@@ -2,7 +2,7 @@ export function FixedLinks() {
   return (
     <div className="space-y-6">
       <h3 className="text-xl font-bold text-slate-900 dark:text-white">Links Úteis</h3>
-      <div className="glass-panel p-2 rounded-2xl flex flex-col animate-in fade-in slide-in-from-bottom-8 duration-700 delay-300">
+      <div className="glass-panel p-2 rounded-2xl flex flex-col">
         <a href="#" className="flex items-center gap-4 p-4 rounded-xl hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-all group">
           <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-green-500 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20 group-hover:scale-110 transition-transform">
             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" /></svg>

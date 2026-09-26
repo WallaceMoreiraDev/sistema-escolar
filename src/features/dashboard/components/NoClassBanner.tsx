@@ -9,7 +9,7 @@ export function NoClassBanner() {
 
   return (
     <>
-      <div className="glass-panel p-10 rounded-3xl flex flex-col items-center justify-center text-center animate-in fade-in slide-in-from-bottom-6 duration-700 delay-200">
+      <div className="glass-panel p-10 rounded-3xl flex flex-col items-center justify-center text-center">
         <div className="w-20 h-20 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center mb-6 shadow-inner">
           <svg className="w-10 h-10 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" /></svg>
         </div>

@@ -6,7 +6,7 @@ export function CrowdfundingBanner() {
 
   return (
     <>
-      <div className="glass-panel p-8 rounded-3xl mb-10 bg-gradient-to-br from-primary/5 via-transparent to-transparent relative overflow-hidden animate-in fade-in slide-in-from-bottom-5 duration-700 delay-150">
+      <div className="glass-panel p-8 rounded-3xl mb-10 bg-gradient-to-br from-primary/5 via-transparent to-transparent relative overflow-hidden">
         <div className="absolute -right-20 -top-20 w-64 h-64 bg-primary/20 rounded-full blur-3xl pointer-events-none"></div>
         
         <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">

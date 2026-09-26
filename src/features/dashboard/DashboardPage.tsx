@@ -10,8 +10,8 @@ export function DashboardPage() {
   const [hasClass, setHasClass] = useState(false)
 
   return (
-    <div className="w-full">
-      <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">Bom dia, Aluno 👋</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
@@ -40,7 +40,7 @@ export function DashboardPage() {
       <CrowdfundingBanner />
       
       {/* Visível em AMBOS os cenários */}
-      <div className="mb-10 animate-in fade-in slide-in-from-bottom-5 duration-700 delay-200">
+      <div className="mb-10">
         <MuralPreview />
       </div>
 

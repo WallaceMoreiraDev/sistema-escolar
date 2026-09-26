@@ -46,7 +46,7 @@ export function WeeklySummary() {
         {/* Renderiza Prova de Matemática */}
         <div 
           onClick={() => setSelectedEvent(weekEvents[0])}
-          className="glass-card p-5 sm:p-6 flex items-center gap-4 sm:gap-5 group cursor-pointer animate-in fade-in slide-in-from-bottom-6 duration-700 delay-200"
+          className="glass-card p-5 sm:p-6 flex items-center gap-4 sm:gap-5 group cursor-pointer"
         >
           {/* Quadrado do Calendário (Mês/Dia) */}
           <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-100 dark:border-rose-900 flex flex-col items-center justify-center text-rose-600 dark:text-rose-400 shrink-0 shadow-sm group-hover:bg-rose-500 group-hover:text-white transition-colors">
@@ -76,7 +76,7 @@ export function WeeklySummary() {
         {/* Renderiza Trabalho de História */}
         <div 
           onClick={() => setSelectedEvent(weekEvents[1])}
-          className="glass-card p-5 sm:p-6 flex items-center gap-4 sm:gap-5 group cursor-pointer animate-in fade-in slide-in-from-bottom-7 duration-700 delay-300"
+          className="glass-card p-5 sm:p-6 flex items-center gap-4 sm:gap-5 group cursor-pointer"
         >
           {/* Quadrado do Calendário (Mês/Dia) */}
           <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-100 dark:border-amber-900 flex flex-col items-center justify-center text-amber-600 dark:text-amber-400 shrink-0 shadow-sm group-hover:bg-amber-500 group-hover:text-white transition-colors">
