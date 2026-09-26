@@ -4,7 +4,7 @@ export function CalendarPage() {
   const [role, setRole] = useState<'ALUNO' | 'LIDER'>('ALUNO') // Mock para mostrar diferença UI
   
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
       <header className="mb-8 flex justify-between items-center">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Calendário da Turma</h1>

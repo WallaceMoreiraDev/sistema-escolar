@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { AppLayout } from '@/components/layout/AppLayout'
 import { CrowdfundingBanner } from './components/CrowdfundingBanner'
 import { WeeklySummary } from './components/WeeklySummary'
 import { FixedLinks } from './components/FixedLinks'
@@ -11,7 +10,7 @@ export function DashboardPage() {
   const [hasClass, setHasClass] = useState(false)
 
   return (
-    <AppLayout>
+    <div className="w-full">
       <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 animate-in fade-in slide-in-from-bottom-4 duration-700">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">Bom dia, Aluno 👋</h1>
@@ -54,6 +53,6 @@ export function DashboardPage() {
       ) : (
         <NoClassBanner />
       )}
-    </AppLayout>
+    </div>
   )
 }

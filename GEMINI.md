@@ -110,3 +110,4 @@
 * **Alinhamento Prévio:** Qualquer alteração de arquitetura, inclusão de nova lib no `package.json`, ou modificações estruturais extensas requerem validação e aprovação do desenvolvedor parceiro (usuário).
 * **Planejamento sobre Ação Pronta:** Antes de despejar grandes quantidades de código, planeje os passos a serem tomados e valide o entendimento lógico. O fluxo é: Compreensão -> Proposta -> Validação -> Execução.
 * **Justificativas Técnicas:** Quando propor uma solução diferente da que foi pedida, a IA tem a obrigação de explicar a motivação e os potenciais ganhos e riscos para a base do código (trade-offs).
+* **Verificação Obrigatória de TypeScript (TSC):** A IA deve obrigatoriamente rodar a verificação do compilador do TypeScript (ex: `npx tsc -b` ou similar) logo após refatorações e adições de código, garantindo que não deixará para trás quebras de tipagem, imports ausentes ou erros de compilação.

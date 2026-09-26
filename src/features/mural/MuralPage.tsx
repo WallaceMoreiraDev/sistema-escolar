@@ -1,6 +1,6 @@
 export function MuralPage() {
   return (
-    <div className="min-h-screen bg-background p-6">
+    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
       <header className="mb-8">
         <h1 className="text-3xl font-bold text-foreground">Mural Geral</h1>
         <p className="text-muted-foreground">Avisos da diretoria e comunicados institucionais.</p>

@@ -3,6 +3,7 @@ import { AuthPage } from '@/features/auth/AuthPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { MuralPage } from '@/features/mural/MuralPage'
 import { CalendarPage } from '@/features/calendar/CalendarPage'
+import { AppLayout } from '@/components/layout/AppLayout'
 
 export const router = createBrowserRouter([
   {
@@ -14,15 +15,21 @@ export const router = createBrowserRouter([
     element: <AuthPage />,
   },
   {
-    path: '/app/dashboard',
-    element: <DashboardPage />,
-  },
-  {
-    path: '/app/mural',
-    element: <MuralPage />,
-  },
-  {
-    path: '/app/calendario',
-    element: <CalendarPage />,
-  },
+    path: '/app',
+    element: <AppLayout />, // O AppLayout agora renderiza o menu lateral e o <Outlet />
+    children: [
+      {
+        path: 'dashboard',
+        element: <DashboardPage />,
+      },
+      {
+        path: 'mural',
+        element: <MuralPage />,
+      },
+      {
+        path: 'calendario',
+        element: <CalendarPage />,
+      },
+    ]
+  }
 ])
