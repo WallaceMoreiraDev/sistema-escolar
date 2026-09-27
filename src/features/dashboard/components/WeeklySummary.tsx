@@ -43,13 +43,13 @@ export function WeeklySummary() {
     <div className="lg:col-span-2 space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-xl font-bold text-slate-900 dark:text-white">Resumo da Semana</h3>
-        <Link to="/app/calendario" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">Ver calendário completo &rarr;</Link>
+        <Link to="/app/minha-turma" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">Ver agenda da turma completa &rarr;</Link>
       </div>
       
       <div className="grid gap-4">
         {/* Renderiza Prova de Matemática */}
         <div 
-          onClick={() => navigate(`/app/calendario/evento/${weekEvents[0].id}`)}
+          onClick={() => navigate(`/app/minha-turma/evento/${weekEvents[0].id}`)}
           className="glass-card p-5 sm:p-6 flex items-center gap-4 sm:gap-5 group cursor-pointer"
         >
           {/* Quadrado do Calendário (Mês/Dia) */}
@@ -79,7 +79,7 @@ export function WeeklySummary() {
         
         {/* Renderiza Trabalho de História */}
         <div 
-          onClick={() => navigate(`/app/calendario/evento/${weekEvents[1].id}`)}
+          onClick={() => navigate(`/app/minha-turma/evento/${weekEvents[1].id}`)}
           className="glass-card p-5 sm:p-6 flex items-center gap-4 sm:gap-5 group cursor-pointer"
         >
           {/* Quadrado do Calendário (Mês/Dia) */}

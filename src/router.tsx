@@ -35,7 +35,7 @@ export const router = createBrowserRouter([
         ]
       },
       {
-        path: 'calendario',
+        path: 'minha-turma',
         element: <CalendarPage />,
         children: [
           {

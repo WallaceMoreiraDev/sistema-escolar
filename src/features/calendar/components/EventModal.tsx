@@ -20,7 +20,7 @@ export function EventModal() {
   
   const onClose = () => {
     // Retorna para o dashboard da turma (CalendarPage) desmontando o modal
-    navigate('/app/calendario')
+    navigate('/app/minha-turma')
   }
 
   return (
