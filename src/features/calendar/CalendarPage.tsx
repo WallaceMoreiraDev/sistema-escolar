@@ -1,9 +1,11 @@
 import { useState } from 'react'
+import { Outlet, useNavigate } from 'react-router-dom'
 
 const FILTERS = ['TUDO', 'PROVAS', 'TRABALHOS', 'TAREFAS']
 const MONTH_NAMES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 
 export function CalendarPage() {
+  const navigate = useNavigate()
   const [viewMode, setViewMode] = useState<'SUMMARY' | 'MONTH_GRID'>('SUMMARY')
   const [activeFilter, setActiveFilter] = useState('TUDO')
   
@@ -81,7 +83,8 @@ export function CalendarPage() {
   const renderedDays = MONTH_DAYS_DYNAMIC.slice(0, weeksNeeded * 7)
 
   return (
-    <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <>
+      <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
       
       {/* Cabeçalho Fixo */}
       <header className="mb-8">
@@ -131,7 +134,11 @@ export function CalendarPage() {
                 <div className="flex flex-col gap-3">
                   {day.events.length > 0 ? (
                     day.events.map(event => (
-                      <div key={event.id} className={`p-4 rounded-2xl border-l-4 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all shadow-sm glass-card ${event.borderClass} ${event.bgClass}`}>
+                      <div 
+                        key={event.id} 
+                        onClick={(e) => { e.stopPropagation(); navigate(`evento/${event.id}`) }}
+                        className={`p-4 rounded-2xl border-l-4 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all shadow-sm glass-card ${event.borderClass} ${event.bgClass}`}
+                      >
                         <div className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold tracking-wider mb-3 ${event.colorClass} bg-white/50 dark:bg-slate-900/50 shadow-sm`}>
                           {event.label}
                         </div>
@@ -159,7 +166,11 @@ export function CalendarPage() {
                 </h3>
                 <div className="flex flex-col gap-3">
                   {day.events.map(event => (
-                    <div key={event.id} className={`glass-card p-5 rounded-2xl border-l-4 shadow-sm active:scale-[0.98] transition-transform ${event.borderClass} ${event.bgClass}`}>
+                    <div 
+                      key={event.id} 
+                      onClick={(e) => { e.stopPropagation(); navigate(`evento/${event.id}`) }}
+                      className={`glass-card p-5 rounded-2xl border-l-4 cursor-pointer shadow-sm active:scale-[0.98] transition-transform ${event.borderClass} ${event.bgClass}`}
+                    >
                       <div className={`inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider mb-2 ${event.colorClass} bg-white/60 dark:bg-slate-900/60`}>
                         {event.label}
                       </div>
@@ -280,7 +291,11 @@ export function CalendarPage() {
                     {/* VISÃO DESKTOP: overflow-hidden sem barras de rolagem (evita UI feia) */}
                     <div className="hidden md:flex flex-col gap-2 overflow-hidden">
                       {filteredEvents.map(event => (
-                        <div key={event.id} className={`text-xs font-bold px-2.5 py-2 rounded-xl border-l-[3px] ${event.colorClass} ${event.bgClass} ${event.borderClass} cursor-pointer hover:scale-[1.02] hover:shadow-md transition-all leading-tight line-clamp-3 shrink-0`}>
+                        <div 
+                          key={event.id} 
+                          onClick={(e) => { e.stopPropagation(); navigate(`evento/${event.id}`) }}
+                          className={`text-xs font-bold px-2.5 py-2 rounded-xl border-l-[3px] ${event.colorClass} ${event.bgClass} ${event.borderClass} cursor-pointer hover:scale-[1.02] hover:shadow-md transition-all leading-tight line-clamp-3 shrink-0`}
+                        >
                           <span className="opacity-75 mr-1 font-extrabold text-[10px]">[{event.label.slice(0,3)}]</span>
                           {event.title}
                         </div>
@@ -307,7 +322,11 @@ export function CalendarPage() {
               {renderedDays.find(d => d && d.day === selectedMobileDay)?.events
                 .filter(e => activeFilter === 'TUDO' || e.type === activeFilter)
                 .map(event => (
-                  <div key={event.id} className={`glass-card p-4 rounded-2xl border-l-4 ${event.borderClass} ${event.bgClass}`}>
+                  <div 
+                    key={event.id} 
+                    onClick={(e) => { e.stopPropagation(); navigate(`evento/${event.id}`) }}
+                    className={`glass-card p-4 rounded-2xl border-l-4 cursor-pointer active:scale-[0.98] transition-transform ${event.borderClass} ${event.bgClass}`}
+                  >
                     <div className={`text-xs font-bold mb-2 ${event.colorClass}`}>{event.label}</div>
                     <p className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{event.title}</p>
                   </div>
@@ -324,6 +343,10 @@ export function CalendarPage() {
 
         </div>
       )}
-    </div>
+      </div>
+
+      {/* MODAL DE DETALHES DO EVENTO */}
+      <Outlet />
+    </>
   )
 }

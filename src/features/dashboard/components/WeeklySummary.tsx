@@ -1,19 +1,23 @@
-import { Link } from 'react-router-dom'
-import { useState } from 'react'
-import { EventModal, ClassEvent } from '@/features/calendar/components/EventModal'
+import { Link, useNavigate } from 'react-router-dom'
 
-// Interface estendida apenas para o mock local
-interface DashboardEvent extends ClassEvent {
+interface DashboardEvent {
+  id: number;
+  subject: string;
+  category: string;
+  date: string;
+  time: string;
   dayStr: string;
   monthStr: string;
+  description: string;
+  imageUrl?: string;
 }
 
 export function WeeklySummary() {
-  const [selectedEvent, setSelectedEvent] = useState<ClassEvent | null>(null);
+  const navigate = useNavigate();
 
   const weekEvents: DashboardEvent[] = [
     {
-      id: "ev1",
+      id: 1, // ID mapeado com o EventModal mock
       subject: "Matemática",
       category: "Prova",
       date: "Amanhã",
@@ -24,7 +28,7 @@ export function WeeklySummary() {
       imageUrl: "https://images.unsplash.com/photo-1632559646142-f94793b89cb0?q=80&w=1000&auto=format&fit=crop"
     },
     {
-      id: "ev2",
+      id: 2, // ID mapeado
       subject: "História",
       category: "Trabalho",
       date: "Sexta-feira",
@@ -45,7 +49,7 @@ export function WeeklySummary() {
       <div className="grid gap-4">
         {/* Renderiza Prova de Matemática */}
         <div 
-          onClick={() => setSelectedEvent(weekEvents[0])}
+          onClick={() => navigate(`/app/calendario/evento/${weekEvents[0].id}`)}
           className="glass-card p-5 sm:p-6 flex items-center gap-4 sm:gap-5 group cursor-pointer"
         >
           {/* Quadrado do Calendário (Mês/Dia) */}
@@ -75,7 +79,7 @@ export function WeeklySummary() {
         
         {/* Renderiza Trabalho de História */}
         <div 
-          onClick={() => setSelectedEvent(weekEvents[1])}
+          onClick={() => navigate(`/app/calendario/evento/${weekEvents[1].id}`)}
           className="glass-card p-5 sm:p-6 flex items-center gap-4 sm:gap-5 group cursor-pointer"
         >
           {/* Quadrado do Calendário (Mês/Dia) */}
@@ -103,12 +107,6 @@ export function WeeklySummary() {
           </div>
         </div>
       </div>
-
-      <EventModal 
-        event={selectedEvent} 
-        isOpen={!!selectedEvent} 
-        onClose={() => setSelectedEvent(null)} 
-      />
     </div>
   )
 }
