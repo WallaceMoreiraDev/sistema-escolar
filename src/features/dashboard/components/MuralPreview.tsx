@@ -1,6 +1,4 @@
-import { useState } from 'react'
-import { Link } from 'react-router-dom'
-import { NoticeModal } from '@/features/mural/components/NoticeModal'
+import { useNavigate, Link } from 'react-router-dom'
 
 // Mock baseado exatamente no muralgeral_detalhes.md
 const mockNotices = [
@@ -31,7 +29,7 @@ const mockNotices = [
 ];
 
 export function MuralPreview() {
-  const [selectedNotice, setSelectedNotice] = useState<typeof mockNotices[0] | null>(null);
+  const navigate = useNavigate();
 
   const getBorderColor = (badge: string) => {
     switch (badge) {
@@ -60,7 +58,7 @@ export function MuralPreview() {
         {mockNotices.map((notice) => (
           <div 
             key={notice.id}
-            onClick={() => setSelectedNotice(notice)}
+            onClick={() => navigate(`/app/mural/aviso/${notice.id}`)}
             className="glass-card p-5 relative overflow-hidden group cursor-pointer hover:shadow-lg transition-all"
           >
             <div className={`absolute top-0 left-0 w-1 h-full ${getBorderColor(notice.badge)}`}></div>
@@ -75,12 +73,6 @@ export function MuralPreview() {
           </div>
         ))}
       </div>
-
-      <NoticeModal 
-        isOpen={!!selectedNotice} 
-        notice={selectedNotice} 
-        onClose={() => setSelectedNotice(null)} 
-      />
     </div>
   )
 }
