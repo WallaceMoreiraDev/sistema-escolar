@@ -19,3 +19,13 @@ export interface PaginatedResponse<T> {
     totalPages: number;
   };
 }
+
+export type MemberRole = 'student' | 'leader';
+
+export interface ClassMember {
+  id: string;
+  name: string;
+  email: string;
+  role: MemberRole;
+  joinedAt: string;
+}

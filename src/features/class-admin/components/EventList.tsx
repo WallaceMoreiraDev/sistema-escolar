@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useClassEvents, useDeleteEvent } from '../hooks/useClassEvents';
 import { ClassEvent } from '../types';
+import { ConfirmModal } from '../../../components/ui/ConfirmModal';
 
 interface EventListProps {
   onEdit: (event: ClassEvent) => void;
@@ -11,6 +12,19 @@ export function EventList({ onEdit }: EventListProps) {
   const limit = 5;
   const { data: response, isLoading, isError } = useClassEvents(page, limit);
   const deleteMutation = useDeleteEvent();
+  const [eventToDelete, setEventToDelete] = useState<ClassEvent | null>(null);
+
+  const handleDelete = (event: ClassEvent) => {
+    setEventToDelete(event);
+  };
+
+  const confirmDelete = () => {
+    if (eventToDelete) {
+      deleteMutation.mutate(eventToDelete.id, {
+        onSuccess: () => setEventToDelete(null)
+      });
+    }
+  };
 
   if (isLoading) return <div className="p-8 text-center animate-pulse text-slate-500 font-bold">Carregando eventos...</div>;
   if (isError) return <div className="p-8 text-center text-red-500 font-bold">Erro ao carregar os eventos.</div>;
@@ -18,14 +32,9 @@ export function EventList({ onEdit }: EventListProps) {
   const events = response?.data || [];
   const meta = response?.meta;
 
-  const handleDelete = (id: string) => {
-    if (window.confirm("Tem certeza que deseja excluir este evento definitivamente?")) {
-      deleteMutation.mutate(id);
-    }
-  };
-
   return (
-    <div className="glass-card overflow-hidden">
+    <>
+      <div className="glass-card overflow-hidden">
       <div className="p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-center">
         <h3 className="text-xl font-bold text-slate-900 dark:text-white">Eventos Cadastrados</h3>
         <span className="text-sm text-slate-500 font-medium">Total: {meta?.total}</span>
@@ -85,8 +94,9 @@ export function EventList({ onEdit }: EventListProps) {
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                         </button>
                         <button 
-                          onClick={() => handleDelete(event.id)}
-                          className="p-2 text-slate-400 hover:text-red-500 transition-colors bg-white dark:bg-slate-800 shadow-sm rounded-lg border border-slate-200 dark:border-slate-700"
+                          onClick={() => handleDelete(event)}
+                          disabled={deleteMutation.isPending && eventToDelete?.id === event.id}
+                          className="p-2 text-slate-400 hover:text-red-500 transition-colors bg-white dark:bg-slate-800 shadow-sm rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50"
                         >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                         </button>
@@ -125,5 +135,16 @@ export function EventList({ onEdit }: EventListProps) {
         </div>
       )}
     </div>
+
+    <ConfirmModal
+      isOpen={!!eventToDelete}
+      title="Excluir Evento"
+      message={`Tem certeza que deseja excluir o evento "${eventToDelete?.subject}"? Essa ação apagará a tarefa para todos os alunos e não pode ser desfeita.`}
+      isDestructive={true}
+      confirmText="Excluir Evento"
+      onConfirm={confirmDelete}
+      onCancel={() => setEventToDelete(null)}
+    />
+    </>
   );
 }
