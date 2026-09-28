@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Outlet, useNavigate } from 'react-router-dom'
 import { ClassSidebar } from './components/ClassSidebar'
+import { useClassEvents } from '../class-admin/hooks/useClassEvents'
 
 const FILTERS = ['TUDO', 'PROVAS', 'TRABALHOS', 'TAREFAS']
 const MONTH_NAMES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
@@ -10,6 +11,15 @@ export function CalendarPage() {
   const [viewMode, setViewMode] = useState<'SUMMARY' | 'MONTH_GRID'>('SUMMARY')
   const [activeFilter, setActiveFilter] = useState('TUDO')
   
+  const { data: response, isLoading } = useClassEvents(1, 100);
+  const realEvents = response?.data || [];
+
+  const getCalendarEventStyles = (category: string) => {
+    if (category === 'Prova') return { type: 'PROVAS', label: 'PROVA', colorClass: 'text-rose-600', bgClass: 'bg-rose-500/10', dotClass: 'bg-rose-500', borderClass: 'border-l-rose-500' };
+    if (category === 'Trabalho') return { type: 'TRABALHOS', label: 'TRABALHO', colorClass: 'text-blue-600', bgClass: 'bg-blue-500/10', dotClass: 'bg-blue-500', borderClass: 'border-l-blue-500' };
+    return { type: 'TAREFAS', label: 'TAREFA', colorClass: 'text-amber-600', bgClass: 'bg-amber-500/10', dotClass: 'bg-amber-500', borderClass: 'border-l-amber-500' };
+  };
+
   // Estado real do calendário focado no hoje
   const today = new Date()
   const [selectedMobileDay, setSelectedMobileDay] = useState<number | null>(today.getDate())
@@ -22,29 +32,28 @@ export function CalendarPage() {
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1))
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1))
   
-  // GERAÇÃO DINÂMICA DO RESUMO (Próximos 5 Dias a partir de Hoje)
+  // GERAÇÃO DO RESUMO (Próximos 5 Dias a partir de Hoje)
   const summaryDays = Array.from({ length: 5 }, (_, i) => {
     const d = new Date(today);
     d.setDate(today.getDate() + i);
+    const dateStr = d.toISOString().split('T')[0];
     
     const weekdays = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
     
-    let events = [];
-    // Mocks aplicados dinamicamente para fins de MVP (ex: Eventos hoje, daqui 2 dias e 3 dias)
-    if (i === 0) {
-      events.push({ id: 1, type: 'PROVAS', label: 'PROVA', title: 'Física Moderna', description: 'Estudar capítulos 4 e 5. Foco em volume.', colorClass: 'text-rose-600', borderClass: 'border-l-rose-500', bgClass: 'bg-rose-500/10' });
-    } else if (i === 2) {
-      events.push({ id: 2, type: 'TRABALHOS', label: 'TRABALHO', title: 'Era Vargas (Entrega PDF)', description: 'Enviar pelo Teams. Máx 10 páginas.', colorClass: 'text-blue-600', borderClass: 'border-l-blue-500', bgClass: 'bg-blue-500/10' });
-    } else if (i === 3) {
-      events.push({ id: 3, type: 'TAREFAS', label: 'TAREFA', title: 'Exercícios Pág. 45', description: 'Resolver ímpares. Visto no início da aula.', colorClass: 'text-amber-600', borderClass: 'border-l-amber-500', bgClass: 'bg-amber-500/10' });
-    }
+    // Filtra eventos reais que caem exatamente neste dia
+    const dayEvents = realEvents.filter(ev => ev.dueDate.startsWith(dateStr)).map(ev => ({
+      id: ev.id,
+      title: ev.subject,
+      description: ev.description || 'Sem descrição.',
+      ...getCalendarEventStyles(ev.category)
+    }));
 
     return {
       date: d.toISOString(),
       dayStr: d.getDate().toString().padStart(2, '0'),
       weekday: weekdays[d.getDay()],
       isToday: i === 0,
-      events
+      events: dayEvents
     }
   });
 
@@ -56,27 +65,19 @@ export function CalendarPage() {
     const day = i - firstDayOfWeek + 1
     if (day < 1 || day > daysInMonth) return null
     
-    let events = []
-    // Populando os eventos mockados (vamos mantê-los fixos no mês atual para demonstração)
-    if (year === today.getFullYear() && month === today.getMonth()) {
-      // Replicando a lógica do mock dinâmico pra bater com o resumo
-      const diaResumo0 = new Date(today); diaResumo0.setDate(today.getDate() + 0);
-      const diaResumo2 = new Date(today); diaResumo2.setDate(today.getDate() + 2);
-      const diaResumo3 = new Date(today); diaResumo3.setDate(today.getDate() + 3);
+    const currentMonthStr = (month + 1).toString().padStart(2, '0');
+    const currentDayStr = day.toString().padStart(2, '0');
+    const dateStr = `${year}-${currentMonthStr}-${currentDayStr}`;
 
-      if (day === diaResumo0.getDate()) events.push({ id: 10, type: 'PROVAS', label: 'PROVA', title: 'Física Moderna', colorClass: 'text-rose-600', bgClass: 'bg-rose-500/10', dotClass: 'bg-rose-500', borderClass: 'border-l-rose-500' })
-      if (day === diaResumo2.getDate()) events.push({ id: 11, type: 'TRABALHOS', label: 'TRABALHO', title: 'Era Vargas (Entrega)', colorClass: 'text-blue-600', bgClass: 'bg-blue-500/10', dotClass: 'bg-blue-500', borderClass: 'border-l-blue-500' })
-      if (day === diaResumo3.getDate()) events.push({ id: 12, type: 'TAREFAS', label: 'TAREFA', title: 'Exercícios Pág. 45', colorClass: 'text-amber-600', bgClass: 'bg-amber-500/10', dotClass: 'bg-amber-500', borderClass: 'border-l-amber-500' })
-      
-      // Mais alguns fixos espalhados para encher o mês
-      if (day === 5) events.push({ id: 1, type: 'PROVAS', label: 'PROVA', title: 'Matemática', colorClass: 'text-rose-600', bgClass: 'bg-rose-500/10', dotClass: 'bg-rose-500', borderClass: 'border-l-rose-500' })
-      if (day === 15 && day !== diaResumo2.getDate() && day !== diaResumo0.getDate() && day !== diaResumo3.getDate()) {
-        events.push({ id: 2, type: 'TRABALHOS', label: 'TRABALHO', title: 'História', colorClass: 'text-blue-600', bgClass: 'bg-blue-500/10', dotClass: 'bg-blue-500', borderClass: 'border-l-blue-500' })
-      }
-    }
+    const dayEvents = realEvents.filter(ev => ev.dueDate.startsWith(dateStr)).map(ev => ({
+      id: ev.id,
+      title: ev.subject,
+      description: ev.description || 'Sem descrição.',
+      ...getCalendarEventStyles(ev.category)
+    }));
 
     const isToday = year === today.getFullYear() && month === today.getMonth() && day === today.getDate()
-    return { day, events, isToday }
+    return { day, events: dayEvents, isToday }
   })
 
   // Remove semanas vazias do final do array
