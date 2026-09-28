@@ -1,26 +1,44 @@
 import { useNavigate, useParams } from 'react-router-dom'
-
-// Mock de dados para simular o fetch do evento específico
-const MOCK_EVENTS = [
-  { id: 1, type: 'PROVAS', label: 'PROVA', title: 'Física Moderna', dateStr: 'Hoje • 08h00', description: 'Estudar capítulos 4 e 5. Foco em volume.', subject: 'Física', colorClass: 'text-rose-600', bgClass: 'bg-rose-500/10', borderClass: 'border-l-rose-500' },
-  { id: 2, type: 'TRABALHOS', label: 'TRABALHO', title: 'Era Vargas (Entrega PDF)', dateStr: 'Daqui 2 dias • 23h59', description: 'Enviar pelo Teams. Máx 10 páginas.', subject: 'História', colorClass: 'text-blue-600', bgClass: 'bg-blue-500/10', borderClass: 'border-l-blue-500' },
-  { id: 3, type: 'TAREFAS', label: 'TAREFA', title: 'Exercícios Pág. 45', dateStr: 'Daqui 3 dias • 07h00', description: 'Resolver ímpares. Visto no início da aula.', subject: 'Física', colorClass: 'text-amber-600', bgClass: 'bg-amber-500/10', borderClass: 'border-l-amber-500' },
-  // Simulando eventos criados pelo mês
-  { id: 10, type: 'PROVAS', label: 'PROVA', title: 'Física Moderna', dateStr: 'Terça, 10 Set • 08h00', description: 'Conteúdo de física moderna completo.', subject: 'Física', colorClass: 'text-rose-600', bgClass: 'bg-rose-500/10', borderClass: 'border-l-rose-500' },
-  { id: 11, type: 'TRABALHOS', label: 'TRABALHO', title: 'Química Orgânica', dateStr: 'Domingo, 15 Set • 23h59', description: 'Relatório.', subject: 'Química', colorClass: 'text-blue-600', bgClass: 'bg-blue-500/10', borderClass: 'border-l-blue-500' },
-  { id: 12, type: 'TAREFAS', label: 'TAREFA', title: 'Exercícios Pág. 45', dateStr: 'Segunda, 26 Set • 14h00', description: 'Fixação de matéria.', subject: 'Física', colorClass: 'text-amber-600', bgClass: 'bg-amber-500/10', borderClass: 'border-l-amber-500' },
-]
+import { useClassEvents } from '../../class-admin/hooks/useClassEvents'
 
 export function EventModal() {
   const navigate = useNavigate()
   const { id } = useParams()
   
-  // Encontra o evento baseado no deep link
-  const event = MOCK_EVENTS.find(e => e.id === Number(id))
+  const { data: response } = useClassEvents(1, 100);
+  const events = response?.data || [];
+  
+  // Encontra o evento baseado no deep link (string matching)
+  const rawEvent = events.find(e => e.id === id);
   
   const onClose = () => {
-    // Retorna para o dashboard da turma (CalendarPage) desmontando o modal
     navigate('/app/minha-turma')
+  }
+
+  // Prepara o evento para UI caso exista
+  let event = null;
+  if (rawEvent) {
+    const isProva = rawEvent.category === 'Prova';
+    const isTrab = rawEvent.category === 'Trabalho';
+
+    const colorClass = isProva ? 'text-rose-600' : isTrab ? 'text-blue-600' : 'text-amber-600';
+    const bgClass = isProva ? 'bg-rose-500/10' : isTrab ? 'bg-blue-500/10' : 'bg-amber-500/10';
+    
+    const dateObj = new Date(rawEvent.dueDate);
+    const dayStr = dateObj.getDate().toString().padStart(2, '0');
+    const monthStr = dateObj.toLocaleString('pt-BR', { month: 'short' }).replace('.', '');
+    const time = dateObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+    const dateStr = `${dayStr} ${monthStr} • ${time}`;
+
+    event = {
+      ...rawEvent,
+      label: rawEvent.category.toUpperCase(),
+      title: rawEvent.subject,
+      subject: rawEvent.subject,
+      dateStr,
+      colorClass,
+      bgClass
+    };
   }
 
   return (
@@ -65,8 +83,8 @@ export function EventModal() {
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h7" /></svg>
                   Descrição Detalhada
                 </h4>
-                <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm">
-                  {event.description}
+                <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm whitespace-pre-wrap">
+                  {event.description || <span className="italic opacity-60">Sem descrição detalhada.</span>}
                 </div>
               </div>
 
