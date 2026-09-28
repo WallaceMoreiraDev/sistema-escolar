@@ -11,7 +11,7 @@ export function CalendarPage() {
   const [viewMode, setViewMode] = useState<'SUMMARY' | 'MONTH_GRID'>('SUMMARY')
   const [activeFilter, setActiveFilter] = useState('TUDO')
   
-  const { data: response, isLoading } = useClassEvents(1, 100);
+  const { data: response } = useClassEvents(1, 100);
   const realEvents = response?.data || [];
 
   const getCalendarEventStyles = (category: string) => {

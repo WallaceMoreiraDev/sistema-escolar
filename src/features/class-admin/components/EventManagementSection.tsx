@@ -1,9 +1,21 @@
 import { useState } from 'react';
 import { EventForm } from './EventForm';
 import { EventList } from './EventList';
+import { ClassEvent } from '../types';
 
 export function EventManagementSection() {
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [eventToEdit, setEventToEdit] = useState<ClassEvent | null>(null);
+
+  const handleOpenNew = () => {
+    setEventToEdit(null);
+    setIsFormOpen(true);
+  };
+
+  const handleEdit = (event: ClassEvent) => {
+    setEventToEdit(event);
+    setIsFormOpen(true);
+  };
 
   return (
     <section className="pt-8 mt-8 border-t border-slate-200 dark:border-slate-800">
@@ -16,7 +28,7 @@ export function EventManagementSection() {
         </div>
         
         <button 
-          onClick={() => setIsFormOpen(true)}
+          onClick={handleOpenNew}
           className="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 rounded-xl font-bold flex items-center gap-2 transition-all active:scale-95 shadow-sm"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" /></svg>
@@ -25,8 +37,12 @@ export function EventManagementSection() {
       </div>
 
       <div className="space-y-8">
-        <EventForm isOpen={isFormOpen} onClose={() => setIsFormOpen(false)} />
-        <EventList />
+        <EventForm 
+          isOpen={isFormOpen} 
+          onClose={() => setIsFormOpen(false)} 
+          eventToEdit={eventToEdit}
+        />
+        <EventList onEdit={handleEdit} />
       </div>
     </section>
   );

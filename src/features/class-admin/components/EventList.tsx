@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { useClassEvents, useDeleteEvent } from '../hooks/useClassEvents';
+import { ClassEvent } from '../types';
 
-export function EventList() {
+interface EventListProps {
+  onEdit: (event: ClassEvent) => void;
+}
+
+export function EventList({ onEdit }: EventListProps) {
   const [page, setPage] = useState(1);
   const limit = 5;
   const { data: response, isLoading, isError } = useClassEvents(page, limit);
@@ -73,7 +78,10 @@ export function EventList() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex justify-end gap-2">
-                        <button className="p-2 text-slate-400 hover:text-primary transition-colors bg-white dark:bg-slate-800 shadow-sm rounded-lg border border-slate-200 dark:border-slate-700">
+                        <button 
+                          onClick={() => onEdit(event)}
+                          className="p-2 text-slate-400 hover:text-primary transition-colors bg-white dark:bg-slate-800 shadow-sm rounded-lg border border-slate-200 dark:border-slate-700"
+                        >
                           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                         </button>
                         <button 

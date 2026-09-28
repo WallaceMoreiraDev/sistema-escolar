@@ -1,17 +1,20 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { eventSchema, EventFormValues } from '../schemas/eventSchema';
-import { useCreateEvent } from '../hooks/useClassEvents';
-
+import { useCreateEvent, useUpdateEvent } from '../hooks/useClassEvents';
+import { ClassEvent } from '../types';
 import { createPortal } from 'react-dom';
+import { useEffect } from 'react';
 
 interface EventFormProps {
   isOpen: boolean;
   onClose: () => void;
+  eventToEdit?: ClassEvent | null;
 }
 
-export function EventForm({ isOpen, onClose }: EventFormProps) {
+export function EventForm({ isOpen, onClose, eventToEdit }: EventFormProps) {
   const createEventMutation = useCreateEvent();
+  const updateEventMutation = useUpdateEvent();
 
   const { register, handleSubmit, reset, formState: { errors } } = useForm<EventFormValues>({
     resolver: zodResolver(eventSchema),
@@ -20,13 +23,40 @@ export function EventForm({ isOpen, onClose }: EventFormProps) {
     }
   });
 
+  useEffect(() => {
+    if (eventToEdit && isOpen) {
+      // Pré-preenche o formulário se estivermos no modo de edição
+      // O input datetime-local requer o formato YYYY-MM-DDThh:mm
+      const formattedDate = new Date(eventToEdit.dueDate).toISOString().slice(0, 16);
+      reset({
+        subject: eventToEdit.subject,
+        category: eventToEdit.category,
+        dueDate: formattedDate,
+        description: eventToEdit.description || '',
+      });
+    } else if (isOpen && !eventToEdit) {
+      // Reseta para padrão de criação ao abrir
+      reset({ category: 'Tarefa', subject: '', dueDate: '', description: '' });
+    }
+  }, [eventToEdit, isOpen, reset]);
+
+  const isEditing = !!eventToEdit;
+  const isPending = createEventMutation.isPending || updateEventMutation.isPending;
+
   const onSubmit = (data: EventFormValues) => {
-    createEventMutation.mutate(data, {
-      onSuccess: () => {
-        reset();
-        onClose();
-      }
-    });
+    if (isEditing) {
+      updateEventMutation.mutate({ id: eventToEdit.id, data }, {
+        onSuccess: () => {
+          onClose();
+        }
+      });
+    } else {
+      createEventMutation.mutate(data, {
+        onSuccess: () => {
+          onClose();
+        }
+      });
+    }
   };
 
   if (!isOpen) return null;
@@ -46,7 +76,9 @@ export function EventForm({ isOpen, onClose }: EventFormProps) {
           ✕
         </button>
 
-        <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-6">Cadastrar Novo Evento</h3>
+        <h3 className="text-2xl font-black text-slate-900 dark:text-white mb-6">
+          {isEditing ? 'Editar Evento' : 'Cadastrar Novo Evento'}
+        </h3>
       
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -109,10 +141,10 @@ export function EventForm({ isOpen, onClose }: EventFormProps) {
           </button>
           <button 
             type="submit"
-            disabled={createEventMutation.isPending}
+            disabled={isPending}
             className="px-6 py-3 bg-primary hover:bg-primary/90 text-white rounded-xl font-bold flex items-center gap-2 transition-all active:scale-95 disabled:opacity-50"
           >
-            {createEventMutation.isPending ? 'Salvando...' : 'Cadastrar Evento'}
+            {isPending ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Cadastrar Evento')}
           </button>
         </div>
       </form>

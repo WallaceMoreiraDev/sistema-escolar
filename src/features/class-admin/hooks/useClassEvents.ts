@@ -64,3 +64,28 @@ export function useDeleteEvent() {
     }
   });
 }
+
+export function useUpdateEvent() {
+  const queryClient = useQueryClient();
+  
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string, data: EventFormValues }) => {
+      await delay(800);
+      const index = eventsDB.findIndex(e => e.id === id);
+      if (index !== -1) {
+        eventsDB[index] = {
+          ...eventsDB[index],
+          subject: data.subject,
+          category: data.category,
+          dueDate: data.dueDate,
+          description: data.description || '',
+        };
+        return eventsDB[index];
+      }
+      throw new Error('Evento não encontrado');
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['class-events'] });
+    }
+  });
+}
