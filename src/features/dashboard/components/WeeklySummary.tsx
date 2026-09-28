@@ -42,8 +42,8 @@ export function WeeklySummary() {
   return (
     <div className="lg:col-span-2 space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Resumo da Semana</h3>
-        <Link to="/app/minha-turma" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">Ver agenda da turma completa &rarr;</Link>
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white">Próximos 5 Dias Letivos</h3>
+        <Link to="/app/minha-turma" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">Ver turma completa &rarr;</Link>
       </div>
       
       <div className="grid gap-4">

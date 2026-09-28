@@ -89,7 +89,7 @@ export function CalendarPage() {
         
         {/* Cabeçalho Fixo */}
         <header className="mb-8">
-              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Agenda da Turma</h1>
+              <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">Minha Turma</h1>
         
         <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm font-medium text-slate-500 dark:text-slate-400">
           <div className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200 font-bold">
