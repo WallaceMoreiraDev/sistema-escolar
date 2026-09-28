@@ -15,7 +15,7 @@ export function JoinClassModal({ isOpen, onClose, onSuccess }: JoinClassModalPro
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (code.length < 5) {
+    if (code.length !== 6) {
       setError(true);
       return;
     }
@@ -54,7 +54,8 @@ export function JoinClassModal({ isOpen, onClose, onSuccess }: JoinClassModalPro
               id="code"
               value={code}
               onChange={(e) => setCode(e.target.value.toUpperCase())}
-              placeholder="Ex: 3B-DEV-2026"
+              placeholder="Ex: X8K9J4"
+              maxLength={6}
               className={`w-full px-4 py-3 rounded-xl border ${error ? 'border-red-500 focus:ring-red-500' : 'border-slate-200 dark:border-slate-700 focus:border-primary focus:ring-primary'} bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white uppercase font-bold text-center tracking-widest focus:ring-2 outline-none transition-all`}
             />
             {error && <p className="text-xs font-medium text-red-500 mt-2 text-center animate-pulse">Código inválido, expirado ou turma inexistente.</p>}
