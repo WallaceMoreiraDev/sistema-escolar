@@ -1,6 +1,7 @@
 import { InviteSection } from './components/InviteSection';
 import { EventManagementSection } from './components/EventManagementSection';
 import { MemberManagementSection } from './components/MemberManagementSection';
+import { UsefulLinksSection } from './components/UsefulLinksSection';
 
 export function ClassAdminPage() {
   return (
@@ -19,8 +20,11 @@ export function ClassAdminPage() {
         {/* ÁREA 2: Gestão de Eventos (CRUD) */}
         <EventManagementSection />
         
-        {/* ÁREA 4: Gestão de Membros */}
+        {/* ÁREA 3: Gestão de Membros */}
         <MemberManagementSection />
+
+        {/* ÁREA 4: Gestão de Links Úteis */}
+        <UsefulLinksSection />
       </div>
     </div>
   );

@@ -29,3 +29,10 @@ export interface ClassMember {
   role: MemberRole;
   joinedAt: string;
 }
+
+export interface UsefulLink {
+  id: string;
+  title: string;
+  url: string;
+  createdAt: string;
+}
