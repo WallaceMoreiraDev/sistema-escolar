@@ -36,4 +36,18 @@ export const MOCK_CLASS_MEMBERS: ClassMember[] = [
     role: 'student',
     joinedAt: new Date(Date.now() - 10 * 86400000).toISOString(),
   },
+  {
+    id: 'usr-6',
+    name: 'Roberto Carlos Silva',
+    email: 'roberto@aluno.prumo.com',
+    role: 'student',
+    joinedAt: new Date(Date.now() - 5 * 86400000).toISOString(),
+  },
+  {
+    id: 'usr-7',
+    name: 'Julia Mendes',
+    email: 'julia@aluno.prumo.com',
+    role: 'student',
+    joinedAt: new Date(Date.now() - 2 * 86400000).toISOString(),
+  }
 ];

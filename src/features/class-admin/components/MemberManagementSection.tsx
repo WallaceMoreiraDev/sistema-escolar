@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useClassMembers, useUpdateMemberRole, useRemoveMember } from '../hooks/useClassMembers';
 import { ClassMember } from '../types';
 import { ConfirmModal } from '../../../components/ui/ConfirmModal';
@@ -9,6 +9,10 @@ export function MemberManagementSection() {
   const removeMutation = useRemoveMember();
   
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  
+  // Paginação
+  const [page, setPage] = useState(1);
+  const limit = 5;
   
   // Controle do Modal de Confirmação
   const [confirmModal, setConfirmModal] = useState<{
@@ -84,6 +88,16 @@ export function MemberManagementSection() {
     });
   }, [members]);
 
+  const totalPages = Math.ceil(sortedMembers.length / limit);
+  const paginatedMembers = sortedMembers.slice((page - 1) * limit, page * limit);
+
+  // Se a página atual ficar vazia (ex: deletou último item da pág), volta 1
+  useEffect(() => {
+    if (page > totalPages && totalPages > 0) {
+      setPage(totalPages);
+    }
+  }, [totalPages, page]);
+
   return (
     <section className="pt-8 mt-8 border-t border-slate-200 dark:border-slate-800">
       <div className="flex items-center gap-3 mb-6">
@@ -117,7 +131,7 @@ export function MemberManagementSection() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
-                {sortedMembers.map((member) => {
+                {paginatedMembers.map((member) => {
                   const isLeader = member.role === 'leader';
                   const isMe = member.id === loggedUserId;
 
@@ -184,6 +198,31 @@ export function MemberManagementSection() {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Paginação */}
+        {totalPages > 1 && (
+          <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/30">
+            <button 
+              onClick={() => setPage(p => Math.max(1, p - 1))}
+              disabled={page === 1}
+              className="px-4 py-2 text-sm font-bold text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 transition-colors flex items-center gap-2"
+            >
+              &larr; Anterior
+            </button>
+            
+            <span className="text-sm font-bold text-slate-500">
+              Página <span className="text-slate-900 dark:text-white">{page}</span> de {totalPages}
+            </span>
+            
+            <button 
+              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+              disabled={page === totalPages}
+              className="px-4 py-2 text-sm font-bold text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 transition-colors flex items-center gap-2"
+            >
+              Próxima &rarr;
+            </button>
           </div>
         )}
       </div>

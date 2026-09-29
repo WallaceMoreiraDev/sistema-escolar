@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { linkSchema, LinkFormValues } from '../schemas/linkSchema';
@@ -32,6 +32,18 @@ export function UsefulLinksSection() {
       });
     }
   };
+
+  const [page, setPage] = useState(1);
+  const limit = 5;
+  const safeLinks = links || [];
+  const totalPages = Math.ceil(safeLinks.length / limit);
+  const paginatedLinks = safeLinks.slice((page - 1) * limit, page * limit);
+
+  useEffect(() => {
+    if (page > totalPages && totalPages > 0) {
+      setPage(totalPages);
+    }
+  }, [totalPages, page]);
 
   return (
     <section className="pt-8 mt-8 border-t border-slate-200 dark:border-slate-800">
@@ -104,14 +116,14 @@ export function UsefulLinksSection() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
-                    {links?.length === 0 ? (
+                    {safeLinks.length === 0 ? (
                       <tr>
                         <td colSpan={3} className="px-6 py-8 text-center text-slate-500">
                           Nenhum link adicionado ainda.
                         </td>
                       </tr>
                     ) : (
-                      links?.map((link) => (
+                      paginatedLinks.map((link) => (
                         <tr key={link.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
                           <td className="px-6 py-4 font-bold text-slate-900 dark:text-white">
                             {link.title}
@@ -141,6 +153,31 @@ export function UsefulLinksSection() {
                     )}
                   </tbody>
                 </table>
+              </div>
+            )}
+            
+            {/* Paginação */}
+            {totalPages > 1 && !isLoading && !isError && (
+              <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/30">
+                <button 
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-4 py-2 text-sm font-bold text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 transition-colors flex items-center gap-2"
+                >
+                  &larr; Anterior
+                </button>
+                
+                <span className="text-sm font-bold text-slate-500">
+                  Página <span className="text-slate-900 dark:text-white">{page}</span> de {totalPages}
+                </span>
+                
+                <button 
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-4 py-2 text-sm font-bold text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 transition-colors flex items-center gap-2"
+                >
+                  Próxima &rarr;
+                </button>
               </div>
             )}
           </div>

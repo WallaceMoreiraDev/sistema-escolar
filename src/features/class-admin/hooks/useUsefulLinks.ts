@@ -5,6 +5,11 @@ import { LinkFormValues } from '../schemas/linkSchema';
 let linksDB: UsefulLink[] = [
   { id: 'lnk-1', title: 'Pasta do Drive da Sala', url: 'https://drive.google.com', createdAt: new Date().toISOString() },
   { id: 'lnk-2', title: 'Grupo do WhatsApp', url: 'https://chat.whatsapp.com', createdAt: new Date().toISOString() },
+  { id: 'lnk-3', title: 'Portal NSA (Notas)', url: 'https://nsa.cps.sp.gov.br', createdAt: new Date().toISOString() },
+  { id: 'lnk-4', title: 'Plano de Ensino (PDF)', url: 'https://docs.google.com/document/d/...', createdAt: new Date().toISOString() },
+  { id: 'lnk-5', title: 'Cronograma do Semestre', url: 'https://docs.google.com/spreadsheets/d/...', createdAt: new Date().toISOString() },
+  { id: 'lnk-6', title: 'Canal do YouTube (Aulas Gravação)', url: 'https://youtube.com', createdAt: new Date().toISOString() },
+  { id: 'lnk-7', title: 'Link Extra para Teste de Pág 2', url: 'https://example.com', createdAt: new Date().toISOString() },
 ];
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
