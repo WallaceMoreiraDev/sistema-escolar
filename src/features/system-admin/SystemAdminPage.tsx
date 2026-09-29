@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { FundingSection } from './components/FundingSection';
 import { MuralManagementSection } from './components/MuralManagementSection';
+import { PendingRequestsSection } from './components/PendingRequestsSection';
 
 export function SystemAdminPage() {
   const navigate = useNavigate();
@@ -29,6 +30,9 @@ export function SystemAdminPage() {
 
         {/* BLOCO B: Gestão do Mural Geral */}
         <MuralManagementSection />
+
+        {/* BLOCO C: Pedidos Pendentes */}
+        <PendingRequestsSection />
 
         {/* Os próximos blocos virão nas etapas seguintes */}
       </div>

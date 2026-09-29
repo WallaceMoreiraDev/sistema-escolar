@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { JoinClassModal } from './JoinClassModal'
 import { CreateClassModal } from './CreateClassModal'
+import { useCreateRequest } from '../../system-admin/hooks/usePendingRequests'
 
 export function NoClassBanner() {
   const [isJoinOpen, setIsJoinOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
   const [isPending, setIsPending] = useState(false); // Mock visual de Aguardando Aprovação
+  
+  const createRequestMutation = useCreateRequest();
 
   return (
     <>
@@ -55,9 +58,16 @@ export function NoClassBanner() {
       <CreateClassModal 
         isOpen={isCreateOpen} 
         onClose={() => setIsCreateOpen(false)} 
-        onSubmit={() => {
-          setIsCreateOpen(false);
-          setIsPending(true); // O botão vai sumir e dar lugar ao aviso de pendente
+        onSubmit={(data) => {
+          createRequestMutation.mutate({
+            ...data,
+            requesterName: 'Aluno Teste', // Mock for current user
+          }, {
+            onSuccess: () => {
+              setIsCreateOpen(false);
+              setIsPending(true); // O botão vai sumir e dar lugar ao aviso de pendente
+            }
+          });
         }}
       />
     </>

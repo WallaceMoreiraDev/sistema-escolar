@@ -3,15 +3,22 @@ import { createPortal } from 'react-dom'
 interface CreateClassModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSubmit: () => void;
+  onSubmit: (data: { year: string; shift: string; course: string; room?: string; justification?: string }) => void;
 }
 
 export function CreateClassModal({ isOpen, onClose, onSubmit }: CreateClassModalProps) {
   if (!isOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    onSubmit();
+    const formData = new FormData(e.currentTarget);
+    onSubmit({
+      year: formData.get('year') as string,
+      shift: formData.get('shift') as string,
+      course: formData.get('course') as string,
+      room: formData.get('room') as string,
+      justification: formData.get('justification') as string,
+    });
   };
 
   return createPortal(
@@ -46,8 +53,8 @@ export function CreateClassModal({ isOpen, onClose, onSubmit }: CreateClassModal
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Ano *</label>
-                <select required className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none appearance-none">
-                  <option value="" disabled selected>Selecione</option>
+                <select name="year" required defaultValue="" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none appearance-none">
+                  <option value="" disabled>Selecione</option>
                   <option value="1">1º Ano</option>
                   <option value="2">2º Ano</option>
                   <option value="3">3º Ano</option>
@@ -55,8 +62,8 @@ export function CreateClassModal({ isOpen, onClose, onSubmit }: CreateClassModal
               </div>
               <div>
                 <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Turno *</label>
-                <select required className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none appearance-none">
-                  <option value="" disabled selected>Selecione</option>
+                <select name="shift" required defaultValue="" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none appearance-none">
+                  <option value="" disabled>Selecione</option>
                   <option value="Manhã">Manhã</option>
                   <option value="Tarde">Tarde</option>
                   <option value="Noite">Noite</option>
@@ -66,8 +73,8 @@ export function CreateClassModal({ isOpen, onClose, onSubmit }: CreateClassModal
 
             <div>
               <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Curso *</label>
-              <select required className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none appearance-none">
-                <option value="" disabled selected>Selecione o curso oficial</option>
+              <select name="course" required defaultValue="" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none appearance-none">
+                <option value="" disabled>Selecione o curso oficial</option>
                 <option value="Desenvolvimento de Sistemas">Desenvolvimento de Sistemas</option>
                 <option value="Administração">Administração</option>
                 <option value="Logística">Logística</option>
@@ -77,12 +84,12 @@ export function CreateClassModal({ isOpen, onClose, onSubmit }: CreateClassModal
 
             <div>
               <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Local / Sala <span className="text-slate-400 font-normal">(Opcional)</span></label>
-              <input type="text" placeholder="Ex: Sala 14 - Bloco B" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none" />
+              <input name="room" type="text" placeholder="Ex: Sala 14 - Bloco B" className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none" />
             </div>
 
             <div>
               <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Justificativa <span className="text-slate-400 font-normal">(Opcional)</span></label>
-              <textarea rows={3} placeholder="Motivo da criação da sala..." className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none resize-none"></textarea>
+              <textarea name="justification" rows={3} placeholder="Motivo da criação da sala..." className="w-full px-3 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white focus:ring-2 focus:ring-primary outline-none resize-none"></textarea>
             </div>
           </form>
         </div>
