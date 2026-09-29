@@ -1,8 +1,13 @@
 import { useState } from 'react'
 import { PixModal } from './PixModal'
+import { useFunding } from '../../system-admin/hooks/useFunding'
 
 export function CrowdfundingBanner() {
   const [isPixOpen, setIsPixOpen] = useState(false);
+  const { data: currentFunding = 0 } = useFunding();
+  const goal = 50.00;
+  
+  const percentage = Math.min(100, Math.round((currentFunding / goal) * 100));
 
   return (
     <>
@@ -23,11 +28,14 @@ export function CrowdfundingBanner() {
             
             <div className="mt-6 flex items-center gap-4">
               <div className="flex-1 h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
-                <div className="h-full bg-gradient-to-r from-primary to-orange-500 w-[60%] rounded-full shadow-[0_0_10px_rgba(239,68,68,0.5)]"></div>
+                <div 
+                  className="h-full bg-gradient-to-r from-primary to-orange-500 rounded-full shadow-[0_0_10px_rgba(239,68,68,0.5)] transition-all duration-1000"
+                  style={{ width: `${percentage}%` }}
+                ></div>
               </div>
-              <span className="text-sm font-bold text-slate-700 dark:text-slate-300">60%</span>
+              <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{percentage}%</span>
             </div>
-            <p className="text-xs text-slate-400 mt-2 font-medium">R$ 30,00 arrecadados de R$ 50,00</p>
+            <p className="text-xs text-slate-400 mt-2 font-medium">R$ {currentFunding.toFixed(2).replace('.', ',')} arrecadados de R$ 50,00</p>
           </div>
           
           <button 
