@@ -29,15 +29,18 @@ export function FundingSection() {
 
   return (
     <section className="glass-card p-6 md:p-8">
-      <div className="flex items-center gap-3 mb-6">
-        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-green-600 flex items-center justify-center text-white shadow-lg shadow-emerald-500/20">
-          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-        </div>
-        <div>
-          <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Financiamento (Crowdfunding)</h2>
-          <p className="text-sm text-slate-500">Atualização em tempo real da meta do servidor da plataforma.</p>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+          </div>
+          <div>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Gestão de Financiamento</h2>
+          </div>
         </div>
       </div>
+
+      <p className="text-sm text-slate-500 mb-6 -mt-2">Atualização em tempo real da meta do servidor da plataforma.</p>
 
       <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 items-start md:items-end">
         <div className="flex-1 w-full space-y-2">
@@ -62,9 +65,9 @@ export function FundingSection() {
         <button 
           type="submit"
           disabled={isLoading || updateMutation.isPending}
-          className="w-full md:w-auto px-8 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50"
+          className="w-full md:w-auto px-8 py-3 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 rounded-xl font-bold flex items-center justify-center gap-2 transition-all active:scale-95 disabled:opacity-50 shadow-sm"
         >
-          {updateMutation.isPending ? 'Salvando...' : 'Salvar'}
+          {updateMutation.isPending ? 'Salvando...' : 'Salvar Valor'}
         </button>
       </form>
 
