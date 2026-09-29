@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { FundingSection } from './components/FundingSection';
+import { MuralManagementSection } from './components/MuralManagementSection';
 
 export function SystemAdminPage() {
   const navigate = useNavigate();
@@ -25,6 +26,9 @@ export function SystemAdminPage() {
       <div className="space-y-8">
         {/* BLOCO A: Gestão de Financiamento */}
         <FundingSection />
+
+        {/* BLOCO B: Gestão do Mural Geral */}
+        <MuralManagementSection />
 
         {/* Os próximos blocos virão nas etapas seguintes */}
       </div>

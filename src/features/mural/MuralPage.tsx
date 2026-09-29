@@ -46,7 +46,7 @@ export function MuralPage() {
                       </div>
                       <div>
                         <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{notice.sender}</h3>
-                        <p className="text-xs text-slate-500">{notice.date}</p>
+                        <p className="text-xs text-slate-500">{new Date(notice.createdAt).toLocaleDateString('pt-BR')}</p>
                       </div>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${typeConfig.badgeClass}`}>

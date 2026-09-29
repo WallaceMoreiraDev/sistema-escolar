@@ -5,4 +5,5 @@ export interface Notice {
   title: string;
   message: string;
   date: string;
+  createdAt: string;
 }

@@ -1,11 +1,12 @@
 import { useNavigate, useParams } from 'react-router-dom'
 import { getNoticeTypeConfig, getSenderIcon } from '../utils/noticeUtils'
-import { MOCK_NOTICES } from '../data/mockNotices'
+import { useNotices } from '../hooks/useNotices'
 
 export function NoticeModal() {
   const navigate = useNavigate();
   const { id } = useParams();
-  const notice = MOCK_NOTICES.find((n: any) => n.id === id);
+  const { data: notices, isLoading } = useNotices();
+  const notice = notices?.find((n) => n.id === id);
 
   const onClose = () => {
     navigate('/app/mural');
@@ -17,7 +18,11 @@ export function NoticeModal() {
         className="glass-panel w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-white/20 dark:border-slate-700/30"
         onClick={e => e.stopPropagation()} 
       >
-        {notice ? (
+        {isLoading ? (
+          <div className="p-12 flex flex-col items-center justify-center text-center bg-white dark:bg-slate-900 h-[400px]">
+            <div className="text-slate-500 font-bold animate-pulse">Carregando detalhes do aviso...</div>
+          </div>
+        ) : notice ? (
           (() => {
             const typeConfig = getNoticeTypeConfig(notice.badge);
             const icon = getSenderIcon(notice.sender);
@@ -43,7 +48,7 @@ export function NoticeModal() {
                     </div>
                     <div className="flex flex-col">
                       <span className="text-sm font-bold text-slate-800 dark:text-slate-200">{notice.sender}</span>
-                      <span className="text-xs font-medium text-slate-500">{notice.date}</span>
+                      <span className="text-xs font-medium text-slate-500">{new Date(notice.createdAt).toLocaleDateString('pt-BR')}</span>
                     </div>
                   </div>
                 </div>
