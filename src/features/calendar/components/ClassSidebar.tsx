@@ -1,34 +1,22 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const mockLinks = [
-  { id: 1, title: 'Google Meet (Aula ao vivo)', url: '#' },
-  { id: 2, title: 'Google Drive (Materiais)', url: '#' },
-  { id: 3, title: 'Grupo do WhatsApp', url: '#' },
-  { id: 4, title: 'Plano de Ensino (PDF)', url: '#' },
-  { id: 5, title: 'Apostila Bimestre 1', url: '#' },
-];
-
-const mockMembers = [
-  { id: '1', name: 'Ana Souza', role: 'LEADER' },
-  { id: '2', name: 'Carlos Ferreira', role: 'STUDENT' },
-  { id: '3', name: 'Beatriz Lima', role: 'STUDENT' },
-  { id: '4', name: 'Daniel Silva', role: 'STUDENT' },
-  { id: '5', name: 'Fernanda Gomes', role: 'STUDENT' },
-  { id: '6', name: 'Gabriel Costa', role: 'STUDENT' },
-  { id: '7', name: 'Helena Mendes', role: 'STUDENT' },
-];
+import { useUsefulLinks } from '../../class-admin/hooks/useUsefulLinks';
+import { useClassMembers } from '../../class-admin/hooks/useClassMembers';
 
 export function ClassSidebar() {
   const navigate = useNavigate();
   const [showConfirmLeave, setShowConfirmLeave] = useState(false);
   
-  // Líderes no topo
-  const sortedMembers = [...mockMembers].sort((a, b) => {
-    if (a.role === 'LEADER' && b.role !== 'LEADER') return -1;
-    if (a.role !== 'LEADER' && b.role === 'LEADER') return 1;
+  const { data: links } = useUsefulLinks();
+  const { data: members } = useClassMembers();
+  
+  // Líderes no topo e alfabético
+  const sortedMembers = members ? [...members].sort((a, b) => {
+    if (a.role === 'leader' && b.role !== 'leader') return -1;
+    if (a.role !== 'leader' && b.role === 'leader') return 1;
     return a.name.localeCompare(b.name);
-  });
+  }) : [];
 
   const handleLeaveClass = () => {
     // Redireciona para o dashboard com estado vazio
@@ -45,16 +33,20 @@ export function ClassSidebar() {
           Links Rápidos
         </h3>
         <div className="flex flex-col gap-2">
-          {mockLinks.map(link => (
+          {links && links.length > 0 ? links.map(link => (
             <a 
               key={link.id} 
               href={link.url}
+              target="_blank"
+              rel="noreferrer"
               className="px-4 py-3 bg-white/50 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-800 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 transition-colors flex items-center justify-between group shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
             >
               <span className="line-clamp-1">{link.title}</span>
               <svg className="w-4 h-4 text-slate-300 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
             </a>
-          ))}
+          )) : (
+            <p className="text-xs font-medium text-slate-500 text-center py-2">Nenhum link útil.</p>
+          )}
         </div>
       </div>
 
@@ -67,7 +59,7 @@ export function ClassSidebar() {
               Membros
             </h3>
             <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-lg text-xs font-bold">
-              {mockMembers.length} Alunos
+              {members?.length || 0} Alunos
             </span>
           </div>
           
@@ -76,17 +68,17 @@ export function ClassSidebar() {
               <div 
                 key={member.id} 
                 className={`flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors ${
-                  member.role === 'LEADER' 
+                  member.role === 'leader' 
                     ? 'bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30' 
                     : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent'
                 }`}
               >
-                <span className={`text-sm font-semibold ${member.role === 'LEADER' ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300'}`}>
+                <span className={`text-sm font-semibold truncate ${member.role === 'leader' ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300'}`}>
                   {member.name}
                 </span>
                 
-                {member.role === 'LEADER' && (
-                  <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-100 dark:bg-amber-900/40 px-2 py-1 rounded-md">
+                {member.role === 'leader' && (
+                  <span className="flex shrink-0 items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-100 dark:bg-amber-900/40 px-2 py-1 rounded-md">
                     <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
                     Líder
                   </span>
