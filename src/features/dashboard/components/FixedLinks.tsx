@@ -8,8 +8,16 @@ export function FixedLinks() {
       <h3 className="text-xl font-bold text-slate-900 dark:text-white">Links Úteis</h3>
       
       {isLoading ? (
-        <div className="glass-panel p-6 rounded-2xl text-center animate-pulse text-slate-500 font-bold">
-          Carregando links...
+        <div className="glass-panel p-2 rounded-2xl flex flex-col gap-1">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={`sk-link-${i}`} className="flex items-center gap-4 p-4 rounded-xl animate-pulse">
+              <div className="w-12 h-12 rounded-xl bg-slate-200 dark:bg-slate-800 shrink-0"></div>
+              <div className="flex-1 space-y-2">
+                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
+                <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
+              </div>
+            </div>
+          ))}
         </div>
       ) : isError ? (
         <div className="glass-panel p-6 rounded-2xl text-center text-red-500 font-bold">
