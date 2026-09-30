@@ -26,7 +26,6 @@ export function EventList({ onEdit }: EventListProps) {
     }
   };
 
-  if (isLoading) return <div className="p-8 text-center animate-pulse text-slate-500 font-bold">Carregando eventos...</div>;
   if (isError) return <div className="p-8 text-center text-red-500 font-bold">Erro ao carregar os eventos.</div>;
 
   const events = response?.data || [];
@@ -52,7 +51,22 @@ export function EventList({ onEdit }: EventListProps) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
-            {events.length === 0 ? (
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <tr key={`sk-evt-${i}`} className="animate-pulse">
+                  <td className="px-6 py-4"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-24"></div></td>
+                  <td className="px-6 py-4"><div className="h-6 bg-slate-200 dark:bg-slate-800 rounded-full w-20"></div></td>
+                  <td className="px-6 py-4"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-48"></div></td>
+                  <td className="px-6 py-4"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-32"></div></td>
+                  <td className="px-6 py-4 text-right">
+                    <div className="flex justify-end gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800"></div>
+                      <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800"></div>
+                    </div>
+                  </td>
+                </tr>
+              ))
+            ) : events.length === 0 ? (
               <tr>
                 <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
                   Nenhum evento cadastrado.

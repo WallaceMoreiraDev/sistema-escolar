@@ -115,9 +115,7 @@ export function MemberManagementSection() {
       )}
 
       <div className="glass-card overflow-hidden">
-        {isLoading ? (
-          <div className="p-8 text-center animate-pulse text-slate-500 font-bold">Carregando membros...</div>
-        ) : isError ? (
+        {isError ? (
           <div className="p-8 text-center text-red-500 font-bold">Erro ao carregar os membros.</div>
         ) : (
           <div className="overflow-x-auto">
@@ -131,7 +129,26 @@ export function MemberManagementSection() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
-                {paginatedMembers.map((member) => {
+                {isLoading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <tr key={`sk-member-${i}`} className="animate-pulse">
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-2">
+                          <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-32"></div>
+                          <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-48"></div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4"><div className="h-6 bg-slate-200 dark:bg-slate-800 rounded-full w-16"></div></td>
+                      <td className="px-6 py-4"><div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-24"></div></td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800"></div>
+                          <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800"></div>
+                        </div>
+                      </td>
+                    </tr>
+                  ))
+                ) : paginatedMembers.map((member) => {
                   const isLeader = member.role === 'leader';
                   const isMe = member.id === loggedUserId;
 
