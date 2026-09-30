@@ -7,6 +7,7 @@ import { EventModal } from '@/features/calendar/components/EventModal'
 import { NoticeModal } from '@/features/mural/components/NoticeModal'
 import { ClassAdminPage } from '@/features/class-admin/ClassAdminPage'
 import { SystemAdminPage } from '@/features/system-admin/SystemAdminPage'
+import { ActiveClassesPage } from '@/features/system-admin/ActiveClassesPage'
 import { AppLayout } from '@/components/layout/AppLayout'
 
 export const router = createBrowserRouter([
@@ -53,6 +54,10 @@ export const router = createBrowserRouter([
       {
         path: 'painel-admin',
         element: <SystemAdminPage />
+      },
+      {
+        path: 'admin-turmas',
+        element: <ActiveClassesPage />
       },
     ]
   }
