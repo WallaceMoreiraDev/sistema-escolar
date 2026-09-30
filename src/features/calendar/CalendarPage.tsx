@@ -10,8 +10,13 @@ export function CalendarPage() {
   const navigate = useNavigate()
   const [viewMode, setViewMode] = useState<'SUMMARY' | 'MONTH_GRID'>('SUMMARY')
   const [activeFilter, setActiveFilter] = useState('TUDO')
+  const [mobilePage, setMobilePage] = useState(1)
   
-  const { data: response } = useClassEvents(1, 100);
+  // Estado para o Tooltip flutuante do desktop
+  const [hoveredEvent, setHoveredEvent] = useState<any | null>(null)
+  const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 })
+  
+  const { data: response, isLoading } = useClassEvents(1, 100);
   const realEvents = response?.data || [];
 
   const getCalendarEventStyles = (category: string) => {
@@ -24,6 +29,11 @@ export function CalendarPage() {
   const today = new Date()
   const [selectedMobileDay, setSelectedMobileDay] = useState<number | null>(today.getDate())
   const [currentDate, setCurrentDate] = useState(new Date(today.getFullYear(), today.getMonth(), 1))
+
+  const handleMobileDaySelect = (day: number) => {
+    setSelectedMobileDay(day);
+    setMobilePage(1);
+  }
 
   const year = currentDate.getFullYear()
   const month = currentDate.getMonth()
@@ -126,14 +136,24 @@ export function CalendarPage() {
           
           {/* VISÃO DESKTOP: Grid 5 Colunas */}
           <div className="hidden md:grid grid-cols-5 gap-6">
-            {summaryDays.map(day => (
+            {isLoading ? (
+              Array.from({ length: 5 }).map((_, i) => (
+                <div key={`sk-desk-${i}`} className="flex flex-col gap-4 animate-pulse">
+                  <div className="text-center pb-3 border-b-2 border-slate-200 dark:border-slate-800">
+                    <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-16 mx-auto mb-2"></div>
+                    <div className="h-8 bg-slate-200 dark:bg-slate-800 rounded w-12 mx-auto"></div>
+                  </div>
+                  <div className="h-32 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
+                </div>
+              ))
+            ) : summaryDays.map(day => (
               <div key={day.date} className="flex flex-col gap-4">
                 <div className={`text-center pb-3 border-b-2 transition-colors ${day.isToday ? 'border-primary' : 'border-slate-200 dark:border-slate-800'}`}>
                   <p className={`text-xs font-bold uppercase tracking-wider ${day.isToday ? 'text-primary' : 'text-slate-500'}`}>{day.weekday}</p>
                   <p className={`text-3xl font-black mt-1 ${day.isToday ? 'text-primary' : 'text-slate-900 dark:text-white'}`}>{day.dayStr}</p>
                 </div>
                 
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 max-h-[400px] overflow-y-auto custom-scrollbar pr-2">
                   {day.events.length > 0 ? (
                     day.events.map(event => (
                       <div 
@@ -160,34 +180,45 @@ export function CalendarPage() {
 
           {/* VISÃO MOBILE: Linha do Tempo Focada (Pula dias vazios) */}
           <div className="flex flex-col md:hidden gap-6">
-            {summaryDays.filter(day => day.events.length > 0).map(day => (
-              <div key={`mob-${day.date}`} className="flex flex-col gap-3">
-                <h3 className={`text-sm font-bold flex items-center gap-2 ${day.isToday ? 'text-primary' : 'text-slate-600 dark:text-slate-400'}`}>
-                  {day.isToday && <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.8)]"></span>}
-                  {day.weekday}, {day.dayStr}
-                </h3>
-                <div className="flex flex-col gap-3">
-                  {day.events.map(event => (
-                    <div 
-                      key={event.id} 
-                      onClick={(e) => { e.stopPropagation(); navigate(`evento/${event.id}`) }}
-                      className={`glass-card p-5 rounded-2xl border-l-4 cursor-pointer shadow-sm active:scale-[0.98] transition-transform ${event.borderClass} ${event.bgClass}`}
-                    >
-                      <div className={`inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider mb-2 ${event.colorClass} bg-white/60 dark:bg-slate-900/60`}>
-                        {event.label}
-                      </div>
-                      <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">{event.title}</h4>
-                      <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{event.description}</p>
-                    </div>
-                  ))}
+            {isLoading ? (
+              Array.from({ length: 3 }).map((_, i) => (
+                <div key={`sk-mob-${i}`} className="flex flex-col gap-3 animate-pulse">
+                  <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded w-32"></div>
+                  <div className="h-24 bg-slate-200 dark:bg-slate-800 rounded-2xl"></div>
                 </div>
-              </div>
-            ))}
-            
-            {summaryDays.every(d => d.events.length === 0) && (
-              <div className="p-8 text-center text-slate-500 glass-card rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 font-medium">
-                Nenhum evento para os próximos 5 dias.
-              </div>
+              ))
+            ) : (
+              <>
+                {summaryDays.filter(day => day.events.length > 0).map(day => (
+                  <div key={`mob-${day.date}`} className="flex flex-col gap-3">
+                    <h3 className={`text-sm font-bold flex items-center gap-2 ${day.isToday ? 'text-primary' : 'text-slate-600 dark:text-slate-400'}`}>
+                      {day.isToday && <span className="w-2 h-2 rounded-full bg-primary shadow-[0_0_8px_rgba(var(--primary),0.8)]"></span>}
+                      {day.weekday}, {day.dayStr}
+                    </h3>
+                    <div className="flex flex-col gap-3">
+                      {day.events.map(event => (
+                        <div 
+                          key={event.id} 
+                          onClick={(e) => { e.stopPropagation(); navigate(`evento/${event.id}`) }}
+                          className={`glass-card p-5 rounded-2xl border-l-4 cursor-pointer shadow-sm active:scale-[0.98] transition-transform ${event.borderClass} ${event.bgClass}`}
+                        >
+                          <div className={`inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider mb-2 ${event.colorClass} bg-white/60 dark:bg-slate-900/60`}>
+                            {event.label}
+                          </div>
+                          <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">{event.title}</h4>
+                          <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">{event.description}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+                
+                {summaryDays.every(d => d.events.length === 0) && (
+                  <div className="p-8 text-center text-slate-500 glass-card rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 font-medium">
+                    Nenhum evento para os próximos 5 dias.
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>
@@ -278,7 +309,7 @@ export function CalendarPage() {
                 return (
                   <div 
                     key={dayObj.day} 
-                    onClick={() => setSelectedMobileDay(dayObj.day)}
+                    onClick={() => handleMobileDaySelect(dayObj.day)}
                     className={`bg-white dark:bg-slate-900 p-1.5 md:p-3 min-h-[80px] md:min-h-[160px] transition-colors cursor-pointer md:cursor-default relative flex flex-col gap-2 overflow-hidden
                       ${dayObj.isToday ? 'bg-primary/5 dark:bg-primary/5' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'}
                       ${isSelectedOnMobile ? 'ring-2 ring-inset ring-primary md:ring-0' : ''}
@@ -290,12 +321,18 @@ export function CalendarPage() {
                       </span>
                     </div>
                     
-                    {/* VISÃO DESKTOP: overflow-hidden sem barras de rolagem (evita UI feia) */}
-                    <div className="hidden md:flex flex-col gap-2 overflow-hidden">
+                    {/* VISÃO DESKTOP: limitador de altura com scroll customizado para quando houver muitos eventos */}
+                    <div className="hidden md:flex flex-col gap-2 max-h-[140px] overflow-y-auto custom-scrollbar pr-1">
                       {filteredEvents.map(event => (
                         <div 
                           key={event.id} 
                           onClick={(e) => { e.stopPropagation(); navigate(`evento/${event.id}`) }}
+                          onMouseEnter={(e) => {
+                            const rect = e.currentTarget.getBoundingClientRect();
+                            setTooltipPos({ x: rect.left + rect.width / 2, y: rect.top });
+                            setHoveredEvent(event);
+                          }}
+                          onMouseLeave={() => setHoveredEvent(null)}
                           className={`text-xs font-bold px-2.5 py-2 rounded-xl border-l-[3px] ${event.colorClass} ${event.bgClass} ${event.borderClass} cursor-pointer hover:scale-[1.02] hover:shadow-md transition-all leading-tight line-clamp-3 shrink-0`}
                         >
                           <span className="opacity-75 mr-1 font-extrabold text-[10px]">[{event.label.slice(0,3)}]</span>
@@ -321,25 +358,58 @@ export function CalendarPage() {
               Eventos do dia {selectedMobileDay}
             </h3>
             <div className="flex flex-col gap-3">
-              {renderedDays.find(d => d && d.day === selectedMobileDay)?.events
-                .filter(e => activeFilter === 'TUDO' || e.type === activeFilter)
-                .map(event => (
-                  <div 
-                    key={event.id} 
-                    onClick={(e) => { e.stopPropagation(); navigate(`evento/${event.id}`) }}
-                    className={`glass-card p-4 rounded-2xl border-l-4 cursor-pointer active:scale-[0.98] transition-transform ${event.borderClass} ${event.bgClass}`}
-                  >
-                    <div className={`text-xs font-bold mb-2 ${event.colorClass}`}>{event.label}</div>
-                    <p className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{event.title}</p>
-                  </div>
-                ))}
-              
-              {renderedDays.find(d => d && d.day === selectedMobileDay)?.events
-                .filter(e => activeFilter === 'TUDO' || e.type === activeFilter).length === 0 && (
-                <div className="p-6 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center text-slate-500 font-medium bg-slate-50/50 dark:bg-slate-900/50">
-                  Nenhum evento programado para este dia.
-                </div>
-              )}
+              {(() => {
+                const dayObj = renderedDays.find(d => d && d.day === selectedMobileDay);
+                const dayEvents = dayObj ? dayObj.events.filter(e => activeFilter === 'TUDO' || e.type === activeFilter) : [];
+                const limit = 4;
+                const totalPages = Math.ceil(dayEvents.length / limit);
+                const paginatedEvents = dayEvents.slice((mobilePage - 1) * limit, mobilePage * limit);
+
+                if (dayEvents.length === 0) {
+                  return (
+                    <div className="p-6 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center text-slate-500 font-medium bg-slate-50/50 dark:bg-slate-900/50">
+                      Nenhum evento programado para este dia.
+                    </div>
+                  );
+                }
+
+                return (
+                  <>
+                    {paginatedEvents.map(event => (
+                      <div 
+                        key={event.id} 
+                        onClick={(e) => { e.stopPropagation(); navigate(`evento/${event.id}`) }}
+                        className={`glass-card p-4 rounded-2xl border-l-4 cursor-pointer active:scale-[0.98] transition-transform ${event.borderClass} ${event.bgClass}`}
+                      >
+                        <div className={`text-xs font-bold mb-2 ${event.colorClass}`}>{event.label}</div>
+                        <p className="text-sm font-bold text-slate-900 dark:text-white leading-tight">{event.title}</p>
+                      </div>
+                    ))}
+                    
+                    {totalPages > 1 && (
+                      <div className="flex justify-between items-center p-3 mt-2 border-t border-slate-200 dark:border-slate-800/50">
+                        <button 
+                          onClick={() => setMobilePage(p => Math.max(1, p - 1))}
+                          disabled={mobilePage === 1}
+                          className="px-3 py-1.5 text-xs font-bold text-slate-600 disabled:opacity-30 hover:text-slate-900 transition-colors"
+                        >
+                          &larr; Anterior
+                        </button>
+                        <span className="text-xs font-bold text-slate-500">
+                          Página <span className="text-slate-900 dark:text-white">{mobilePage}</span> de {totalPages}
+                        </span>
+                        <button 
+                          onClick={() => setMobilePage(p => Math.min(totalPages, p + 1))}
+                          disabled={mobilePage === totalPages}
+                          className="px-3 py-1.5 text-xs font-bold text-slate-600 disabled:opacity-30 hover:text-slate-900 transition-colors"
+                        >
+                          Próxima &rarr;
+                        </button>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </div>
           </div>
 
@@ -350,6 +420,30 @@ export function CalendarPage() {
           <ClassSidebar />
         </div>
       </div>
+
+      {/* TOOLTIP FLUTUANTE GLOBAL (Evita problemas de overflow e clipping) */}
+      {hoveredEvent && (
+        <div 
+          className="fixed z-50 p-4 rounded-xl glass-panel shadow-2xl border border-slate-200 dark:border-slate-700 w-64 pointer-events-none transition-opacity animate-in fade-in zoom-in-95 duration-200"
+          style={{ 
+            left: `${tooltipPos.x}px`, 
+            top: `${tooltipPos.y - 8}px`,
+            transform: 'translate(-50%, -100%)' // Centraliza no eixo X e joga totalmente pra cima do card
+          }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${hoveredEvent.colorClass} bg-slate-100 dark:bg-slate-800`}>
+              {hoveredEvent.label}
+            </span>
+          </div>
+          <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1 leading-tight">{hoveredEvent.title}</h4>
+          <p className="text-xs text-slate-500 dark:text-slate-400 line-clamp-4 leading-relaxed">{hoveredEvent.description}</p>
+          
+          {/* Triângulo do Tooltip */}
+          <div className="absolute left-1/2 bottom-0 -translate-x-1/2 translate-y-[99%] w-0 h-0 border-l-[8px] border-r-[8px] border-t-[8px] border-transparent border-t-slate-200 dark:border-t-slate-700"></div>
+          <div className="absolute left-1/2 bottom-0 -translate-x-1/2 translate-y-[90%] w-0 h-0 border-l-[8px] border-r-[8px] border-t-[8px] border-transparent border-t-white/80 dark:border-t-slate-900/80 backdrop-blur-md"></div>
+        </div>
+      )}
 
       {/* MODAL DE DETALHES DO EVENTO */}
       <Outlet />

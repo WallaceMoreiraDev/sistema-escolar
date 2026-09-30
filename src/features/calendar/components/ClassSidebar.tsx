@@ -7,16 +7,27 @@ import { useClassMembers } from '../../class-admin/hooks/useClassMembers';
 export function ClassSidebar() {
   const navigate = useNavigate();
   const [showConfirmLeave, setShowConfirmLeave] = useState(false);
+  const [linksPage, setLinksPage] = useState(1);
+  const [membersPage, setMembersPage] = useState(1);
+  const linksLimit = 4;
+  const membersLimit = 8;
   
   const { data: links } = useUsefulLinks();
   const { data: members } = useClassMembers();
   
+  const safeLinks = links || [];
+  const linksTotalPages = Math.ceil(safeLinks.length / linksLimit);
+  const paginatedLinks = safeLinks.slice((linksPage - 1) * linksLimit, linksPage * linksLimit);
+
   // Líderes no topo e alfabético
   const sortedMembers = members ? [...members].sort((a, b) => {
     if (a.role === 'leader' && b.role !== 'leader') return -1;
     if (a.role !== 'leader' && b.role === 'leader') return 1;
     return a.name.localeCompare(b.name);
   }) : [];
+  
+  const membersTotalPages = Math.ceil(sortedMembers.length / membersLimit);
+  const paginatedMembers = sortedMembers.slice((membersPage - 1) * membersLimit, membersPage * membersLimit);
 
   const handleLeaveClass = () => {
     // Redireciona para o dashboard com estado vazio
@@ -33,7 +44,7 @@ export function ClassSidebar() {
           Links Rápidos
         </h3>
         <div className="flex flex-col gap-2">
-          {links && links.length > 0 ? links.map(link => (
+          {paginatedLinks.length > 0 ? paginatedLinks.map(link => (
             <a 
               key={link.id} 
               href={link.url}
@@ -46,6 +57,28 @@ export function ClassSidebar() {
             </a>
           )) : (
             <p className="text-xs font-medium text-slate-500 text-center py-2">Nenhum link útil.</p>
+          )}
+
+          {linksTotalPages > 1 && (
+            <div className="flex justify-between items-center p-2 mt-1">
+              <button 
+                onClick={() => setLinksPage(p => Math.max(1, p - 1))}
+                disabled={linksPage === 1}
+                className="px-2 py-1 text-[10px] font-bold text-slate-600 disabled:opacity-30 hover:text-slate-900 transition-colors"
+              >
+                &larr; Ant
+              </button>
+              <span className="text-[10px] font-bold text-slate-500">
+                Página {linksPage} de {linksTotalPages}
+              </span>
+              <button 
+                onClick={() => setLinksPage(p => Math.min(linksTotalPages, p + 1))}
+                disabled={linksPage === linksTotalPages}
+                className="px-2 py-1 text-[10px] font-bold text-slate-600 disabled:opacity-30 hover:text-slate-900 transition-colors"
+              >
+                Próx &rarr;
+              </button>
+            </div>
           )}
         </div>
       </div>
@@ -63,8 +96,8 @@ export function ClassSidebar() {
             </span>
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1 max-h-[350px] overflow-y-auto pr-2 custom-scrollbar">
-            {sortedMembers.map(member => (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
+            {paginatedMembers.map(member => (
               <div 
                 key={member.id} 
                 className={`flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors ${
@@ -86,6 +119,28 @@ export function ClassSidebar() {
               </div>
             ))}
           </div>
+
+          {membersTotalPages > 1 && (
+            <div className="flex justify-between items-center p-3 mt-4 border-t border-slate-100 dark:border-slate-800/50">
+              <button 
+                onClick={() => setMembersPage(p => Math.max(1, p - 1))}
+                disabled={membersPage === 1}
+                className="px-3 py-1.5 text-xs font-bold text-slate-600 disabled:opacity-30 hover:text-slate-900 transition-colors"
+              >
+                &larr; Anterior
+              </button>
+              <span className="text-xs font-bold text-slate-500">
+                Página <span className="text-slate-900 dark:text-white">{membersPage}</span> de {membersTotalPages}
+              </span>
+              <button 
+                onClick={() => setMembersPage(p => Math.min(membersTotalPages, p + 1))}
+                disabled={membersPage === membersTotalPages}
+                className="px-3 py-1.5 text-xs font-bold text-slate-600 disabled:opacity-30 hover:text-slate-900 transition-colors"
+              >
+                Próxima &rarr;
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Bloco F: Sair da Turma */}
