@@ -1,10 +1,12 @@
+import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 
 import { useClassEvents } from '../../class-admin/hooks/useClassEvents'
 
 export function WeeklySummary() {
   const navigate = useNavigate();
-  const { data: response, isLoading } = useClassEvents(1, 5); // Pega os 5 eventos mais próximos
+  const [page, setPage] = useState(1);
+  const { data: response, isLoading, isPlaceholderData } = useClassEvents(page, 5);
 
   const getEventStyles = (category: string) => {
     if (category === 'Prova') return { bg: 'bg-rose-50 dark:bg-rose-950/30', border: 'border-rose-100 dark:border-rose-900', text: 'text-rose-600 dark:text-rose-400', hoverBg: 'group-hover:bg-rose-500', badgeBg: 'bg-rose-100 dark:bg-rose-900/40', badgeText: 'text-rose-700 dark:text-rose-300' };
@@ -21,9 +23,18 @@ export function WeeklySummary() {
         <Link to="/app/minha-turma" className="text-sm font-medium text-primary hover:text-primary/80 transition-colors">Ver turma completa &rarr;</Link>
       </div>
       
-      <div className="grid gap-4">
+      <div className={`grid gap-4 transition-opacity duration-200 ${isPlaceholderData ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
         {isLoading ? (
-          <div className="p-8 text-center text-slate-500 animate-pulse font-bold">Carregando eventos...</div>
+          Array.from({ length: 3 }).map((_, i) => (
+            <div key={`skeleton-${i}`} className="glass-card p-5 sm:p-6 flex items-center gap-4 sm:gap-5 animate-pulse">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-slate-200 dark:bg-slate-800 shrink-0"></div>
+              <div className="flex-1 min-w-0 space-y-2">
+                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/4"></div>
+                <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
+                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
+              </div>
+            </div>
+          ))
         ) : events.length === 0 ? (
           <div className="p-8 text-center text-slate-500 glass-card rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 font-medium">
             Nenhum evento letivo para os próximos dias.
@@ -68,6 +79,31 @@ export function WeeklySummary() {
           })
         )}
       </div>
+
+      {/* Paginação */}
+      {response?.meta && response.meta.totalPages > 1 && !isLoading && (
+        <div className="flex justify-between items-center pt-2">
+          <button 
+            onClick={() => setPage(p => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 dark:hover:text-white transition-colors"
+          >
+            &larr; Anterior
+          </button>
+          
+          <span className="text-xs font-bold text-slate-500">
+            Página <span className="text-slate-900 dark:text-white">{page}</span> de {response.meta.totalPages}
+          </span>
+          
+          <button 
+            onClick={() => setPage(p => Math.min(response.meta.totalPages, p + 1))}
+            disabled={page === response.meta.totalPages}
+            className="px-3 py-1.5 text-xs font-bold text-slate-600 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 dark:hover:text-white transition-colors"
+          >
+            Próxima &rarr;
+          </button>
+        </div>
+      )}
     </div>
   )
 }

@@ -15,9 +15,22 @@ export function MuralPreview() {
       
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {isLoading ? (
-          <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center text-slate-500 font-bold p-8 animate-pulse">
-            Carregando avisos recentes...
-          </div>
+          Array.from({ length: 3 }).map((_, i) => (
+            <div key={`skeleton-${i}`} className="glass-card p-5 relative overflow-hidden animate-pulse flex flex-col h-48">
+              <div className="flex items-center gap-2 mb-3">
+                <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded-full w-20"></div>
+                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-16"></div>
+              </div>
+              <div className="h-6 bg-slate-200 dark:bg-slate-800 rounded w-3/4 mb-2"></div>
+              <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-full mb-1"></div>
+              <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-2/3 mb-4"></div>
+              
+              <div className="flex items-center gap-2 mt-auto pt-4 border-t border-slate-100 dark:border-slate-800/50">
+                <div className="w-6 h-6 rounded-full bg-slate-200 dark:bg-slate-800"></div>
+                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-24"></div>
+              </div>
+            </div>
+          ))
         ) : (
           notices?.slice(0, 3).map((notice) => {
             const typeConfig = getNoticeTypeConfig(notice.badge);
