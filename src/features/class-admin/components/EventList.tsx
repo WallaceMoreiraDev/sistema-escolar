@@ -10,7 +10,7 @@ interface EventListProps {
 export function EventList({ onEdit }: EventListProps) {
   const [page, setPage] = useState(1);
   const limit = 5;
-  const { data: response, isLoading, isError } = useClassEvents(page, limit);
+  const { data: response, isLoading, isError, isPlaceholderData } = useClassEvents(page, limit);
   const deleteMutation = useDeleteEvent();
   const [eventToDelete, setEventToDelete] = useState<ClassEvent | null>(null);
 
@@ -40,7 +40,7 @@ export function EventList({ onEdit }: EventListProps) {
         <span className="text-sm text-slate-500 font-medium">Total: {meta?.total}</span>
       </div>
 
-      <div className="overflow-x-auto">
+      <div className={`overflow-x-auto transition-opacity duration-200 ${isPlaceholderData ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
         <table className="w-full text-left text-sm whitespace-nowrap">
           <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-xs">
             <tr>

@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { ClassEvent, PaginatedResponse } from '../types';
 import { EventFormValues } from '../schemas/eventSchema';
 import { MOCK_CLASS_EVENTS } from '../data/mockEvents';
@@ -23,7 +23,9 @@ export function useClassEvents(page: number = 1, limit: number = 5) {
           totalPages: Math.ceil(eventsDB.length / limit)
         }
       };
-    }
+    },
+    placeholderData: keepPreviousData,
+    staleTime: 1000 * 60 * 5, // 5 minutos de cache sem re-fetch automático
   });
 }
 

@@ -20,7 +20,7 @@ export const router = createBrowserRouter([
   },
   {
     path: '/app',
-    element: <AppLayout />, // O AppLayout agora renderiza o menu lateral e o <Outlet />
+    element: <AppLayout />, 
     children: [
       {
         path: 'dashboard',

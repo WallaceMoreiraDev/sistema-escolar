@@ -71,35 +71,69 @@ export function PendingRequestsSection() {
 
       <div className="w-full">
         <div className="glass-card overflow-hidden">
-          {isLoading ? (
-            <div className="p-8 text-center animate-pulse text-slate-500 font-bold">Carregando pedidos pendentes...</div>
-          ) : isError ? (
-            <div className="p-8 text-center text-red-500 font-bold">Erro ao carregar os pedidos.</div>
-          ) : !requests || requests.length === 0 ? (
-            <div className="p-12 text-center flex flex-col items-center">
-              <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400 mb-4">
-                <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-              </div>
-              <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Tudo limpo por aqui!</h3>
-              <p className="text-sm text-slate-500 max-w-sm">Não há nenhum pedido de criação de turma aguardando moderação no momento.</p>
-            </div>
-          ) : (
-            <>
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm whitespace-nowrap">
-                  <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-xs">
-                    <tr>
-                      <th className="px-6 py-4">Turma Solicitada</th>
-                      <th className="px-6 py-4">Solicitante</th>
-                      <th className="px-6 py-4">Justificativa</th>
-                      <th className="px-6 py-4">Data</th>
-                      <th className="px-6 py-4 text-right">Moderação</th>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm whitespace-nowrap">
+              <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-xs">
+                <tr>
+                  <th className="px-6 py-4">Turma Solicitada</th>
+                  <th className="px-6 py-4">Solicitante</th>
+                  <th className="px-6 py-4">Justificativa</th>
+                  <th className="px-6 py-4">Data</th>
+                  <th className="px-6 py-4 text-right">Moderação</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                {isLoading ? (
+                  Array.from({ length: 3 }).map((_, i) => (
+                    <tr key={`skeleton-${i}`} className="animate-pulse">
+                      <td className="px-6 py-4">
+                        <div className="flex flex-col gap-2">
+                          <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-32"></div>
+                          <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-20"></div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="flex items-center gap-2">
+                          <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-800"></div>
+                          <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-24"></div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-48"></div>
+                      </td>
+                      <td className="px-6 py-4">
+                        <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-20"></div>
+                      </td>
+                      <td className="px-6 py-4 text-right">
+                        <div className="flex justify-end gap-2">
+                          <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800"></div>
+                          <div className="w-8 h-8 rounded-lg bg-slate-200 dark:bg-slate-800"></div>
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
-                    {paginatedRequests.map((req) => (
-                      <tr 
-                        key={req.id} 
+                  ))
+                ) : isError ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-8 text-center text-red-500 font-bold">
+                      Erro ao carregar os pedidos.
+                    </td>
+                  </tr>
+                ) : !requests || requests.length === 0 ? (
+                  <tr>
+                    <td colSpan={5} className="px-6 py-12 text-center">
+                      <div className="flex flex-col items-center">
+                        <div className="w-16 h-16 bg-slate-100 dark:bg-slate-800 rounded-full flex items-center justify-center text-slate-400 mb-4">
+                          <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
+                        </div>
+                        <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-1">Tudo limpo por aqui!</h3>
+                        <p className="text-sm text-slate-500 max-w-sm">Não há nenhum pedido de criação de turma aguardando moderação no momento.</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedRequests.map((req) => (
+                    <tr 
+                      key={req.id} 
                         className="hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors cursor-pointer"
                         onClick={() => setRequestToView(req)}
                       >
@@ -163,12 +197,13 @@ export function PendingRequestsSection() {
                           </div>
                         </td>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    ))
+                  )}
+              </tbody>
+            </table>
+          </div>
 
-              {totalPages > 1 && (
+          {totalPages > 1 && !isLoading && !isError && (
                 <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/30">
                   <button 
                     onClick={() => setPage(p => Math.max(1, p - 1))}
@@ -190,9 +225,7 @@ export function PendingRequestsSection() {
                     Próxima &rarr;
                   </button>
                 </div>
-              )}
-            </>
-          )}
+            )}
         </div>
       </div>
 

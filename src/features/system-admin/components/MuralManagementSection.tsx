@@ -66,30 +66,51 @@ export function MuralManagementSection() {
       </div>
 
       <div className="w-full">
-          <div className="glass-card overflow-hidden">
-            {isLoading ? (
-              <div className="p-8 text-center animate-pulse text-slate-500 font-bold">Carregando mural...</div>
-            ) : isError ? (
-              <div className="p-8 text-center text-red-500 font-bold">Erro ao carregar avisos.</div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-xs">
-                    <tr>
-                      <th className="px-6 py-4">Aviso</th>
-                      <th className="px-6 py-4">Status</th>
-                      <th className="px-6 py-4 text-right">Ações</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
-                    {safeNotices.length === 0 ? (
-                      <tr>
-                        <td colSpan={3} className="px-6 py-8 text-center text-slate-500">
-                          Nenhum aviso publicado.
+        <div className="glass-card overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm">
+                <thead className="bg-slate-50 dark:bg-slate-900/50 text-slate-500 dark:text-slate-400 font-bold uppercase tracking-wider text-xs">
+                  <tr>
+                    <th className="px-6 py-4 w-1/2">Aviso</th>
+                    <th className="px-6 py-4">Status</th>
+                    <th className="px-6 py-4 text-right">Ações</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/50">
+                  {isLoading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <tr key={`skeleton-${i}`} className="animate-pulse">
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col gap-2">
+                            <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-3/4"></div>
+                            <div className="h-3 bg-slate-200 dark:bg-slate-800 rounded w-1/4"></div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="h-5 bg-slate-200 dark:bg-slate-800 rounded-full w-20"></div>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <div className="flex justify-end gap-2">
+                            <div className="w-8 h-8 bg-slate-200 dark:bg-slate-800 rounded-lg"></div>
+                            <div className="w-8 h-8 bg-slate-200 dark:bg-slate-800 rounded-lg"></div>
+                          </div>
                         </td>
                       </tr>
-                    ) : (
-                      paginatedNotices.map((notice) => {
+                    ))
+                  ) : isError ? (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-8 text-center text-red-500 font-bold">
+                        Erro ao carregar avisos.
+                      </td>
+                    </tr>
+                  ) : safeNotices.length === 0 ? (
+                    <tr>
+                      <td colSpan={3} className="px-6 py-8 text-center text-slate-500">
+                        Nenhum aviso publicado.
+                      </td>
+                    </tr>
+                  ) : (
+                    paginatedNotices.map((notice) => {
                         const typeConfig = getNoticeTypeConfig(notice.badge);
                         return (
                           <tr key={notice.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
@@ -131,10 +152,9 @@ export function MuralManagementSection() {
                         )
                       })
                     )}
-                  </tbody>
-                </table>
-              </div>
-            )}
+                </tbody>
+              </table>
+            </div>
             
             {/* Paginação */}
             {totalPages > 1 && !isLoading && !isError && (
