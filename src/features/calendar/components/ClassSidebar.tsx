@@ -12,8 +12,8 @@ export function ClassSidebar() {
   const linksLimit = 4;
   const membersLimit = 8;
   
-  const { data: links } = useUsefulLinks();
-  const { data: members } = useClassMembers();
+  const { data: links, isLoading: isLoadingLinks } = useUsefulLinks();
+  const { data: members, isLoading: isLoadingMembers } = useClassMembers();
   
   const safeLinks = links || [];
   const linksTotalPages = Math.ceil(safeLinks.length / linksLimit);
@@ -44,7 +44,14 @@ export function ClassSidebar() {
           Links Rápidos
         </h3>
         <div className="flex flex-col gap-2">
-          {paginatedLinks.length > 0 ? paginatedLinks.map(link => (
+          {isLoadingLinks ? (
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={`sk-link-${i}`} className="px-4 py-3 bg-white/50 dark:bg-slate-900/50 rounded-xl flex items-center justify-between shadow-sm border border-transparent animate-pulse h-[46px]">
+                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-2/3"></div>
+                <div className="w-4 h-4 bg-slate-200 dark:bg-slate-800 rounded"></div>
+              </div>
+            ))
+          ) : paginatedLinks.length > 0 ? paginatedLinks.map(link => (
             <a 
               key={link.id} 
               href={link.url}
@@ -97,7 +104,13 @@ export function ClassSidebar() {
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
-            {paginatedMembers.map(member => (
+            {isLoadingMembers ? (
+              Array.from({ length: 8 }).map((_, i) => (
+                <div key={`sk-member-${i}`} className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-transparent animate-pulse h-10">
+                  <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
+                </div>
+              ))
+            ) : paginatedMembers.map(member => (
               <div 
                 key={member.id} 
                 className={`flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors ${
