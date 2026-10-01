@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useNotices } from './hooks/useNotices';
 import { getNoticeTypeConfig, getSenderIcon } from './utils/noticeUtils';
@@ -6,6 +7,18 @@ import { Notice } from './types';
 export function MuralPage() {
   const navigate = useNavigate();
   const { data: notices, isLoading, isError } = useNotices();
+
+  const [page, setPage] = useState(1);
+  const limit = 5;
+  const safeNotices = notices || [];
+  const totalPages = Math.ceil(safeNotices.length / limit);
+  const paginatedNotices = safeNotices.slice((page - 1) * limit, page * limit);
+
+  useEffect(() => {
+    if (page > totalPages && totalPages > 0) {
+      setPage(totalPages);
+    }
+  }, [totalPages, page]);
 
   return (
     <>
@@ -39,12 +52,13 @@ export function MuralPage() {
             <div className="glass p-8 rounded-2xl text-center text-red-500 font-bold">
               Erro ao carregar avisos.
             </div>
-          ) : notices?.length === 0 ? (
+          ) : safeNotices.length === 0 ? (
             <div className="glass p-8 rounded-2xl text-center text-slate-500 font-bold">
               Nenhum aviso no mural no momento.
             </div>
           ) : (
-            notices?.map((notice: Notice) => {
+            <>
+              {paginatedNotices.map((notice: Notice) => {
               const typeConfig = getNoticeTypeConfig(notice.badge);
               const icon = getSenderIcon(notice.sender);
               return (
@@ -74,7 +88,33 @@ export function MuralPage() {
                   </p>
                 </div>
               )
-            })
+            })}
+            
+            {/* Paginação */}
+            {totalPages > 1 && !isLoading && !isError && (
+              <div className="p-4 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/30 rounded-2xl">
+                <button 
+                  onClick={() => setPage(p => Math.max(1, p - 1))}
+                  disabled={page === 1}
+                  className="px-4 py-2 text-sm font-bold text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 transition-colors flex items-center gap-2"
+                >
+                  &larr; Anterior
+                </button>
+                
+                <span className="text-sm font-bold text-slate-500">
+                  Página <span className="text-slate-900 dark:text-white">{page}</span> de {totalPages}
+                </span>
+                
+                <button 
+                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                  disabled={page === totalPages}
+                  className="px-4 py-2 text-sm font-bold text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 transition-colors flex items-center gap-2"
+                >
+                  Próxima &rarr;
+                </button>
+              </div>
+            )}
+            </>
           )}
         </div>
       </div>
