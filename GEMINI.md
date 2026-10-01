@@ -6,7 +6,7 @@
 
 ## 1. Princípios Fundamentais (Core Principles)
 1. **Falhe Rápido (Fail-Fast):** Erros devem estourar no momento da execução, seja na validação de payload ou na compilação. Falhas silenciosas são inaceitáveis.
-2. **Única Fonte da Verdade (SSOT):** Evite duplicação de lógicas de negócio e tipos. Utilize contratos compartilhados entre Frontend e Backend.
+2. **Única Fonte da Verdade (SSOT):** Evite duplicação de lógicas de negócio e tipos. Utilize contratos compartilhados entre Frontend e Backend. Os Schemas do Zod e Tipagens TypeScript compartilhadas devem ser obrigatoriamente centralizados em uma pasta `/shared` na raiz do projeto (estrutura de Monorepo), permitindo a importação simultânea pelas duas aplicações.
 3. **Legibilidade sobre Esperteza:** O código é lido muito mais vezes do que escrito. Prefira clareza, nomes descritivos e design simples em vez de otimizações prematuras ou tipagens complexas (type gymnastics).
 4. **Tratamento de Datas e Horas (UTC Always):** Todas as datas DEVEM ser armazenadas e transitadas (API) em UTC (ISO 8601). A conversão para o fuso horário local do usuário (ex: `America/Sao_Paulo`) deve ocorrer EXCLUSIVAMENTE na camada de visualização (Frontend).
 5. **Idempotência em Operações Críticas:** Mutação de dados (POST, PUT, DELETE) em processos sensíveis deve ser desenhada de forma idempotente, garantindo que retentativas de requisições não causem duplicidade de registros ou efeitos colaterais indesejados.
