@@ -3,6 +3,7 @@ import { defineConfig } from "vite"
 import path from "node:path"
 
 export default defineConfig({
+  base: '/sistema-escolar/',
   plugins: [react()],
   resolve: {
     alias: {
