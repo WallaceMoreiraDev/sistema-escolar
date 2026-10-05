@@ -6,7 +6,7 @@
 
 ## 1. Princípios Fundamentais (Core Principles)
 1. **Falhe Rápido (Fail-Fast):** Erros devem estourar no momento da execução, seja na validação de payload ou na compilação. Falhas silenciosas são inaceitáveis.
-2. **Única Fonte da Verdade (SSOT):** Evite duplicação de lógicas de negócio e tipos. Utilize contratos compartilhados entre Frontend e Backend.
+2. **Única Fonte da Verdade (SSOT):** Evite duplicação de lógicas de negócio e tipos. Utilize contratos compartilhados entre Frontend e Backend. Os Schemas do Zod e Tipagens TypeScript compartilhadas devem ser obrigatoriamente centralizados em uma pasta `/shared` na raiz do projeto (estrutura de Monorepo), permitindo a importação simultânea pelas duas aplicações.
 3. **Legibilidade sobre Esperteza:** O código é lido muito mais vezes do que escrito. Prefira clareza, nomes descritivos e design simples em vez de otimizações prematuras ou tipagens complexas (type gymnastics).
 4. **Tratamento de Datas e Horas (UTC Always):** Todas as datas DEVEM ser armazenadas e transitadas (API) em UTC (ISO 8601). A conversão para o fuso horário local do usuário (ex: `America/Sao_Paulo`) deve ocorrer EXCLUSIVAMENTE na camada de visualização (Frontend).
 5. **Idempotência em Operações Críticas:** Mutação de dados (POST, PUT, DELETE) em processos sensíveis deve ser desenhada de forma idempotente, garantindo que retentativas de requisições não causem duplicidade de registros ou efeitos colaterais indesejados.
@@ -68,6 +68,8 @@
   * Uso exclusivo da combinação **React Hook Form** + **Zod** para formulários controlados/descontrolados com validação baseada em schema. 
   * Prevenção de XSS: NUNCA utilize `dangerouslySetInnerHTML` sem passar o conteúdo por uma biblioteca de sanitização rigorosa (ex: `DOMPurify`).
 * **Estilização UI:** Utilizar **Tailwind CSS** com componentes da biblioteca **shadcn/ui**. A criação de arquivos de CSS manual (arquivos `.css` soltos) é proibida para manter a consistência visual.
+* **UX de Carregamento (Skeleton Loaders):** É TERMINANTEMENTE PROIBIDO usar textos genéricos (ex: "Carregando...") para estados de loading no frontend. Todo carregamento assíncrono deve utilizar componentes **Skeleton** refinados para evitar *Layout Shifts* (pulos na tela).
+* **Limites de Exibição e Paginação Visual:** Elementos de dashboard e widgets (ex: Links Úteis) não possuem paginação e limitam-se a no máximo 3 itens. Listagens completas em tabelas ou grids (ex: Gestão do Mural, Turmas, Membros) DEVEM ser paginadas no frontend ou backend, sempre padronizadas com o limite de **5 itens por página** para manter a consistência visual.
 
 ---
 
@@ -106,7 +108,18 @@
 ---
 
 ## 8. Protocolo de Atuação da Inteligência Artificial (Trabalho Colaborativo)
+* **Zero Commits Automáticos:** A IA NUNCA deve realizar `git commit` ou `git push` por conta própria logo após escrever código. O fluxo obrigatório é: codificar -> testar compilação -> entregar para validação do usuário -> **aguardar**. O commit SÓ DEVE ocorrer após o comando explícito (ex: "pode comitar").
+* **Comunicação Direta e Profissional:** A IA não deve ser excessivamente submissa ou concordar com tudo repetitivamente. A postura deve ser técnica, objetiva, profissional e focada estritamente na engenharia.
 * **Obediência Estrita a este Manual:** A IA deve sempre consultar e obedecer este documento (`GEMINI.md`) antes de realizar qualquer ação. Caso o usuário solicite algo que contradiga as regras estabelecidas aqui, a IA está terminantemente proibida de obedecer de imediato. Ao invés disso, deve apontar a contradição e pedir a confirmação explícita do usuário antes de prosseguir.
 * **Alinhamento Prévio:** Qualquer alteração de arquitetura, inclusão de nova lib no `package.json`, ou modificações estruturais extensas requerem validação e aprovação do desenvolvedor parceiro (usuário).
 * **Planejamento sobre Ação Pronta:** Antes de despejar grandes quantidades de código, planeje os passos a serem tomados e valide o entendimento lógico. O fluxo é: Compreensão -> Proposta -> Validação -> Execução.
 * **Justificativas Técnicas:** Quando propor uma solução diferente da que foi pedida, a IA tem a obrigação de explicar a motivação e os potenciais ganhos e riscos para a base do código (trade-offs).
+* **Verificação Obrigatória de TypeScript (TSC):** A IA deve obrigatoriamente rodar a verificação do compilador do TypeScript (ex: `npx tsc -b` ou similar) logo após refatorações e adições de código, garantindo que não deixará para trás quebras de tipagem, imports ausentes ou erros de compilação.
+
+---
+
+## 9. Regras Absolutas de Otimização e Lógica de API
+1. **Delegação de Tempo ao Cliente:** O backend NUNCA deve realizar cálculos de prazos relativos (como "buscar os próximos 5 dias" ou "buscar o mês atual"). Todas as rotas que envolvem tempo devem obrigatoriamente exigir `start_date` e `end_date` via Query Params. O Frontend é o único responsável pela inteligência temporal.
+2. **Limite de Escalabilidade no Zod (Obrigatório):** Para prevenir ataques de exaustão ao banco de dados, TODOS os intervalos de data (`start_date` e `end_date`) DEVEM ser validados no Zod com uma regra matemática que restrinja a diferença máxima de dias permitida para a requisição.
+3. **Paginação Direta no Banco:** É estritamente proibido retornar tabelas inteiras para o Frontend. Rotas de listagem exigem paginação real no banco de dados, utilizando `LIMIT` e `OFFSET` direto no Repositório (Supabase).
+4. **Middlewares como Único Guarda-Costas:** Validações de sessão (JWT) e verificações de pertencimento (`turma_id`) devem ocorrer EXCLUSIVAMENTE em Middlewares de Roteamento. Controllers e Services recebem a requisição "limpa" e não devem repetir verificações de segurança de acesso.
