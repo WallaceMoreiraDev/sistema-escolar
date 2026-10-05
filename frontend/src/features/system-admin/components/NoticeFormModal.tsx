@@ -24,10 +24,10 @@ export function NoticeFormModal({ isOpen, onClose, noticeToEdit }: NoticeFormMod
       if (noticeToEdit) {
         setValue('title', noticeToEdit.title);
         setValue('message', noticeToEdit.message);
-        setValue('sender', noticeToEdit.sender as any);
+        setValue('sender', noticeToEdit.sender as NoticeFormValues['sender']);
         setValue('badge', noticeToEdit.badge);
       } else {
-        reset();
+        reset({ title: '', message: '', sender: undefined, badge: undefined });
       }
     }
   }, [isOpen, noticeToEdit, setValue, reset]);

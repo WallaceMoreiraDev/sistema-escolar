@@ -1,7 +1,7 @@
 export const MOCK_NOTICES = [
   {
     id: "1",
-    sender: "Diretoria ETEC",
+    sender: "Diretoria",
     badge: "Urgente",
     title: "Cancelamento de Aulas - Semana Paulo Freire",
     message: "Aviso oficial: Devido aos eventos da Semana Paulo Freire, informamos que não haverá aulas regulares na próxima quarta-feira. A presença de todos os alunos será computada unicamente através da participação nos workshops e palestras previamente agendados.",
