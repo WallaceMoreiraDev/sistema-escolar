@@ -11,6 +11,7 @@ export function WeeklySummary() {
   const getEventStyles = (category: string) => {
     if (category === 'Prova') return { bg: 'bg-rose-50 dark:bg-rose-950/30', border: 'border-rose-100 dark:border-rose-900', text: 'text-rose-600 dark:text-rose-400', hoverBg: 'group-hover:bg-rose-500', badgeBg: 'bg-rose-100 dark:bg-rose-900/40', badgeText: 'text-rose-700 dark:text-rose-300' };
     if (category === 'Trabalho') return { bg: 'bg-blue-50 dark:bg-blue-950/30', border: 'border-blue-100 dark:border-blue-900', text: 'text-blue-600 dark:text-blue-400', hoverBg: 'group-hover:bg-blue-500', badgeBg: 'bg-blue-100 dark:bg-blue-900/40', badgeText: 'text-blue-700 dark:text-blue-300' };
+    if (category === 'Lembrete') return { bg: 'bg-purple-50 dark:bg-purple-950/30', border: 'border-purple-100 dark:border-purple-900', text: 'text-purple-600 dark:text-purple-400', hoverBg: 'group-hover:bg-purple-500', badgeBg: 'bg-purple-100 dark:bg-purple-900/40', badgeText: 'text-purple-700 dark:text-purple-300' };
     return { bg: 'bg-amber-50 dark:bg-amber-950/30', border: 'border-amber-100 dark:border-amber-900', text: 'text-amber-600 dark:text-amber-400', hoverBg: 'group-hover:bg-amber-500', badgeBg: 'bg-amber-100 dark:bg-amber-900/40', badgeText: 'text-amber-700 dark:text-amber-300' };
   };
 
