@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { ClassEvent, PaginatedResponse } from '../types';
-import { EventFormValues } from '../schemas/eventSchema';
+import {  } from '@shared/schemas/eventSchema';
 import { MOCK_CLASS_EVENTS } from '../data/mockEvents';
 
 let eventsDB = [...MOCK_CLASS_EVENTS];

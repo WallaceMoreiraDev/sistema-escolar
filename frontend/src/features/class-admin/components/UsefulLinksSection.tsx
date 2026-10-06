@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { linkSchema, LinkFormValues } from '../schemas/linkSchema';
+import {  } from '@shared/schemas/linkSchema';
 import { useUsefulLinks, useCreateLink, useDeleteLink } from '../hooks/useUsefulLinks';
 import { ConfirmModal } from '../../../components/ui/ConfirmModal';
 import { UsefulLink } from '../types';

@@ -25,7 +25,8 @@
 
     /* Path aliases for shadcn */
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@shared/*": ["../shared/*"]
     }
   },
   "include": ["src"]

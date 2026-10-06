@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { UsefulLink } from '../types';
-import { LinkFormValues } from '../schemas/linkSchema';
+import {  } from '@shared/schemas/linkSchema';
 
 let linksDB: UsefulLink[] = [
   { id: 'lnk-1', title: 'Pasta do Drive da Sala', url: 'https://drive.google.com', createdAt: new Date().toISOString() },

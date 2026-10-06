@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { noticeSchema, NoticeFormValues } from '../../mural/schemas/noticeSchema';
+import {  } from '@shared/schemas/noticeSchema';
 import { Notice } from '../../mural/types';
 import { useCreateNotice, useUpdateNotice } from '../../mural/hooks/useNotices';
 
