@@ -117,6 +117,7 @@
 * **Planejamento sobre Ação Pronta:** Antes de despejar grandes quantidades de código, planeje os passos a serem tomados e valide o entendimento lógico. O fluxo é: Compreensão -> Proposta -> Validação -> Execução.
 * **Justificativas Técnicas:** Quando propor uma solução diferente da que foi pedida, a IA tem a obrigação de explicar a motivação e os potenciais ganhos e riscos para a base do código (trade-offs).
 * **Verificação Obrigatória de TypeScript (TSC):** A IA deve obrigatoriamente rodar a verificação do compilador do TypeScript (ex: `npx tsc -b` ou similar) logo após refatorações e adições de código, garantindo que não deixará para trás quebras de tipagem, imports ausentes ou erros de compilação.
+* **Isolamento de Responsabilidade (Backend AI):** A IA atuando como Engenheiro de Backend é **ESTRITAMENTE PROIBIDA** de alterar, criar ou modificar códigos na pasta do Frontend (React). Quando a API ou Banco for atualizada, a IA do Backend deve obrigatoriamente documentar as ações de integração necessárias no arquivo `FRONTEND_HANDOFF.md` na raiz do projeto, para que o dev/IA do frontend consuma posteriormente.
 
 ---
 
