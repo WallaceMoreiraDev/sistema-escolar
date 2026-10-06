@@ -1,5 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { useProfile } from '@/features/auth/hooks/useProfile';
 
 // === CONSTANTES DOS LINKS PARA REUTILIZAR ===
 const NAV_LINKS = [
@@ -17,6 +18,10 @@ const ADMIN_LINKS = [
 export function Sidebar() {
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
+  const { data: profile } = useProfile();
+  
+  const userName = profile?.name || 'Aluno';
+  const userInitials = userName.substring(0, 2).toUpperCase();
 
   return (
     <aside className="w-64 hidden md:flex flex-col h-screen fixed left-0 top-0 border-r border-slate-200/50 bg-white/40 backdrop-blur-3xl dark:bg-black/20 z-10">
@@ -55,11 +60,11 @@ export function Sidebar() {
         <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/50 bg-white/50 backdrop-blur-sm cursor-pointer hover:bg-white/80 transition-colors">
           <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-orange-500 p-[2px]">
             <div className="w-full h-full bg-white rounded-full flex items-center justify-center text-sm font-bold text-primary">
-              AL
+              {userInitials}
             </div>
           </div>
           <div className="flex-1 overflow-hidden">
-            <p className="text-sm font-semibold text-slate-900 truncate">Aluno Comum</p>
+            <p className="text-sm font-semibold text-slate-900 truncate">{userName}</p>
             <p className="text-xs text-slate-500 truncate">3º B - DS</p>
           </div>
         </div>
@@ -73,6 +78,10 @@ export function MobileNav() {
   const location = useLocation();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const isActive = (path: string) => location.pathname === path;
+  const { data: profile } = useProfile();
+  
+  const userName = profile?.name || 'Aluno';
+  const userInitials = userName.substring(0, 2).toUpperCase();
 
   // Fecha o drawer automaticamente ao mudar de rota
   useEffect(() => {
@@ -172,11 +181,11 @@ export function MobileNav() {
           <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/50 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm cursor-pointer">
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-orange-500 p-[2px] shrink-0">
               <div className="w-full h-full bg-white dark:bg-slate-900 rounded-full flex items-center justify-center text-sm font-bold text-primary">
-                AL
+                {userInitials}
               </div>
             </div>
             <div className="flex-1 overflow-hidden">
-              <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">Aluno Comum</p>
+              <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{userName}</p>
               <p className="text-xs text-slate-500 truncate">3º B - DS</p>
             </div>
           </div>

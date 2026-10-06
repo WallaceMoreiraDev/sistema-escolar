@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useProfile } from '@/features/auth/hooks/useProfile'
 import { CrowdfundingBanner } from './components/CrowdfundingBanner'
 import { WeeklySummary } from './components/WeeklySummary'
 import { FixedLinks } from './components/FixedLinks'
@@ -8,12 +9,15 @@ import { NoClassBanner } from './components/NoClassBanner'
 export function DashboardPage() {
   // Mock State de UI para testar visualmente os dois cenários do documento de UX
   const [hasClass, setHasClass] = useState(false)
+  const { data: profile } = useProfile()
+  
+  const firstName = profile?.name?.split(' ')[0] || 'Aluno'
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
       <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">Bom dia, Aluno 👋</h1>
+          <h1 className="text-4xl font-extrabold tracking-tight text-slate-900 dark:text-white">Bom dia, {firstName} 👋</h1>
           <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
             {hasClass ? "Aqui está o que você precisa focar hoje na Turma 3º B." : "Bem-vindo! Descubra as ferramentas que a plataforma oferece."}
           </p>

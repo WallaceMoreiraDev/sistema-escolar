@@ -1,13 +1,20 @@
+import { useNavigate } from 'react-router-dom';
+
 export function AuthPage() {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
-      <div className="glass w-full max-w-md p-8 rounded-2xl flex flex-col items-center gap-6">
+      <div className="glass w-full max-w-md p-8 rounded-2xl flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500">
         <div className="text-center">
-          <h1 className="text-3xl font-bold text-primary mb-2">Bem-vindo</h1>
+          <h1 className="text-3xl font-bold text-primary mb-2">Prumo</h1>
           <p className="text-muted-foreground">Faça login para acessar a plataforma escolar.</p>
         </div>
         
-        <button className="w-full flex items-center justify-center gap-2 bg-white text-slate-900 border border-slate-200 py-3 rounded-lg shadow-sm hover:bg-slate-50 transition-colors font-medium">
+        <button 
+          onClick={() => navigate('/onboarding')}
+          className="w-full flex items-center justify-center gap-3 bg-white dark:bg-slate-800 text-slate-900 dark:text-white border border-slate-200 dark:border-slate-700 py-3.5 rounded-xl shadow-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-all font-bold hover:shadow-md hover:-translate-y-0.5 active:scale-95"
+        >
           <img src="https://upload.wikimedia.org/wikipedia/commons/c/c1/Google_%22G%22_logo.svg" alt="Google Logo" className="w-5 h-5" />
           Entrar com Google
         </button>
