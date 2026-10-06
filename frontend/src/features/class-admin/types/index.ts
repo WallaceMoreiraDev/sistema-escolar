@@ -1,4 +1,4 @@
-export type EventCategory = 'Prova' | 'Trabalho' | 'Tarefa';
+export type EventCategory = 'Prova' | 'Trabalho' | 'Tarefa' | 'Lembrete';
 
 export interface ClassEvent {
   id: string;
@@ -7,6 +7,8 @@ export interface ClassEvent {
   dueDate: string;
   description: string;
   attachmentUrl?: string;
+  attachmentName?: string;
+  attachmentType?: string;
   createdAt: string;
 }
 

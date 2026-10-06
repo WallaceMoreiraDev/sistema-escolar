@@ -76,10 +76,12 @@ export function EventList({ onEdit }: EventListProps) {
               events.map((event) => {
                 const isProva = event.category === 'Prova';
                 const isTrab = event.category === 'Trabalho';
+                const isLemb = event.category === 'Lembrete';
                 
                 let badgeClass = 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400';
                 if (isProva) badgeClass = 'bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400';
                 if (isTrab) badgeClass = 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400';
+                if (isLemb) badgeClass = 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400';
 
                 return (
                   <tr key={event.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">

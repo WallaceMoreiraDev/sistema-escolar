@@ -20,9 +20,10 @@ export function EventModal() {
   if (rawEvent) {
     const isProva = rawEvent.category === 'Prova';
     const isTrab = rawEvent.category === 'Trabalho';
+    const isLemb = rawEvent.category === 'Lembrete';
 
-    const colorClass = isProva ? 'text-rose-600' : isTrab ? 'text-blue-600' : 'text-amber-600';
-    const bgClass = isProva ? 'bg-rose-500/10' : isTrab ? 'bg-blue-500/10' : 'bg-amber-500/10';
+    const colorClass = isProva ? 'text-rose-600' : isTrab ? 'text-blue-600' : isLemb ? 'text-purple-600' : 'text-amber-600';
+    const bgClass = isProva ? 'bg-rose-500/10' : isTrab ? 'bg-blue-500/10' : isLemb ? 'bg-purple-500/10' : 'bg-amber-500/10';
     
     const dateObj = new Date(rawEvent.dueDate);
     const dayStr = dateObj.getDate().toString().padStart(2, '0');
@@ -88,21 +89,46 @@ export function EventModal() {
                 </div>
               </div>
 
-              <div>
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
-                  Anexos e Arquivos
-                </h4>
-                <div className="flex items-center gap-4 p-3 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/5 transition-all cursor-pointer group bg-white/50 dark:bg-slate-800/50">
-                  <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform shadow-sm">
-                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                  </div>
-                  <div className="flex flex-col">
-                    <span className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">material_de_apoio.pdf</span>
-                    <span className="text-xs font-medium text-slate-500 mt-0.5">Documento PDF • 2.4 MB</span>
-                  </div>
+              {event.attachmentUrl && (
+                <div>
+                  <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
+                    <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" /></svg>
+                    Anexos e Arquivos
+                  </h4>
+                  
+                  {event.attachmentType?.startsWith('image/') ? (
+                    <div className="block relative group overflow-hidden rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm mt-2">
+                      <img 
+                        src={event.attachmentUrl} 
+                        alt={event.attachmentName || "Anexo"} 
+                        className="w-full h-auto max-h-[250px] object-cover group-hover:scale-105 transition-transform duration-500" 
+                      />
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-3 backdrop-blur-[2px]">
+                        <a href={event.attachmentUrl} target="_blank" rel="noopener noreferrer" className="bg-white/90 hover:bg-white text-slate-900 font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-2 shadow-xl transform translate-y-4 group-hover:translate-y-0 transition-all duration-300">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+                          Abrir
+                        </a>
+                        <a href={event.attachmentUrl} download={event.attachmentName || 'anexo'} className="bg-primary/90 hover:bg-primary text-white font-bold px-4 py-2 rounded-xl text-sm flex items-center gap-2 shadow-xl transform translate-y-4 group-hover:translate-y-0 transition-all duration-300 delay-75">
+                          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                          Baixar
+                        </a>
+                      </div>
+                    </div>
+                  ) : (
+                    <a href={event.attachmentUrl} download={event.attachmentName || 'anexo'} className="flex items-center gap-4 p-3 rounded-2xl border-2 border-dashed border-slate-300 dark:border-slate-700 hover:border-primary/50 hover:bg-primary/5 dark:hover:bg-primary/5 transition-all cursor-pointer group bg-white/50 dark:bg-slate-800/50 mt-2">
+                      <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center text-blue-600 dark:text-blue-400 group-hover:scale-110 transition-transform shadow-sm">
+                        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                      </div>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-bold text-slate-900 dark:text-slate-100 group-hover:text-primary transition-colors">
+                          {event.attachmentName || 'Anexo do Evento'}
+                        </span>
+                        <span className="text-xs font-medium text-slate-500 mt-0.5">Clique para baixar o arquivo</span>
+                      </div>
+                    </a>
+                  )}
                 </div>
-              </div>
+              )}
             </div>
           </>
         ) : (

@@ -104,6 +104,7 @@ export function EventForm({ isOpen, onClose, eventToEdit }: EventFormProps) {
               <option value="Prova">Prova</option>
               <option value="Trabalho">Trabalho</option>
               <option value="Tarefa">Tarefa</option>
+              <option value="Lembrete">Lembrete</option>
             </select>
             {errors.category && <p className="text-xs text-red-500 mt-1">{errors.category.message}</p>}
           </div>
@@ -129,6 +130,17 @@ export function EventForm({ isOpen, onClose, eventToEdit }: EventFormProps) {
             placeholder="Ex: Capítulos 4 e 5. Trazer calculadora."
             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 focus:border-primary bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white outline-none transition-all resize-none"
           ></textarea>
+        </div>
+
+        {/* Anexo */}
+        <div>
+          <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">Anexo (Opcional)</label>
+          <input 
+            {...register('attachment')}
+            type="file" 
+            className="w-full px-4 py-2 rounded-xl border border-slate-200 dark:border-slate-700 focus:border-primary bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white outline-none transition-all file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
+          />
+          {errors.attachment && <p className="text-xs text-red-500 mt-1">{errors.attachment.message as string}</p>}
         </div>
 
         <div className="flex justify-end pt-4 mt-6 border-t border-slate-100 dark:border-slate-800">

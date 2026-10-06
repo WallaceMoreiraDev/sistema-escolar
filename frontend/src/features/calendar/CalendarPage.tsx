@@ -3,7 +3,7 @@ import { Outlet, useNavigate } from 'react-router-dom'
 import { ClassSidebar } from './components/ClassSidebar'
 import { useClassEvents } from '../class-admin/hooks/useClassEvents'
 
-const FILTERS = ['TUDO', 'PROVAS', 'TRABALHOS', 'TAREFAS']
+const FILTERS = ['TUDO', 'PROVAS', 'TRABALHOS', 'TAREFAS', 'LEMBRETES']
 const MONTH_NAMES = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro']
 
 export function CalendarPage() {
@@ -22,6 +22,7 @@ export function CalendarPage() {
   const getCalendarEventStyles = (category: string) => {
     if (category === 'Prova') return { type: 'PROVAS', label: 'PROVA', colorClass: 'text-rose-600', bgClass: 'bg-rose-500/10', dotClass: 'bg-rose-500', borderClass: 'border-l-rose-500' };
     if (category === 'Trabalho') return { type: 'TRABALHOS', label: 'TRABALHO', colorClass: 'text-blue-600', bgClass: 'bg-blue-500/10', dotClass: 'bg-blue-500', borderClass: 'border-l-blue-500' };
+    if (category === 'Lembrete') return { type: 'LEMBRETES', label: 'LEMBRETE', colorClass: 'text-purple-600', bgClass: 'bg-purple-500/10', dotClass: 'bg-purple-500', borderClass: 'border-l-purple-500' };
     return { type: 'TAREFAS', label: 'TAREFA', colorClass: 'text-amber-600', bgClass: 'bg-amber-500/10', dotClass: 'bg-amber-500', borderClass: 'border-l-amber-500' };
   };
 

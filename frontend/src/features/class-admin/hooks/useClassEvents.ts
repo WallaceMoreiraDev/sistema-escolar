@@ -35,12 +35,25 @@ export function useCreateEvent() {
   return useMutation({
     mutationFn: async (data: EventFormValues) => {
       await delay(800);
+      let attachmentUrl = undefined;
+      let attachmentName = undefined;
+      let attachmentType = undefined;
+      
+      if (data.attachment && data.attachment.length > 0) {
+        attachmentUrl = URL.createObjectURL(data.attachment[0]);
+        attachmentName = data.attachment[0].name;
+        attachmentType = data.attachment[0].type;
+      }
+
       const newEvent: ClassEvent = {
         id: `evt-${Date.now()}`,
         subject: data.subject,
         category: data.category,
         dueDate: data.dueDate,
         description: data.description || '',
+        attachmentUrl,
+        attachmentName,
+        attachmentType,
         createdAt: new Date().toISOString(),
       };
       eventsDB = [newEvent, ...eventsDB]; // Add to top
@@ -74,6 +87,17 @@ export function useUpdateEvent() {
     mutationFn: async ({ id, data }: { id: string, data: EventFormValues }) => {
       await delay(800);
       const index = eventsDB.findIndex(e => e.id === id);
+      let attachmentUrl = eventsDB[index].attachmentUrl;
+      let attachmentName = eventsDB[index].attachmentName;
+      let attachmentType = eventsDB[index].attachmentType;
+      
+      // Só atualiza se o usuário selecionou um arquivo novo
+      if (data.attachment && data.attachment.length > 0) {
+        attachmentUrl = URL.createObjectURL(data.attachment[0]);
+        attachmentName = data.attachment[0].name;
+        attachmentType = data.attachment[0].type;
+      }
+
       if (index !== -1) {
         eventsDB[index] = {
           ...eventsDB[index],
@@ -81,6 +105,9 @@ export function useUpdateEvent() {
           category: data.category,
           dueDate: data.dueDate,
           description: data.description || '',
+          attachmentUrl,
+          attachmentName,
+          attachmentType,
         };
         return eventsDB[index];
       }
