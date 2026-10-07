@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useProfile } from '@/features/auth/hooks/useProfile'
+import { useAuth } from '@/features/auth/contexts/AuthContext'
 import { CrowdfundingBanner } from './components/CrowdfundingBanner'
 import { WeeklySummary } from './components/WeeklySummary'
 import { FixedLinks } from './components/FixedLinks'
@@ -9,9 +9,9 @@ import { NoClassBanner } from './components/NoClassBanner'
 export function DashboardPage() {
   // Mock State de UI para testar visualmente os dois cenários do documento de UX
   const [hasClass, setHasClass] = useState(false)
-  const { data: profile } = useProfile()
+  const { user } = useAuth()
   
-  const firstName = profile?.name?.split(' ')[0] || 'Aluno'
+  const firstName = user?.nome?.split(' ')[0] || 'Aluno'
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">

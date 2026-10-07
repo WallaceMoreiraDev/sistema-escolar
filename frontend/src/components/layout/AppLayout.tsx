@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { useProfile } from '@/features/auth/hooks/useProfile';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
 
 // === CONSTANTES DOS LINKS PARA REUTILIZAR ===
 const NAV_LINKS = [
@@ -18,9 +18,9 @@ const ADMIN_LINKS = [
 export function Sidebar() {
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
-  const { data: profile } = useProfile();
+  const { user } = useAuth();
   
-  const userName = profile?.name || 'Aluno';
+  const userName = user?.nome || 'Aluno';
   const userInitials = userName.substring(0, 2).toUpperCase();
 
   return (
@@ -78,9 +78,9 @@ export function MobileNav() {
   const location = useLocation();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const isActive = (path: string) => location.pathname === path;
-  const { data: profile } = useProfile();
+  const { user } = useAuth();
   
-  const userName = profile?.name || 'Aluno';
+  const userName = user?.nome || 'Aluno';
   const userInitials = userName.substring(0, 2).toUpperCase();
 
   // Fecha o drawer automaticamente ao mudar de rota
