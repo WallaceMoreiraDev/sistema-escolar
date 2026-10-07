@@ -93,6 +93,10 @@
 ## 7. Git Workflow e CI/CD
 * **Proibição de Commits Diretos:** É estritamente proibido realizar *commits* ou *pushes* diretamente nas branches `master`, `main` ou `develop`. 
 * **Trabalho por Branches:** Todo desenvolvimento se dá em branches no padrão `feature/nome`, `bugfix/nome`, `hotfix/nome` ou `chore/nome`.
+* **Padrão de Commits (Conventional Commits):** 
+  * A mensagem de commit deve sempre seguir o padrão: `tipo(escopo): descrição da mudança`. (ex: `feat(alunos): adiciona ...`, `fix(auth): corrige ...`, `docs: ...`, `refactor(ui): ...`, `chore: ...`).
+  * A descrição da mudança **DEVE** ser escrita em **Português**.
+  * Sempre especifique o **local/escopo** de onde a mudança ocorreu entre parênteses (a menos que seja uma mudança global que não se encaixe em um escopo específico).
 * **Pull Requests e o Code Review Checklist (CRÍTICO):** Nenhuma PR pode ser "auto-aprovada". O revisor DEVE validar:
   * [ ] As regras de negócio estão no Service e isoladas do Controller?
   * [ ] Todos os inputs estão sendo validados por Zod?
