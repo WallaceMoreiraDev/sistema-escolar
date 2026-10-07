@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import {  } from '@shared/schemas/eventSchema';
+import { eventSchema, type EventFormValues } from '@shared/schemas/eventSchema';
 import { useCreateEvent, useUpdateEvent } from '../hooks/useClassEvents';
 import { ClassEvent } from '../types';
 import { createPortal } from 'react-dom';

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Notice } from '../types';
 import { MOCK_NOTICES } from '../data/mockNotices';
-import {  } from '@shared/schemas/noticeSchema';
+import { type NoticeFormValues } from '@shared/schemas/noticeSchema';
 
 let noticesDB: Notice[] = [...MOCK_NOTICES] as Notice[];
 
