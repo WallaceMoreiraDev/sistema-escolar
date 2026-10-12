@@ -1,46 +1,52 @@
 import { Context } from 'hono';
 import { UserService } from '../services/userService';
 import { UserRepository } from '../repositories/userRepository';
+import { UserDTO } from '../dtos/userDto';
+import { ApiResponse, UserProfileDTO, UpdateProfilePayload } from '@shared/types';
 
 export class UserController {
   /**
    * GET /api/me
+   * Retorna os dados do perfil do usuário autenticado no formato DTO padronizado.
    */
   static async getProfile(c: Context) {
-    // Extract injected supabase client and user from Context (set by authMiddleware)
     const supabase = c.get('supabase');
     const user = c.get('user');
 
-    // Manually instantiate the layered architecture components (or use a DI container in the future)
     const repo = new UserRepository(supabase);
     const service = new UserService(repo);
 
-    const profile = await service.getProfile(user.id);
+    const rawProfile = await service.getProfile(user.id);
+    const profileDTO = UserDTO.toProfile(rawProfile);
 
-    return c.json({
+    const response: ApiResponse<UserProfileDTO> = {
       success: true,
-      data: profile
-    });
+      data: profileDTO,
+    };
+
+    return c.json(response);
   }
 
   /**
    * PUT /api/me/profile
+   * Atualiza o nome oficial do usuário (Onboarding) e retorna o perfil atualizado.
    */
   static async updateProfile(c: Context) {
     const supabase = c.get('supabase');
     const user = c.get('user');
-    
-    // The payload is already validated by the Zod validator middleware in the route definition
-    const { nome } = c.get('validBody') as { nome: string };
+    const body = c.get('validBody') as UpdateProfilePayload;
 
     const repo = new UserRepository(supabase);
     const service = new UserService(repo);
 
-    const updatedProfile = await service.updateProfile(user.id, nome);
+    const rawUpdated = await service.updateProfile(user.id, body.nome);
+    const profileDTO = UserDTO.toProfile(rawUpdated);
 
-    return c.json({
+    const response: ApiResponse<UserProfileDTO> = {
       success: true,
-      data: updatedProfile
-    });
+      data: profileDTO,
+    };
+
+    return c.json(response);
   }
 }

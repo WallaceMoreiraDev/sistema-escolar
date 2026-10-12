@@ -6,8 +6,7 @@ export const errorHandler: ErrorHandler = (err, c) => {
   console.error(`[Error] ${c.req.method} ${c.req.url}:`, err);
 
   if (err instanceof AppError) {
-    // Hono typing for status codes is strict, but setting it via Response or c.status works
-    c.status(err.statusCode as any);
+    c.status(err.statusCode);
     return c.json({
       success: false,
       code: err.code,

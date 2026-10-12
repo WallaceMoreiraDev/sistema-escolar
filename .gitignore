@@ -27,3 +27,4 @@ dist-ssr
 #Folders and files
 
 .env
+.wrangler
