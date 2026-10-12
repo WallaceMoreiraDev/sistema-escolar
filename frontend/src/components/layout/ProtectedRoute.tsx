@@ -18,19 +18,15 @@ export function ProtectedRoute() {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
   }
 
-  // Verifica se o usuário recém criado precisa de onboarding
-  // Pela regra de negócio, nome provisório é igual à primeira parte do email
+  // Verifica se o usuário precisa de onboarding com base na flag oficial da API
   if (user) {
-    const emailPrefix = user.email.split('@')[0];
-    const isNewUser = user.nome === emailPrefix;
-
-    // Se é novo e não tá na rota de onboarding, manda pra lá
-    if (isNewUser && location.pathname !== '/onboarding') {
+    // Se o onboarding não foi concluído e não está na rota de onboarding, manda pra lá
+    if (!user.onboardingConcluido && location.pathname !== '/onboarding') {
       return <Navigate to="/onboarding" replace />;
     }
     
-    // Se não é novo e tá tentando acessar o onboarding, manda pro app
-    if (!isNewUser && location.pathname === '/onboarding') {
+    // Se o onboarding já foi concluído e está tentando acessar o onboarding, manda pro app
+    if (user.onboardingConcluido && location.pathname === '/onboarding') {
       return <Navigate to="/app/dashboard" replace />;
     }
   }

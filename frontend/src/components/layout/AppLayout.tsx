@@ -65,7 +65,7 @@ export function Sidebar() {
           </div>
           <div className="flex-1 overflow-hidden">
             <p className="text-sm font-semibold text-slate-900 truncate">{userName}</p>
-            <p className="text-xs text-slate-500 truncate">3º B - DS</p>
+            <p className="text-xs text-slate-500 truncate">{user?.turma?.nomeOficial || 'Sem Turma'}</p>
           </div>
         </div>
       </div>
@@ -186,7 +186,7 @@ export function MobileNav() {
             </div>
             <div className="flex-1 overflow-hidden">
               <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{userName}</p>
-              <p className="text-xs text-slate-500 truncate">3º B - DS</p>
+              <p className="text-xs text-slate-500 truncate">{user?.turma?.nomeOficial || 'Sem Turma'}</p>
             </div>
           </div>
         </div>

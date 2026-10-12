@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '../../../lib/supabase';
-import { UserSessionData, authApi } from '../api/authApi';
+import { UserProfileDTO } from '@shared/types';
+import { authApi } from '../api/authApi';
 import { useQuery } from '@tanstack/react-query';
 
 interface AuthContextType {
   session: Session | null;
-  user: UserSessionData | null | undefined;
+  user: UserProfileDTO | null | undefined;
   isLoading: boolean;
   isError: boolean;
 }

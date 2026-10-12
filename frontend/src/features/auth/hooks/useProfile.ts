@@ -13,7 +13,7 @@ export function useUpdateProfile() {
     },
     onSuccess: () => {
       // Força a atualização dos dados do usuário logado
-      queryClient.invalidateQueries({ queryKey: ['me', session?.access_token] });
+      queryClient.invalidateQueries({ queryKey: ['me'] });
     },
   });
 }

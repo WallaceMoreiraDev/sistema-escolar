@@ -1,18 +1,9 @@
+import { ApiResponse, UserProfileDTO } from '@shared/types';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
-export interface UserSessionData {
-  id: string;
-  nome: string;
-  email: string;
-  role: string;
-  turma: {
-    id: string;
-    nome_oficial: string;
-  } | null;
-}
-
 export const authApi = {
-  async getMe(token: string): Promise<UserSessionData> {
+  async getMe(token: string): Promise<UserProfileDTO> {
     const res = await fetch(`${API_URL}/api/me`, {
       headers: {
         Authorization: `Bearer ${token}`
@@ -23,11 +14,11 @@ export const authApi = {
       throw new Error('Falha ao obter dados do usuário');
     }
 
-    const data = await res.json();
-    return data.data as UserSessionData;
+    const data: ApiResponse<UserProfileDTO> = await res.json();
+    return data.data;
   },
 
-  async updateProfile(token: string, nome: string): Promise<UserSessionData> {
+  async updateProfile(token: string, nome: string): Promise<UserProfileDTO> {
     const res = await fetch(`${API_URL}/api/me/profile`, {
       method: 'PUT',
       headers: {
@@ -41,7 +32,7 @@ export const authApi = {
       throw new Error('Falha ao atualizar perfil');
     }
 
-    const data = await res.json();
-    return data.data as UserSessionData;
+    const data: ApiResponse<UserProfileDTO> = await res.json();
+    return data.data;
   }
 };

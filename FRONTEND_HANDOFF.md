@@ -13,15 +13,15 @@
   - [x] **Instalar Dependência:** Rodar `npm install @supabase/supabase-js` na pasta `/frontend`.
   - [x] Implementar a chamada `signInWithOAuth` do Google e capturar a Sessão (JWT) do Supabase.
 
-- [ ] **Adoção dos Contratos Compartilhados (@shared/types):**
-  - [ ] Em `frontend/src/features/auth/api/authApi.ts`:
+- [x] **Adoção dos Contratos Compartilhados (@shared/types):**
+  - [x] Em `frontend/src/features/auth/api/authApi.ts`:
     - Importar `UserProfileDTO` e `ApiResponse` diretamente de `@shared/types`:
       ```typescript
       import { ApiResponse, UserProfileDTO } from '@shared/types';
       ```
     - Substituir a interface manual `UserSessionData` por `UserProfileDTO`.
     - Ajustar a leitura do objeto de turma para `user.turma.nomeOficial` (padronizado em camelCase conforme GEMINI.md Seção 2).
-  - [ ] **Contrato Oficial da Resposta (`GET /api/me` e `PUT /api/me/profile`):**
+  - [x] **Contrato Oficial da Resposta (`GET /api/me` e `PUT /api/me/profile`):**
     ```typescript
     {
       success: true,
@@ -39,17 +39,17 @@
     }
     ```
 
-- [ ] **Guardião de Rotas & Onboarding (Desacoplado de Strings):**
+- [x] **Guardião de Rotas & Onboarding (Desacoplado de Strings):**
   - [x] Criar `AuthProvider.tsx` para prover a sessão do Supabase.
   - [x] Envolver rotas `/app` com `ProtectedRoute`.
   - [x] Executar _fetch_ em `GET /api/me` com header `Authorization: Bearer <token>`.
   - [x] Se não houver sessão ou `isError` -> Redirecionar para `/login`.
-  - [ ] Em `ProtectedRoute.tsx`:
+  - [x] Em `ProtectedRoute.tsx`:
     - Substituir a verificação de string (`user.nome === emailPrefix`) pela checagem da flag booleana `user.onboardingConcluido`.
     - Se `!user.onboardingConcluido && location.pathname !== '/onboarding'` -> Redirecionar para `/onboarding`.
     - Se `user.onboardingConcluido && location.pathname === '/onboarding'` -> Redirecionar para `/app/dashboard`.
 
-- [ ] **Fluxo da Tela de Onboarding:**
+- [x] **Fluxo da Tela de Onboarding:**
   - [x] Importar o schema (`import { onboardingSchema } from '@shared/schemas/onboardingSchema'`) no `react-hook-form` da tela `OnboardingPage.tsx`.
   - [x] O formulário deve enviar `PUT /api/me/profile` com `{ "nome": "..." }`.
-  - [ ] Após sucesso no `PUT /api/me/profile`, invalidar a query `['me']` no TanStack Query (`queryClient.invalidateQueries({ queryKey: ['me'] })`) para atualizar o estado do usuário com `onboardingConcluido: true` e navegar para `/app/dashboard`.
+  - [x] Após sucesso no `PUT /api/me/profile`, invalidar a query `['me']` no TanStack Query (`queryClient.invalidateQueries({ queryKey: ['me'] })`) para atualizar o estado do usuário com `onboardingConcluido: true` e navegar para `/app/dashboard`.
