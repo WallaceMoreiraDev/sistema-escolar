@@ -23,6 +23,7 @@
   * Nenhuma alteração estrutural de banco de dados (tabelas, colunas, RLS, functions) deve ser feita via Supabase Dashboard. O uso exclusivo de **Supabase Migrations CLI** é obrigatório, garantindo o versionamento do schema.
   * Mutações que envolvem múltiplas tabelas devem ser feitas através de transações. Como o Supabase JS Client não suporta transações locais complexas nativamente, utilize **Postgres RPCs (Stored Procedures)** encapsulando a lógica transacional para garantir ACID.
 * **Convenção de Nomenclatura do Banco:** Tabelas e colunas devem obrigatoriamente usar `snake_case`. O backend é responsável por mapear esses valores para `camelCase` (via DTOs) antes de enviá-los ao frontend.
+* **Sincronização Obrigatória do Schema (Pré-requisito Mandatório):** Antes de iniciar qualquer codificação ou manutenção no Backend que toque no banco de dados, é OBRIGATÓRIO rodar o comando `npm run db:types` na pasta `/backend` (ou `npx supabase gen types --lang=typescript --project-id ... > ../shared/types/database.types.ts`) para atualizar `shared/types/database.types.ts`. É expressamente proibido supor colunas ou relacionamentos sem antes sincronizar e consultar este arquivo gerado.
 
 ---
 
@@ -53,6 +54,15 @@
 * **DTOs e Boundary Mapping:** As entidades cruas do banco não devem ser expostas se possuírem dados sensíveis (senhas, meta-dados). O Controller deve aplicar Mapeamento via DTO (Data Transfer Object).
 * **Validação Universal:** TODO payload, query e param de rota deve ser validado via middlewares estritos do **Zod** antes de tocar o Controller.
 * **Variáveis de Ambiente:** O arquivo `.env` DEVE ser validado na inicialização da aplicação usando Zod (`env.ts`). O aplicativo deve crashear no *boot* caso falte uma variável obrigatória, evitando comportamentos imprevisíveis.
+* **Estrutura de Tipos e Contratos Compartilhados (Monorepo SSOT):**
+  * A pasta `/shared` é a única autorizada a definir contratos entre Frontend e Backend:
+    - `/shared/schemas/`: Schemas do Zod de validação de input.
+    - `/shared/types/database.types.ts`: Tipos brutos gerados do Supabase.
+    - `/shared/types/api.types.ts`: Envelopes padronizados de resposta (`ApiResponse<T>`, `ApiErrorResponse`).
+    - `/shared/types/*.types.ts`: DTOs de dados transitados entre as aplicações em `camelCase`.
+  * É estritamente proibido criar tipos soltos ou interfaces manuais duplicadas no Frontend ou Backend que redefinam contratos já centralizados no `/shared`.
+  * Toda tipagem de cliente do Supabase no Backend deve obrigatoriamente instanciar `SupabaseClient<Database>` para garantir tipagem estrita de queries em tempo de compilação.
+  * É expressamente proibido o uso de `any` em rotas, middlewares ou controllers. Payloads devem utilizar middlewares de validação Zod tipados com generics do framework (Hono/Express).
 
 ---
 
