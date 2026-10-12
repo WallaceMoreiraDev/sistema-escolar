@@ -9,6 +9,7 @@ export default defineConfig({
     alias: {
       "@": path.resolve(import.meta.dirname, "./src"),
       "@shared": path.resolve(import.meta.dirname, "../shared"),
+      "zod": path.resolve(import.meta.dirname, "./node_modules/zod"),
     },
   },
 })
