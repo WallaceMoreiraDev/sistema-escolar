@@ -1,6 +1,6 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
-import { useProfile } from '@/features/auth/hooks/useProfile';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
 
 // === CONSTANTES DOS LINKS PARA REUTILIZAR ===
 const NAV_LINKS = [
@@ -18,9 +18,9 @@ const ADMIN_LINKS = [
 export function Sidebar() {
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
-  const { data: profile } = useProfile();
+  const { user } = useAuth();
   
-  const userName = profile?.name || 'Aluno';
+  const userName = user?.nome || 'Aluno';
   const userInitials = userName.substring(0, 2).toUpperCase();
 
   return (
@@ -65,7 +65,7 @@ export function Sidebar() {
           </div>
           <div className="flex-1 overflow-hidden">
             <p className="text-sm font-semibold text-slate-900 truncate">{userName}</p>
-            <p className="text-xs text-slate-500 truncate">3º B - DS</p>
+            <p className="text-xs text-slate-500 truncate">{user?.turma?.nomeOficial || 'Sem Turma'}</p>
           </div>
         </div>
       </div>
@@ -78,9 +78,9 @@ export function MobileNav() {
   const location = useLocation();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const isActive = (path: string) => location.pathname === path;
-  const { data: profile } = useProfile();
+  const { user } = useAuth();
   
-  const userName = profile?.name || 'Aluno';
+  const userName = user?.nome || 'Aluno';
   const userInitials = userName.substring(0, 2).toUpperCase();
 
   // Fecha o drawer automaticamente ao mudar de rota
@@ -186,7 +186,7 @@ export function MobileNav() {
             </div>
             <div className="flex-1 overflow-hidden">
               <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{userName}</p>
-              <p className="text-xs text-slate-500 truncate">3º B - DS</p>
+              <p className="text-xs text-slate-500 truncate">{user?.turma?.nomeOficial || 'Sem Turma'}</p>
             </div>
           </div>
         </div>

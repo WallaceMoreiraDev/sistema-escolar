@@ -1,18 +1,19 @@
-import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { onboardingSchema, type OnboardingFormValues } from '@shared/schemas/onboardingSchema';
 import { useUpdateProfile } from '@/features/auth/hooks/useProfile';
 
 export function OnboardingPage() {
   const navigate = useNavigate();
-  const [name, setName] = useState('');
-
   const { mutate, isPending } = useUpdateProfile();
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (name.trim().length < 3) return;
-    
-    mutate({ name: name.trim() }, {
+  const { register, handleSubmit, formState: { errors } } = useForm<OnboardingFormValues>({
+    resolver: zodResolver(onboardingSchema)
+  });
+
+  const onSubmit = (data: OnboardingFormValues) => {
+    mutate({ nome: data.nome }, {
       onSuccess: () => {
         navigate('/app/dashboard');
       }
@@ -36,21 +37,19 @@ export function OnboardingPage() {
           </p>
         </div>
         
-        <form onSubmit={handleSubmit} className="w-full space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="w-full space-y-6">
           <div className="space-y-2">
-            <label htmlFor="fullName" className="block text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
+            <label htmlFor="nome" className="block text-sm font-bold text-slate-700 dark:text-slate-300 ml-1">
               Nome Completo
             </label>
             <input 
-              id="fullName"
+              id="nome"
               type="text" 
-              value={name}
-              onChange={(e) => setName(e.target.value)}
+              {...register('nome')}
               placeholder="Ex: João Silva Mendes"
               className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-4 text-slate-900 dark:text-white placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all shadow-sm"
-              required
-              minLength={3}
             />
+            {errors.nome && <span className="text-sm text-red-500 font-bold ml-1">{errors.nome.message}</span>}
           </div>
 
           <div className="bg-orange-50 dark:bg-orange-900/20 border border-orange-200 dark:border-orange-800/50 rounded-xl p-4 flex gap-3 text-left">
@@ -63,7 +62,7 @@ export function OnboardingPage() {
 
           <button 
             type="submit"
-            disabled={name.trim().length < 3 || isPending}
+            disabled={isPending}
             className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white py-4 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:pointer-events-none text-lg mt-4"
           >
             {isPending ? 'Salvando...' : 'Continuar para o Dashboard'}

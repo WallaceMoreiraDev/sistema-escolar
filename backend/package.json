@@ -4,9 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "wrangler dev",
+    "dev": "wrangler dev --port 3000",
     "deploy": "wrangler deploy",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "db:types": "supabase gen types --lang=typescript --project-id fbuufhrzoklhepefnlcm > ../shared/types/database.types.ts"
   },
   "keywords": [],
   "author": "",

@@ -23,6 +23,7 @@
   * Nenhuma alteração estrutural de banco de dados (tabelas, colunas, RLS, functions) deve ser feita via Supabase Dashboard. O uso exclusivo de **Supabase Migrations CLI** é obrigatório, garantindo o versionamento do schema.
   * Mutações que envolvem múltiplas tabelas devem ser feitas através de transações. Como o Supabase JS Client não suporta transações locais complexas nativamente, utilize **Postgres RPCs (Stored Procedures)** encapsulando a lógica transacional para garantir ACID.
 * **Convenção de Nomenclatura do Banco:** Tabelas e colunas devem obrigatoriamente usar `snake_case`. O backend é responsável por mapear esses valores para `camelCase` (via DTOs) antes de enviá-los ao frontend.
+* **Sincronização Obrigatória do Schema (Pré-requisito Mandatório):** Antes de iniciar qualquer codificação ou manutenção no Backend que toque no banco de dados, é OBRIGATÓRIO rodar o comando `npm run db:types` na pasta `/backend` (ou `npx supabase gen types --lang=typescript --project-id ... > ../shared/types/database.types.ts`) para atualizar `shared/types/database.types.ts`. É expressamente proibido supor colunas ou relacionamentos sem antes sincronizar e consultar este arquivo gerado.
 
 ---
 
@@ -53,6 +54,15 @@
 * **DTOs e Boundary Mapping:** As entidades cruas do banco não devem ser expostas se possuírem dados sensíveis (senhas, meta-dados). O Controller deve aplicar Mapeamento via DTO (Data Transfer Object).
 * **Validação Universal:** TODO payload, query e param de rota deve ser validado via middlewares estritos do **Zod** antes de tocar o Controller.
 * **Variáveis de Ambiente:** O arquivo `.env` DEVE ser validado na inicialização da aplicação usando Zod (`env.ts`). O aplicativo deve crashear no *boot* caso falte uma variável obrigatória, evitando comportamentos imprevisíveis.
+* **Estrutura de Tipos e Contratos Compartilhados (Monorepo SSOT):**
+  * A pasta `/shared` é a única autorizada a definir contratos entre Frontend e Backend:
+    - `/shared/schemas/`: Schemas do Zod de validação de input.
+    - `/shared/types/database.types.ts`: Tipos brutos gerados do Supabase.
+    - `/shared/types/api.types.ts`: Envelopes padronizados de resposta (`ApiResponse<T>`, `ApiErrorResponse`).
+    - `/shared/types/*.types.ts`: DTOs de dados transitados entre as aplicações em `camelCase`.
+  * É estritamente proibido criar tipos soltos ou interfaces manuais duplicadas no Frontend ou Backend que redefinam contratos já centralizados no `/shared`.
+  * Toda tipagem de cliente do Supabase no Backend deve obrigatoriamente instanciar `SupabaseClient<Database>` para garantir tipagem estrita de queries em tempo de compilação.
+  * É expressamente proibido o uso de `any` em rotas, middlewares ou controllers. Payloads devem utilizar middlewares de validação Zod tipados com generics do framework (Hono/Express).
 
 ---
 
@@ -93,6 +103,10 @@
 ## 7. Git Workflow e CI/CD
 * **Proibição de Commits Diretos:** É estritamente proibido realizar *commits* ou *pushes* diretamente nas branches `master`, `main` ou `develop`. 
 * **Trabalho por Branches:** Todo desenvolvimento se dá em branches no padrão `feature/nome`, `bugfix/nome`, `hotfix/nome` ou `chore/nome`.
+* **Padrão de Commits (Conventional Commits):** 
+  * A mensagem de commit deve sempre seguir o padrão: `tipo(escopo): descrição da mudança`. (ex: `feat(alunos): adiciona ...`, `fix(auth): corrige ...`, `docs: ...`, `refactor(ui): ...`, `chore: ...`).
+  * A descrição da mudança **DEVE** ser escrita em **Português**.
+  * Sempre especifique o **local/escopo** de onde a mudança ocorreu entre parênteses (a menos que seja uma mudança global que não se encaixe em um escopo específico).
 * **Pull Requests e o Code Review Checklist (CRÍTICO):** Nenhuma PR pode ser "auto-aprovada". O revisor DEVE validar:
   * [ ] As regras de negócio estão no Service e isoladas do Controller?
   * [ ] Todos os inputs estão sendo validados por Zod?
@@ -116,7 +130,8 @@
 * **Alinhamento Prévio:** Qualquer alteração de arquitetura, inclusão de nova lib no `package.json`, ou modificações estruturais extensas requerem validação e aprovação do desenvolvedor parceiro (usuário).
 * **Planejamento sobre Ação Pronta:** Antes de despejar grandes quantidades de código, planeje os passos a serem tomados e valide o entendimento lógico. O fluxo é: Compreensão -> Proposta -> Validação -> Execução.
 * **Justificativas Técnicas:** Quando propor uma solução diferente da que foi pedida, a IA tem a obrigação de explicar a motivação e os potenciais ganhos e riscos para a base do código (trade-offs).
-* **Verificação Obrigatória de TypeScript (TSC):** A IA deve obrigatoriamente rodar a verificação do compilador do TypeScript (ex: `npx tsc -b` ou similar) logo após refatorações e adições de código, garantindo que não deixará para trás quebras de tipagem, imports ausentes ou erros de compilação.
+* **Verificação Obrigatória de TypeScript (TSC):** A IA deve obrigatoriamente rodar a verificação do compilador do TypeScript (ex: `npx tsc --noEmit`) logo após refatorações e adições de código, garantindo que não deixará para trás quebras de tipagem, imports ausentes ou erros de compilação. **ATENÇÃO:** Caso a compilação gere arquivos `.js` ou `.d.ts` sujos acidentalmente nas pastas de código-fonte (ex: ao usar `tsc -b`), a IA **DEVE** realizar a limpeza (exclusão) de todos esses arquivos gerados antes de propor qualquer commit. Jamais comite arquivos transpilados no meio do código fonte.
+* **Isolamento de Responsabilidade (Backend AI):** A IA atuando como Engenheiro de Backend é **ESTRITAMENTE PROIBIDA** de alterar, criar ou modificar códigos na pasta do Frontend (React). Quando a API ou Banco for atualizada, a IA do Backend deve obrigatoriamente documentar as ações de integração necessárias no arquivo `FRONTEND_HANDOFF.md` na raiz do projeto, para que o dev/IA do frontend consuma posteriormente. **Importante:** Todo o conteúdo do `FRONTEND_HANDOFF.md` DEVE ser mantido no formato de checklist (usando `[ ]` e `[x]`), permitindo que a IA do frontend marque facilmente o que já foi implementado e o que está pendente.
 
 ---
 

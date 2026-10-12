@@ -10,6 +10,7 @@ import { ClassAdminPage } from '@/features/class-admin/ClassAdminPage'
 import { SystemAdminPage } from '@/features/system-admin/SystemAdminPage'
 import { ActiveClassesPage } from '@/features/system-admin/ActiveClassesPage'
 import { AppLayout } from '@/components/layout/AppLayout'
+import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
 
 export const router = createBrowserRouter([
   {
@@ -21,49 +22,54 @@ export const router = createBrowserRouter([
     element: <AuthPage />,
   },
   {
-    path: '/onboarding',
-    element: <OnboardingPage />,
-  },
-  {
-    path: '/app',
-    element: <AppLayout />, 
+    element: <ProtectedRoute />,
     children: [
       {
-        path: 'dashboard',
-        element: <DashboardPage />,
+        path: '/onboarding',
+        element: <OnboardingPage />,
       },
       {
-        path: 'mural',
-        element: <MuralPage />,
+        path: '/app',
+        element: <AppLayout />, 
         children: [
           {
-            path: 'aviso/:id',
-            element: <NoticeModal />
-          }
-        ]
-      },
-      {
-        path: 'minha-turma',
-        element: <CalendarPage />,
-        children: [
+            path: 'dashboard',
+            element: <DashboardPage />,
+          },
           {
-            path: 'evento/:id',
-            element: <EventModal />
-          }
+            path: 'mural',
+            element: <MuralPage />,
+            children: [
+              {
+                path: 'aviso/:id',
+                element: <NoticeModal />
+              }
+            ]
+          },
+          {
+            path: 'minha-turma',
+            element: <CalendarPage />,
+            children: [
+              {
+                path: 'evento/:id',
+                element: <EventModal />
+              }
+            ]
+          },
+          {
+            path: 'painel-turma',
+            element: <ClassAdminPage />
+          },
+          {
+            path: 'painel-admin',
+            element: <SystemAdminPage />
+          },
+          {
+            path: 'admin-turmas',
+            element: <ActiveClassesPage />
+          },
         ]
-      },
-      {
-        path: 'painel-turma',
-        element: <ClassAdminPage />
-      },
-      {
-        path: 'painel-admin',
-        element: <SystemAdminPage />
-      },
-      {
-        path: 'admin-turmas',
-        element: <ActiveClassesPage />
-      },
+      }
     ]
   }
 ], {

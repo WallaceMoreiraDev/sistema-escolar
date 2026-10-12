@@ -1,12 +1,14 @@
 import { MiddlewareHandler } from "hono";
 import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
+import { Database } from "@shared/types/database.types";
 import { AppError } from "../utils/AppError";
 import { validateEnv } from "../env";
 
 // Extend Hono's Context Variables to include the authenticated Supabase client and User
 export type Variables = {
-  supabase: SupabaseClient;
+  supabase: SupabaseClient<Database>;
   user: User;
+  validBody?: unknown;
 };
 
 export const authMiddleware: MiddlewareHandler<{ Variables: Variables }> = async (c, next) => {
@@ -28,6 +30,7 @@ export const authMiddleware: MiddlewareHandler<{ Variables: Variables }> = async
     global: {
       headers: {
         Authorization: `Bearer ${token}`,
+        apikey: env.SUPABASE_ANON_KEY,
       },
     },
   });

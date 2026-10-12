@@ -4,6 +4,7 @@ import { cors } from "hono/cors";
 import { errorHandler } from "./middlewares/errorMiddleware";
 import { authMiddleware, Variables } from "./middlewares/authMiddleware";
 import { EnvConfig } from "./env";
+import { userRoutes } from "./routes/userRoutes";
 
 // Define the Bindings (Env Vars) and Variables (Context State) for the app
 type AppBindings = {
@@ -25,10 +26,7 @@ app.get("/health", (c) => {
   return c.json({ success: true, message: "Backend is running and healthy!" });
 });
 
-// Example pattern for protected routes (to be moved to /routes later)
-// app.get("/api/me", authMiddleware, (c) => {
-//   const user = c.get("user");
-//   return c.json({ success: true, data: user });
-// });
+// Register Route Groups
+app.route("/api/me", userRoutes);
 
 export default app;
