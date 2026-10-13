@@ -9,9 +9,9 @@
 
 ### Ações Exigidas para o Frontend:
 
-- [ ] **Integração da API de Avisos (`frontend/src/features/mural/api/noticeApi.ts` ou hooks):**
-  - [ ] Criar/atualizar as chamadas de API apontando para `http://localhost:3000/api/avisos` com o header `Authorization: Bearer <session.access_token>`.
-  - [ ] **Tipagens e Contratos Oficiais:**
+- [x] **Integração da API de Avisos (`frontend/src/features/mural/api/noticeApi.ts` ou hooks):**
+  - [x] Criar/atualizar as chamadas de API apontando para `http://localhost:3000/api/avisos` com o header `Authorization: Bearer <session.access_token>`.
+  - [x] **Tipagens e Contratos Oficiais:**
     - Importar `NoticeDTO`, `AvisoRemetente`, `AvisoBadge`, `ApiResponse` de `@shared/types`:
       ```typescript
       import { ApiResponse, NoticeDTO, AvisoRemetente, AvisoBadge } from '@shared/types';
@@ -26,8 +26,8 @@
       } from '@shared/schemas/noticeSchema';
       ```
 
-- [ ] **Substituir Mock pelo Backend Real em `useNotices.ts`:**
-  - [ ] **Listagem Paginada (`GET /api/avisos?page=1`):**
+- [x] **Substituir Mock pelo Backend Real em `useNotices.ts`:**
+  - [x] **Listagem Paginada (`GET /api/avisos?page=1`):**
     - Parâmetro query opcional: `page` (default 1).
     - O backend retorna 5 itens por página ordenados por `dataPostagem DESC`.
     - Envelope da resposta:
@@ -46,28 +46,28 @@
       }
       ```
     - Atualizar a paginação visual da tabela/cards no frontend (padronizada em 5 itens por página conforme GEMINI.md Seção 5).
-  - [ ] **Busca de Aviso por ID (`GET /api/avisos/:id`):**
+  - [x] **Busca de Aviso por ID (`GET /api/avisos/:id`):**
     - Retorna `{ success: true, data: NoticeDTO }`.
     - Usar na abertura do modal de visualização (`NoticeModal.tsx`).
-  - [ ] **Criação de Aviso (`POST /api/avisos`):**
+  - [x] **Criação de Aviso (`POST /api/avisos`):**
     - Apenas usuários com `role = 'ADMIN'`.
     - Payload enviado: `{ titulo: string, mensagem: string, remetente: AvisoRemetente, badgeDestaque: AvisoBadge }`.
     - Retorno: status 201 `{ success: true, data: NoticeDTO }`.
     - Invalidar queries `['notices']` no TanStack Query após mutação bem-sucedida.
-  - [ ] **Edição de Aviso (`PUT /api/avisos/:id`):**
+  - [x] **Edição de Aviso (`PUT /api/avisos/:id`):**
     - Apenas usuários com `role = 'ADMIN'`.
     - Payload enviado: `{ titulo: string, mensagem: string, remetente: AvisoRemetente, badgeDestaque: AvisoBadge }`.
     - Retorno: status 200 `{ success: true, data: NoticeDTO }`.
     - Invalidar queries `['notices']` no TanStack Query após sucesso.
-  - [ ] **Exclusão de Aviso (`DELETE /api/avisos/:id`):**
+  - [x] **Exclusão de Aviso (`DELETE /api/avisos/:id`):**
     - Apenas usuários com `role = 'ADMIN'`.
     - Retorno: status 200 `{ success: true, data: { id: string } }`.
     - Invalidar queries `['notices']` no TanStack Query após sucesso.
 
-- [ ] **Ajuste dos Formulários e Modais de Aviso:**
-  - [ ] Em `NoticeFormModal.tsx`: migrar os nomes dos campos para português camelCase (`titulo`, `mensagem`, `remetente`, `badgeDestaque`) e usar o resolver `zodResolver(createNoticeSchema)`.
-  - [ ] Opções do select de `remetente`: `'Diretoria ETEC'`, `'Coordenação'`, `'Administração da Plataforma'`.
-  - [ ] Opções do select de `badgeDestaque`: `'Urgente'`, `'Informativo'`, `'Evento'`.
+- [x] **Ajuste dos Formulários e Modais de Aviso:**
+  - [x] Em `NoticeFormModal.tsx`: migrar os nomes dos campos para português camelCase (`titulo`, `mensagem`, `remetente`, `badgeDestaque`) e usar o resolver `zodResolver(createNoticeSchema)`.
+  - [x] Opções do select de `remetente`: `'Diretoria ETEC'`, `'Coordenação'`, `'Administração da Plataforma'`.
+  - [x] Opções do select de `badgeDestaque`: `'Urgente'`, `'Informativo'`, `'Evento'`.
 
 ---
 
