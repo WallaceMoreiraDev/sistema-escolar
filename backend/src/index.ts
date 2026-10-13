@@ -2,9 +2,10 @@ import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { cors } from "hono/cors";
 import { errorHandler } from "./middlewares/errorMiddleware";
-import { authMiddleware, Variables } from "./middlewares/authMiddleware";
+import { Variables } from "./middlewares/authMiddleware";
 import { EnvConfig } from "./env";
 import { userRoutes } from "./routes/userRoutes";
+import { noticeRoutes } from "./routes/noticeRoutes";
 
 // Define the Bindings (Env Vars) and Variables (Context State) for the app
 type AppBindings = {
@@ -28,5 +29,6 @@ app.get("/health", (c) => {
 
 // Register Route Groups
 app.route("/api/me", userRoutes);
+app.route("/api/avisos", noticeRoutes);
 
 export default app;
