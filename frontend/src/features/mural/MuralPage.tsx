@@ -2,17 +2,15 @@ import { useState, useEffect } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
 import { useNotices } from './hooks/useNotices';
 import { getNoticeTypeConfig, getSenderIcon } from './utils/noticeUtils';
-import { Notice } from './types';
+import { NoticeDTO } from '@shared/types';
 
 export function MuralPage() {
   const navigate = useNavigate();
-  const { data: notices, isLoading, isError } = useNotices();
-
   const [page, setPage] = useState(1);
-  const limit = 5;
-  const safeNotices = notices || [];
-  const totalPages = Math.ceil(safeNotices.length / limit);
-  const paginatedNotices = safeNotices.slice((page - 1) * limit, page * limit);
+  const { data: response, isLoading, isError } = useNotices(page);
+
+  const notices = response?.data || [];
+  const totalPages = response?.meta?.pagination?.totalPages || 1;
 
   useEffect(() => {
     if (page > totalPages && totalPages > 0) {
@@ -50,70 +48,76 @@ export function MuralPage() {
             ))
           ) : isError ? (
             <div className="glass p-8 rounded-2xl text-center text-red-500 font-bold">
-              Erro ao carregar avisos.
+              Erro ao carregar avisos do mural.
             </div>
-          ) : safeNotices.length === 0 ? (
+          ) : notices.length === 0 ? (
             <div className="glass p-8 rounded-2xl text-center text-slate-500 font-bold">
               Nenhum aviso no mural no momento.
             </div>
           ) : (
             <>
-              {paginatedNotices.map((notice: Notice) => {
-              const typeConfig = getNoticeTypeConfig(notice.badge);
-              const icon = getSenderIcon(notice.sender);
-              return (
-                <div 
-                  key={notice.id}
-                  onClick={() => navigate(`aviso/${notice.id}`)}
-                  className="glass p-6 rounded-2xl relative overflow-hidden cursor-pointer hover:shadow-lg hover:scale-[1.01] transition-all group"
-                >
-                  <div className={`absolute top-0 left-0 w-1 h-full ${typeConfig.borderClass}`}></div>
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
-                        {icon}
+              {notices.map((notice: NoticeDTO) => {
+                const typeConfig = getNoticeTypeConfig(notice.badgeDestaque);
+                const icon = getSenderIcon(notice.remetente);
+                return (
+                  <div 
+                    key={notice.id}
+                    onClick={() => navigate(`aviso/${notice.id}`)}
+                    className="glass p-6 rounded-2xl relative overflow-hidden cursor-pointer hover:shadow-lg hover:scale-[1.01] transition-all group"
+                  >
+                    <div className={`absolute top-0 left-0 w-1 h-full ${typeConfig.borderClass}`}></div>
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400">
+                          {icon}
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">
+                            {notice.remetente}
+                          </h3>
+                          <p className="text-xs text-slate-500">
+                            {new Date(notice.dataPostagem).toLocaleDateString('pt-BR')}
+                          </p>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors">{notice.sender}</h3>
-                        <p className="text-xs text-slate-500">{new Date(notice.createdAt).toLocaleDateString('pt-BR')}</p>
-                      </div>
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${typeConfig.badgeClass}`}>
+                        {notice.badgeDestaque}
+                      </span>
                     </div>
-                    <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${typeConfig.badgeClass}`}>
-                      {notice.badge}
-                    </span>
+                    <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">
+                      {notice.titulo}
+                    </h2>
+                    <p className="text-slate-600 dark:text-slate-300 line-clamp-2">
+                      {notice.mensagem}
+                    </p>
                   </div>
-                  <h2 className="text-xl font-bold text-slate-900 dark:text-white mb-2">{notice.title}</h2>
-                  <p className="text-slate-600 dark:text-slate-300 line-clamp-2">
-                    {notice.message}
-                  </p>
-                </div>
-              )
-            })}
+                );
+              })}
             
-            {/* Paginação */}
-            {totalPages > 1 && !isLoading && !isError && (
-              <div className="p-4 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/30 rounded-2xl">
-                <button 
-                  onClick={() => setPage(p => Math.max(1, p - 1))}
-                  disabled={page === 1}
-                  className="px-4 py-2 text-sm font-bold text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 transition-colors flex items-center gap-2"
-                >
-                  &larr; Anterior
-                </button>
-                
-                <span className="text-sm font-bold text-slate-500">
-                  Página <span className="text-slate-900 dark:text-white">{page}</span> de {totalPages}
-                </span>
-                
-                <button 
-                  onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-                  disabled={page === totalPages}
-                  className="px-4 py-2 text-sm font-bold text-slate-600 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 transition-colors flex items-center gap-2"
-                >
-                  Próxima &rarr;
-                </button>
-              </div>
-            )}
+              {/* Paginação Real (GEMINI.md Seção 5: limite padronizado de 5 itens) */}
+              {totalPages > 1 && !isLoading && !isError && (
+                <div className="p-4 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/30 rounded-2xl">
+                  <button 
+                    onClick={() => setPage(p => Math.max(1, p - 1))}
+                    disabled={page === 1}
+                    className="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-2"
+                  >
+                    &larr; Anterior
+                  </button>
+                  
+                  <span className="text-sm font-bold text-slate-500">
+                    Página <span className="text-slate-900 dark:text-white">{page}</span> de {totalPages}
+                  </span>
+                  
+                  <button 
+                    onClick={() => setPage(p => Math.min(totalPages, p + 1))}
+                    disabled={page === totalPages}
+                    className="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-2"
+                  >
+                    Próxima &rarr;
+                  </button>
+                </div>
+              )}
             </>
           )}
         </div>
@@ -121,5 +125,5 @@ export function MuralPage() {
       
       <Outlet />
     </>
-  )
+  );
 }

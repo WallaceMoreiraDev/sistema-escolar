@@ -1,83 +1,91 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { Notice } from '../types';
-import { MOCK_NOTICES } from '../data/mockNotices';
-import { type NoticeFormValues } from '@shared/schemas/noticeSchema';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { noticeApi } from '../api/noticeApi';
+import { CreateNoticePayload, UpdateNoticePayload } from '@shared/types';
 
-let noticesDB: Notice[] = [...MOCK_NOTICES] as Notice[];
+/**
+ * Hook para listagem paginada de avisos gerais do mural (5 itens por página).
+ */
+export function useNotices(page: number = 1) {
+  const { session } = useAuth();
+  const token = session?.access_token;
 
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
-export function useNotices() {
   return useQuery({
-    queryKey: ['notices'],
-    queryFn: async (): Promise<Notice[]> => {
-      await delay(600); // Simulando delay de rede
-      // Ordena decrescente por createdAt (mais novos primeiro)
-      return [...noticesDB].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-    }
+    queryKey: ['notices', page],
+    queryFn: () => noticeApi.getNotices(token!, page),
+    enabled: !!token,
+    staleTime: 1000 * 60 * 2, // 2 minutos de cache
   });
 }
 
+/**
+ * Hook para buscar detalhes de um aviso específico por ID.
+ */
+export function useNotice(id?: string) {
+  const { session } = useAuth();
+  const token = session?.access_token;
+
+  return useQuery({
+    queryKey: ['notice', id],
+    queryFn: () => noticeApi.getNoticeById(token!, id!),
+    enabled: !!id && !!token,
+  });
+}
+
+/**
+ * Hook de mutação para criar aviso geral (ADMIN).
+ */
 export function useCreateNotice() {
   const queryClient = useQueryClient();
-  
+  const { session } = useAuth();
+  const token = session?.access_token;
+
   return useMutation({
-    mutationFn: async (data: NoticeFormValues) => {
-      await delay(800);
-      const newNotice: Notice = {
-        id: `notice-${Date.now()}`,
-        sender: data.sender,
-        badge: data.badge,
-        title: data.title,
-        message: data.message,
-        date: 'Agora', // Simplificação para o frontend (poderia usar date-fns no front real)
-        createdAt: new Date().toISOString()
-      };
-      noticesDB = [newNotice, ...noticesDB];
-      return newNotice;
+    mutationFn: (data: CreateNoticePayload) => {
+      if (!token) throw new Error('Não autenticado');
+      return noticeApi.createNotice(token, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notices'] });
-    }
+    },
   });
 }
 
+/**
+ * Hook de mutação para editar aviso geral (ADMIN).
+ */
 export function useUpdateNotice() {
   const queryClient = useQueryClient();
-  
+  const { session } = useAuth();
+  const token = session?.access_token;
+
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string, data: NoticeFormValues }) => {
-      await delay(800);
-      const index = noticesDB.findIndex(n => n.id === id);
-      if (index !== -1) {
-        noticesDB[index] = {
-          ...noticesDB[index],
-          sender: data.sender,
-          badge: data.badge,
-          title: data.title,
-          message: data.message
-        };
-        return noticesDB[index];
-      }
-      throw new Error('Aviso não encontrado');
+    mutationFn: ({ id, data }: { id: string; data: UpdateNoticePayload }) => {
+      if (!token) throw new Error('Não autenticado');
+      return noticeApi.updateNotice(token, id, data);
     },
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['notices'] });
-    }
+      queryClient.invalidateQueries({ queryKey: ['notice', variables.id] });
+    },
   });
 }
 
+/**
+ * Hook de mutação para excluir aviso geral (ADMIN).
+ */
 export function useDeleteNotice() {
   const queryClient = useQueryClient();
-  
+  const { session } = useAuth();
+  const token = session?.access_token;
+
   return useMutation({
-    mutationFn: async (id: string) => {
-      await delay(500);
-      noticesDB = noticesDB.filter(n => n.id !== id);
-      return id;
+    mutationFn: (id: string) => {
+      if (!token) throw new Error('Não autenticado');
+      return noticeApi.deleteNotice(token, id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['notices'] });
-    }
+    },
   });
 }

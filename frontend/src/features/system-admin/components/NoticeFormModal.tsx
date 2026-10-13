@@ -1,40 +1,54 @@
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { noticeSchema, type NoticeFormValues } from '@shared/schemas/noticeSchema';
-import { Notice } from '../../mural/types';
+import {
+  createNoticeSchema,
+  type CreateNoticeInput,
+} from '@shared/schemas/noticeSchema';
+import { NoticeDTO } from '@shared/types';
 import { useCreateNotice, useUpdateNotice } from '../../mural/hooks/useNotices';
 
 interface NoticeFormModalProps {
   isOpen: boolean;
   onClose: () => void;
-  noticeToEdit?: Notice | null;
+  noticeToEdit?: NoticeDTO | null;
 }
 
 export function NoticeFormModal({ isOpen, onClose, noticeToEdit }: NoticeFormModalProps) {
   const createMutation = useCreateNotice();
   const updateMutation = useUpdateNotice();
 
-  const { register, handleSubmit, reset, setValue, formState: { errors } } = useForm<NoticeFormValues>({
-    resolver: zodResolver(noticeSchema),
+  const {
+    register,
+    handleSubmit,
+    reset,
+    setValue,
+    formState: { errors },
+  } = useForm<CreateNoticeInput>({
+    resolver: zodResolver(createNoticeSchema),
   });
 
   useEffect(() => {
     if (isOpen) {
       if (noticeToEdit) {
-        setValue('title', noticeToEdit.title);
-        setValue('message', noticeToEdit.message);
-        setValue('sender', noticeToEdit.sender as NoticeFormValues['sender']);
-        setValue('badge', noticeToEdit.badge);
+        setValue('titulo', noticeToEdit.titulo);
+        setValue('mensagem', noticeToEdit.mensagem);
+        setValue('remetente', noticeToEdit.remetente);
+        setValue('badgeDestaque', noticeToEdit.badgeDestaque);
       } else {
-        reset({ title: '', message: '', sender: undefined, badge: undefined });
+        reset({
+          titulo: '',
+          mensagem: '',
+          remetente: undefined,
+          badgeDestaque: undefined,
+        });
       }
     }
   }, [isOpen, noticeToEdit, setValue, reset]);
 
   if (!isOpen) return null;
 
-  const onSubmit = (data: NoticeFormValues) => {
+  const onSubmit = (data: CreateNoticeInput) => {
     if (noticeToEdit) {
       updateMutation.mutate(
         { id: noticeToEdit.id, data },
@@ -42,7 +56,7 @@ export function NoticeFormModal({ isOpen, onClose, noticeToEdit }: NoticeFormMod
           onSuccess: () => {
             onClose();
             reset();
-          }
+          },
         }
       );
     } else {
@@ -50,7 +64,7 @@ export function NoticeFormModal({ isOpen, onClose, noticeToEdit }: NoticeFormMod
         onSuccess: () => {
           onClose();
           reset();
-        }
+        },
       });
     }
   };
@@ -69,7 +83,9 @@ export function NoticeFormModal({ isOpen, onClose, noticeToEdit }: NoticeFormMod
             onClick={onClose}
             className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-colors bg-white dark:bg-slate-800 rounded-full shadow-sm border border-slate-200 dark:border-slate-700"
           >
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+            </svg>
           </button>
         </div>
 
@@ -78,21 +94,21 @@ export function NoticeFormModal({ isOpen, onClose, noticeToEdit }: NoticeFormMod
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Remetente</label>
               <select 
-                {...register('sender')}
+                {...register('remetente')}
                 className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               >
                 <option value="">Selecione...</option>
-                <option value="Diretoria">Diretoria</option>
+                <option value="Diretoria ETEC">Diretoria ETEC</option>
                 <option value="Coordenação">Coordenação</option>
                 <option value="Administração da Plataforma">Administração da Plataforma</option>
               </select>
-              {errors.sender && <span className="text-xs font-bold text-red-500">{errors.sender.message}</span>}
+              {errors.remetente && <span className="text-xs font-bold text-red-500">{errors.remetente.message}</span>}
             </div>
 
             <div className="space-y-1.5">
               <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Badge (Destaque)</label>
               <select 
-                {...register('badge')}
+                {...register('badgeDestaque')}
                 className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
               >
                 <option value="">Selecione...</option>
@@ -100,7 +116,7 @@ export function NoticeFormModal({ isOpen, onClose, noticeToEdit }: NoticeFormMod
                 <option value="Informativo">Informativo (Azul)</option>
                 <option value="Evento">Evento (Verde)</option>
               </select>
-              {errors.badge && <span className="text-xs font-bold text-red-500">{errors.badge.message}</span>}
+              {errors.badgeDestaque && <span className="text-xs font-bold text-red-500">{errors.badgeDestaque.message}</span>}
             </div>
           </div>
 
@@ -108,22 +124,22 @@ export function NoticeFormModal({ isOpen, onClose, noticeToEdit }: NoticeFormMod
             <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Título</label>
             <input 
               type="text" 
-              {...register('title')}
+              {...register('titulo')}
               placeholder="Ex: Feriado Nacional"
               className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all"
             />
-            {errors.title && <span className="text-xs font-bold text-red-500">{errors.title.message}</span>}
+            {errors.titulo && <span className="text-xs font-bold text-red-500">{errors.titulo.message}</span>}
           </div>
 
           <div className="space-y-1.5">
             <label className="text-sm font-bold text-slate-700 dark:text-slate-300">Mensagem</label>
             <textarea 
-              {...register('message')}
+              {...register('mensagem')}
               placeholder="Digite o conteúdo do aviso..."
               rows={5}
               className="w-full bg-white dark:bg-slate-900/50 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all resize-none"
             ></textarea>
-            {errors.message && <span className="text-xs font-bold text-red-500">{errors.message.message}</span>}
+            {errors.mensagem && <span className="text-xs font-bold text-red-500">{errors.mensagem.message}</span>}
           </div>
           
           <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex justify-end gap-3">

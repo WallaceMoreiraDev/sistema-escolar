@@ -1,14 +1,18 @@
 import { MiddlewareHandler } from "hono";
 import { createClient, SupabaseClient, User } from "@supabase/supabase-js";
 import { Database } from "@shared/types/database.types";
+import { UserRole } from "@shared/types/user.types";
 import { AppError } from "../utils/AppError";
 import { validateEnv } from "../env";
 
-// Extend Hono's Context Variables to include the authenticated Supabase client and User
+// Extend Hono's Context Variables to include the authenticated Supabase client, User and validated inputs
 export type Variables = {
   supabase: SupabaseClient<Database>;
   user: User;
+  userRole?: UserRole;
   validBody?: unknown;
+  validParams?: unknown;
+  validQuery?: unknown;
 };
 
 export const authMiddleware: MiddlewareHandler<{ Variables: Variables }> = async (c, next) => {
