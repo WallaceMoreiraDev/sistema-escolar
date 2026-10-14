@@ -11,6 +11,7 @@ import { SystemAdminPage } from '@/features/system-admin/SystemAdminPage'
 import { ActiveClassesPage } from '@/features/system-admin/ActiveClassesPage'
 import { AppLayout } from '@/components/layout/AppLayout'
 import { ProtectedRoute } from '@/components/layout/ProtectedRoute'
+import { RoleProtectedRoute } from '@/components/layout/RoleProtectedRoute'
 
 export const router = createBrowserRouter([
   {
@@ -56,17 +57,29 @@ export const router = createBrowserRouter([
               }
             ]
           },
+          // Rotas de Gestão de Turma: Exclusivas para Líder ou Admin com Turma vinculada
           {
-            path: 'painel-turma',
-            element: <ClassAdminPage />
+            element: <RoleProtectedRoute allowedRoles={['LIDER', 'ADMIN']} requireTurma />,
+            children: [
+              {
+                path: 'painel-turma',
+                element: <ClassAdminPage />
+              },
+            ]
           },
+          // Rotas de Administração Geral do Sistema: Exclusivas para Administrador
           {
-            path: 'painel-admin',
-            element: <SystemAdminPage />
-          },
-          {
-            path: 'admin-turmas',
-            element: <ActiveClassesPage />
+            element: <RoleProtectedRoute allowedRoles={['ADMIN']} />,
+            children: [
+              {
+                path: 'painel-admin',
+                element: <SystemAdminPage />
+              },
+              {
+                path: 'admin-turmas',
+                element: <ActiveClassesPage />
+              },
+            ]
           },
         ]
       }
