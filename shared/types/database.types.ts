@@ -152,6 +152,7 @@ export type Database = {
       pedidos_turma: {
         Row: {
           ano: Database["public"]["Enums"]["ano_type"]
+          created_at: string
           curso: string
           id: string
           justificativa: string | null
@@ -162,6 +163,7 @@ export type Database = {
         }
         Insert: {
           ano: Database["public"]["Enums"]["ano_type"]
+          created_at?: string
           curso: string
           id?: string
           justificativa?: string | null
@@ -172,6 +174,7 @@ export type Database = {
         }
         Update: {
           ano?: Database["public"]["Enums"]["ano_type"]
+          created_at?: string
           curso?: string
           id?: string
           justificativa?: string | null
@@ -284,7 +287,7 @@ export type Database = {
         | "Administração da Plataforma"
       evento_categoria: "Prova" | "Trabalho" | "Tarefa" | "Aviso"
       pedido_status: "pendente" | "aprovado" | "rejeitado"
-      turno_type: "Manhã" | "Tarde" | "Noite"
+      turno_type: "Manhã" | "Tarde" | "Noite" | "Integral"
       user_role: "ALUNO" | "LIDER" | "ADMIN"
     }
     CompositeTypes: {
@@ -422,7 +425,7 @@ export const Constants = {
       ],
       evento_categoria: ["Prova", "Trabalho", "Tarefa", "Aviso"],
       pedido_status: ["pendente", "aprovado", "rejeitado"],
-      turno_type: ["Manhã", "Tarde", "Noite"],
+      turno_type: ["Manhã", "Tarde", "Noite", "Integral"],
       user_role: ["ALUNO", "LIDER", "ADMIN"],
     },
   },
