@@ -6,7 +6,9 @@ export type ErrorCode =
   | "NOT_FOUND"
   | "VALIDATION_ERROR"
   | "INTERNAL_SERVER_ERROR"
-  | "BAD_REQUEST";
+  | "BAD_REQUEST"
+  | "CLASS_REQUEST_DUPLICATE"
+  | "ALREADY_IN_CLASS";
 
 export class AppError extends Error {
   public readonly code: ErrorCode;
