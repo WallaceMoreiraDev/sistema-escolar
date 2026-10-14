@@ -4,23 +4,23 @@
 
 ---
 
-## 🟡 Pendentes: Etapa 1 do Fluxo de Turmas (Solicitação pelo Aluno)
+## 🟢 Concluído: Etapa 1 do Fluxo de Turmas (Solicitação pelo Aluno)
 **Data/Contexto:** Criação da API REST para envio e consulta de solicitações de turma (`pedidos_turma`), incluindo suporte ao cancelamento e controle de unicidade anti-spam.
 
 ### Ações Exigidas para o Frontend:
 
-- [ ] **Adoção dos Contratos e Schemas (@shared):**
-  - [ ] Importar `createClassRequestSchema` e tipo `CreateClassRequestInput` de `@shared/schemas/classSchema`:
+- [x] **Adoção dos Contratos e Schemas (@shared):**
+  - [x] Importar `createClassRequestSchema` e tipo `CreateClassRequestInput` de `@shared/schemas/classSchema`:
     ```typescript
     import { createClassRequestSchema, type CreateClassRequestInput } from '@shared/schemas/classSchema';
     ```
-  - [ ] Importar `ClassRequestDTO`, `AnoTurma`, `TurnoTurma` e `ApiResponse` de `@shared/types`:
+  - [x] Importar `ClassRequestDTO`, `AnoTurma`, `TurnoTurma` e `ApiResponse` de `@shared/types`:
     ```typescript
     import { ApiResponse, ClassRequestDTO, AnoTurma, TurnoTurma } from '@shared/types';
     ```
 
-- [ ] **Integração das Chamadas de API (`/api/turmas/pedidos`):**
-  - [ ] **Enviar Solicitação de Turma (`POST /api/turmas/pedidos`):**
+- [x] **Integração das Chamadas de API (`/api/turmas/pedidos`):**
+  - [x] **Enviar Solicitação de Turma (`POST /api/turmas/pedidos`):**
     - Header: `Authorization: Bearer <session.access_token>`.
     - Payload esperado:
       ```typescript
@@ -37,22 +37,22 @@
       - `400 BAD_REQUEST` com `code: "ALREADY_IN_CLASS"`: O usuário já está vinculado a uma turma.
       - `409 CONFLICT` com `code: "CLASS_REQUEST_DUPLICATE"`: O usuário já possui uma solicitação pendente em andamento.
     - Após sucesso: fechar o modal `CreateClassModal` e invalidar a query de pedido pendente (`['my-pending-class-request']`).
-  - [ ] **Consultar Solicitação Pendente do Aluno (`GET /api/turmas/pedidos/meu`):**
+  - [x] **Consultar Solicitação Pendente do Aluno (`GET /api/turmas/pedidos/meu`):**
     - Header: `Authorization: Bearer <session.access_token>`.
     - Retorno:
       - Se houver pedido pendente: status 200 `{ success: true, data: ClassRequestDTO }`.
       - Se não houver pedido ativo: status 200 `{ success: true, data: null }`.
     - Utilizar para exibir banner/aviso no Dashboard informando que o pedido da turma está em análise pela moderação.
-  - [ ] **Cancelar Solicitação Pendente (`DELETE /api/turmas/pedidos/meu`):**
+  - [x] **Cancelar Solicitação Pendente (`DELETE /api/turmas/pedidos/meu`):**
     - Header: `Authorization: Bearer <session.access_token>`.
     - Retorno: status 200 `{ success: true, data: { message: "Solicitação de turma cancelada com sucesso." } }`.
     - Permite ao aluno desistir de uma solicitação incorreta para criar uma nova.
     - Após sucesso: invalidar a query `['my-pending-class-request']`.
 
-- [ ] **Ajuste do Modal `CreateClassModal.tsx`:**
-  - [ ] Integrar formulário com `react-hook-form` e `zodResolver(createClassRequestSchema)`.
-  - [ ] As opções do select de `ano` devem enviar `'1º'`, `'2º'`, `'3º'`.
-  - [ ] As opções do select de `turno` devem incluir `'Manhã'`, `'Tarde'`, `'Noite'`, `'Integral'`.
+- [x] **Ajuste do Modal `CreateClassModal.tsx`:**
+  - [x] Integrar formulário com `react-hook-form` e `zodResolver(createClassRequestSchema)`.
+  - [x] As opções do select de `ano` devem enviar `'1º'`, `'2º'`, `'3º'`.
+  - [x] As opções do select de `turno` devem incluir `'Manhã'`, `'Tarde'`, `'Noite'`, `'Integral'`.
 
 ---
 
