@@ -23,7 +23,7 @@ export function CrowdfundingBanner() {
               </span>
               Meta do Mês
             </div>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">Apoie o Projeto Prumo! 🚀</h2>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">Apoie o Projeto Prumo!</h2>
             <p className="text-slate-500 dark:text-slate-300 text-sm max-w-md">O servidor custa R$ 50/mês. Ajude a manter nossa plataforma rápida, segura e sem anúncios.</p>
             
             <div className="mt-6 flex items-center gap-4">
