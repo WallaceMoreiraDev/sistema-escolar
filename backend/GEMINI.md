@@ -14,3 +14,11 @@
 - **Controle de Acesso (RBAC):** Mutações (criação via `POST /api/avisos`, edição via `PUT /api/avisos/:id` e exclusão via `DELETE /api/avisos/:id`) são de acesso restrito e exclusivo para usuários com perfil `role = 'ADMIN'`. A leitura (`GET /api/avisos` e `GET /api/avisos/:id`) é liberada para qualquer usuário autenticado.
 - **Paginação no Banco (Scalability Constraint):** A listagem de avisos gerais é fixada em **5 avisos por página**, paginada no banco via `.range()` no Supabase com contagem exata (`count: 'exact'`) e ordenada por `data_postagem DESC`.
 - **Contratos e DTO:** O backend deve expor estritamente os campos em `camelCase` (`titulo`, `mensagem`, `remetente`, `badgeDestaque`, `dataPostagem`) através do `NoticeDTO`, isolando as entidades cruas do banco.
+
+---
+
+## 3. Diretrizes do Fluxo de Turmas - Etapa 1: Solicitação pelo Aluno (`pedidos_turma`)
+- **Regra de Unicidade e Anti-Spam (409):** O aluno só pode ter no máximo **1 solicitação pendente** por vez. Tentativas duplicadas disparam `HTTP 409 CONFLICT` com código tipado `CLASS_REQUEST_DUPLICATE`.
+- **Prevenção de Vínculo Duplo (400):** Alunos que já possuem turma vinculada (`turma_id IS NOT NULL`) não podem enviar solicitações de criação de turma, disparando `HTTP 400 BAD_REQUEST` com código tipado `ALREADY_IN_CLASS`.
+- **Cancelamento Autônomo:** O aluno pode cancelar sua solicitação enquanto ela estiver com status `pendente` (`DELETE /api/turmas/pedidos/meu`). Caso não exista solicitação ativa, a rota dispara `HTTP 404 NOT_FOUND`.
+- **Contratos e DTO:** A solicitação é representada pelo `ClassRequestDTO` com campos em `camelCase` (`id`, `usuarioId`, `ano`, `turno`, `curso`, `localSala`, `justificativa`, `status`, `createdAt`).
