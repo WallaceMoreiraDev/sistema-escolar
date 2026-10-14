@@ -6,6 +6,7 @@ import { Variables } from "./middlewares/authMiddleware";
 import { EnvConfig } from "./env";
 import { userRoutes } from "./routes/userRoutes";
 import { noticeRoutes } from "./routes/noticeRoutes";
+import { classRoutes } from "./routes/classRoutes";
 
 // Define the Bindings (Env Vars) and Variables (Context State) for the app
 type AppBindings = {
@@ -30,5 +31,6 @@ app.get("/health", (c) => {
 // Register Route Groups
 app.route("/api/me", userRoutes);
 app.route("/api/avisos", noticeRoutes);
+app.route("/api/turmas", classRoutes);
 
 export default app;
