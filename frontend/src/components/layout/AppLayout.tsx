@@ -23,6 +23,16 @@ export function Sidebar() {
   const userName = user?.nome || 'Aluno';
   const userInitials = userName.substring(0, 2).toUpperCase();
 
+  const isTurmaLeaderOrAdmin = !!user?.turma && (user?.role === 'LIDER' || user?.role === 'ADMIN');
+  const isAdmin = user?.role === 'ADMIN';
+
+  const visibleNavLinks = NAV_LINKS.filter(link => {
+    if (link.path === '/app/painel-turma') {
+      return isTurmaLeaderOrAdmin;
+    }
+    return true;
+  });
+
   return (
     <aside className="w-64 hidden md:flex flex-col h-screen fixed left-0 top-0 border-r border-slate-200/50 bg-white/40 backdrop-blur-3xl dark:bg-black/20 z-10">
       <div className="p-6 flex items-center gap-3">
@@ -33,7 +43,7 @@ export function Sidebar() {
       </div>
 
       <nav className="flex-1 px-4 py-6 space-y-2">
-        {NAV_LINKS.map(link => (
+        {visibleNavLinks.map(link => (
           <Link 
             key={link.path}
             to={link.path} 
@@ -44,7 +54,7 @@ export function Sidebar() {
           </Link>
         ))}
 
-        {ADMIN_LINKS.map(link => (
+        {isAdmin && ADMIN_LINKS.map(link => (
           <Link 
             key={link.path}
             to={link.path} 
@@ -83,6 +93,16 @@ export function MobileNav() {
   const userName = user?.nome || 'Aluno';
   const userInitials = userName.substring(0, 2).toUpperCase();
 
+  const isTurmaLeaderOrAdmin = !!user?.turma && (user?.role === 'LIDER' || user?.role === 'ADMIN');
+  const isAdmin = user?.role === 'ADMIN';
+
+  const visibleNavLinks = NAV_LINKS.filter(link => {
+    if (link.path === '/app/painel-turma') {
+      return isTurmaLeaderOrAdmin;
+    }
+    return true;
+  });
+
   // Fecha o drawer automaticamente ao mudar de rota
   useEffect(() => {
     setIsDrawerOpen(false);
@@ -99,7 +119,7 @@ export function MobileNav() {
   }, [isDrawerOpen]);
 
   // Os 3 links principais para a Bottom Bar
-  const bottomNavLinks = NAV_LINKS.slice(0, 3);
+  const bottomNavLinks = visibleNavLinks.slice(0, 3);
 
   return (
     <>
@@ -152,7 +172,7 @@ export function MobileNav() {
 
         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
           <p className="text-xs font-bold text-slate-400 uppercase tracking-widest px-4 mb-4">Navegação Principal</p>
-          {NAV_LINKS.map(link => (
+          {visibleNavLinks.map(link => (
             <Link 
               key={link.path}
               to={link.path} 
@@ -163,18 +183,22 @@ export function MobileNav() {
             </Link>
           ))}
 
-          <div className="h-4"></div>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest px-4 mb-4">Administração</p>
-          {ADMIN_LINKS.map(link => (
-            <Link 
-              key={link.path}
-              to={link.path} 
-              className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-bold ${isActive(link.path) ? 'bg-red-500/10 text-red-500' : 'text-slate-600 dark:text-slate-300 hover:bg-red-50 hover:text-red-600'}`}
-            >
-              {link.icon}
-              {link.label}
-            </Link>
-          ))}
+          {isAdmin && (
+            <>
+              <div className="h-4"></div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest px-4 mb-4">Administração</p>
+              {ADMIN_LINKS.map(link => (
+                <Link 
+                  key={link.path}
+                  to={link.path} 
+                  className={`flex items-center gap-3 px-4 py-3 rounded-xl transition-colors font-bold ${isActive(link.path) ? 'bg-red-500/10 text-red-500' : 'text-slate-600 dark:text-slate-300 hover:bg-red-50 hover:text-red-600'}`}
+                >
+                  {link.icon}
+                  {link.label}
+                </Link>
+              ))}
+            </>
+          )}
         </nav>
 
         <div className="p-6 border-t border-slate-200/50 dark:border-slate-800/50">
