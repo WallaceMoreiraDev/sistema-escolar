@@ -2,23 +2,23 @@
 
 > Este documento serve como ponte de comunicação oficial entre o time de Backend (IA/Dev) e o time de Frontend (IA/Dev). Todas as ações que o Frontend precisar tomar devido a alterações de API, banco ou regras de negócio devem ser registradas aqui em formato estrito de checklist.
 
-## 🟡 Pendentes: Etapa 3 do Fluxo de Turmas (Entrada via Código de Convite)
+## 🟢 Concluído: Etapa 3 do Fluxo de Turmas (Entrada via Código de Convite)
 **Data/Contexto:** Endpoint `POST /api/turmas/entrar` permitindo que alunos autenticados sem turma ingressem em uma sala existente através de código de convite de 6 caracteres alfanuméricos.
 
 ### Ações Exigidas para o Frontend:
 
-- [ ] **Adoção dos Contratos e Schemas (@shared):**
-  - [ ] Importar `joinClassSchema` e tipo `JoinClassInput` de `@shared/schemas/classSchema`:
+- [x] **Adoção dos Contratos e Schemas (@shared):**
+  - [x] Importar `joinClassSchema` e tipo `JoinClassInput` de `@shared/schemas/classSchema`:
     ```typescript
     import { joinClassSchema, type JoinClassInput } from '@shared/schemas/classSchema';
     ```
-  - [ ] Importar `JoinClassPayload`, `JoinClassResponse`, `ApiResponse` de `@shared/types`:
+  - [x] Importar `JoinClassPayload`, `JoinClassResponse`, `ApiResponse` de `@shared/types`:
     ```typescript
     import { ApiResponse, JoinClassPayload, JoinClassResponse } from '@shared/types';
     ```
 
-- [ ] **Integração da Chamada de API (`POST /api/turmas/entrar`):**
-  - [ ] **Requisição de Ingresso na Turma:**
+- [x] **Integração da Chamada de API (`POST /api/turmas/entrar`):**
+  - [x] **Requisição de Ingresso na Turma:**
     - Header: `Authorization: Bearer <session.access_token>`.
     - Body:
       ```typescript
@@ -41,9 +41,9 @@
       - `404 NOT_FOUND` com `code: "NOT_FOUND"`: Código de turma inválido ou inexistente.
       - `400 BAD_REQUEST` com `code: "VALIDATION_ERROR"`: Formato incorreto (diferente de 6 caracteres alfanuméricos).
 
-- [ ] **Integração no Componente `JoinClassModal.tsx`:**
-  - [ ] Conectar formulário ao mutation do TanStack Query (`useMutation`) chamando `POST /api/turmas/entrar`.
-  - [ ] Após sucesso:
+- [x] **Integração no Componente `JoinClassModal.tsx`:**
+  - [x] Conectar formulário ao mutation do TanStack Query (`useMutation`) chamando `POST /api/turmas/entrar`.
+  - [x] Após sucesso:
     - Fechar o modal `JoinClassModal`.
     - Exibir feedback de boas-vindas com o nome da turma (`data.nomeOficial`).
     - Invalidar a query `['me']` (e `['my-pending-class-request']`) para atualização reativa instantânea da Dashboard do aluno.
