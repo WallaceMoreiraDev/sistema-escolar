@@ -2,7 +2,7 @@ import { Hono } from 'hono';
 import { ClassController } from '../controllers/classController';
 import { authMiddleware, Variables } from '../middlewares/authMiddleware';
 import { validateBody } from '../middlewares/validationMiddleware';
-import { createClassRequestSchema } from '@shared/schemas/classSchema';
+import { createClassRequestSchema, joinClassSchema } from '@shared/schemas/classSchema';
 
 const classRoutes = new Hono<{ Variables: Variables }>();
 
@@ -26,6 +26,13 @@ classRoutes.get(
 classRoutes.delete(
   '/pedidos/meu',
   ClassController.cancelMyPendingRequest
+);
+
+// POST /api/turmas/entrar - Entrada na turma via código de convite pelo aluno
+classRoutes.post(
+  '/entrar',
+  validateBody(joinClassSchema),
+  ClassController.joinByCode
 );
 
 export { classRoutes };

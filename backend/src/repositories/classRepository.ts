@@ -60,4 +60,29 @@ export class ClassRepository {
 
     return (count ?? 0) > 0;
   }
+
+  /**
+   * Executa a procedure PostgreSQL transacional 'entrar_turma_por_codigo'.
+   * Vincula o usuário autenticado à turma informada via código de convite.
+   *
+   * @param codigoConvite Código de convite alfanumérico de 6 caracteres.
+   * @returns Objeto com turma_id e nome_oficial da turma vinculada.
+   */
+  async joinClassByCode(
+    codigoConvite: string
+  ): Promise<{ turma_id: string; nome_oficial: string }> {
+    const { data, error } = await this.supabase.rpc('entrar_turma_por_codigo', {
+      p_codigo_convite: codigoConvite,
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    if (!data || typeof data !== 'object') {
+      throw new Error('Retorno inválido da procedure entrar_turma_por_codigo.');
+    }
+
+    return data as { turma_id: string; nome_oficial: string };
+  }
 }
