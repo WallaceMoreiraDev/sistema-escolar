@@ -3,6 +3,7 @@ import { UserProfileDTO, UserRole } from '@shared/types/user.types';
 export type RawTurmaJoin = {
   id: string;
   nome_oficial: string;
+  codigo_convite?: string | null;
 };
 
 export type RawUserWithTurma = {
@@ -33,6 +34,7 @@ export class UserDTO {
         ? {
             id: turmaRaw.id,
             nomeOficial: turmaRaw.nome_oficial,
+            codigoConvite: turmaRaw.codigo_convite ?? null,
           }
         : null,
     };

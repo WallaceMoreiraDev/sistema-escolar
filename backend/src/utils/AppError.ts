@@ -8,7 +8,9 @@ export type ErrorCode =
   | "INTERNAL_SERVER_ERROR"
   | "BAD_REQUEST"
   | "CLASS_REQUEST_DUPLICATE"
-  | "ALREADY_IN_CLASS";
+  | "ALREADY_IN_CLASS"
+  | "INVITE_CODE_ALREADY_EXISTS"
+  | "APPROVAL_FAILED";
 
 export class AppError extends Error {
   public readonly code: ErrorCode;

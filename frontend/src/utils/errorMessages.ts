@@ -13,7 +13,9 @@ export const errorMessages: Record<string, string> = {
   // Fluxo de Turmas (Solicitação e Moderação)
   ALREADY_IN_CLASS: 'Você já está vinculado a uma turma e não pode solicitar uma nova.',
   CLASS_REQUEST_DUPLICATE: 'Você já possui uma solicitação de turma em andamento. Aguarde a avaliação do administrador da plataforma.',
-  NOT_FOUND: 'O recurso solicitado não foi encontrado ou já foi removido.',
+  INVITE_CODE_ALREADY_EXISTS: 'O código de convite informado já está em uso por outra turma.',
+  AUTH_FORBIDDEN: 'Acesso negado. Apenas o Administrador Geral pode executar esta moderação.',
+  NOT_FOUND: 'O recurso solicitado não foi encontrado ou já foi processado.',
   CLASS_NOT_FOUND: 'Turma não encontrada.',
   INVALID_INVITE_CODE: 'Código de convite inválido ou expirado.',
 

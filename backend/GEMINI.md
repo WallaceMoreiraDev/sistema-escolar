@@ -22,3 +22,13 @@
 - **Prevenção de Vínculo Duplo (400):** Alunos que já possuem turma vinculada (`turma_id IS NOT NULL`) não podem enviar solicitações de criação de turma, disparando `HTTP 400 BAD_REQUEST` com código tipado `ALREADY_IN_CLASS`.
 - **Cancelamento Autônomo:** O aluno pode cancelar sua solicitação enquanto ela estiver com status `pendente` (`DELETE /api/turmas/pedidos/meu`). Caso não exista solicitação ativa, a rota dispara `HTTP 404 NOT_FOUND`.
 - **Contratos e DTO:** A solicitação é representada pelo `ClassRequestDTO` com campos em `camelCase` (`id`, `usuarioId`, `ano`, `turno`, `curso`, `localSala`, `justificativa`, `status`, `createdAt`).
+
+---
+
+## 4. Diretrizes do Fluxo de Turmas - Etapa 2: Moderação e Aprovação pelo Administrador Geral (`/api/admin/pedidos-turma`)
+- **Controle de Acesso Estrito (RBAC):** Todas as rotas de moderação (`/api/admin/pedidos-turma/*`) são de uso exclusivo do Administrador Geral. Protegidas com `authMiddleware` e `requireRole(['ADMIN'])`, retornando `HTTP 403 AUTH_FORBIDDEN` para qualquer outro perfil.
+- **Listagem e Paginação FIFO:** `GET /api/admin/pedidos-turma` lista solicitações em aberto (`status = 'pendente'`) em ordem cronológica de chegada (`created_at ASC` / FIFO), acompanhadas dos dados do solicitante (`solicitante: { id, nome, email }`) via join com a tabela `usuarios`. A listagem é paginada no banco com limite cravado de **5 itens por página** (`count: 'exact'`).
+- **Geração de Código de Convite:** O backend gera automaticamente um código único de 6 caracteres alfanuméricos em caixa alta (alfabeto legível sem ambiguidade: `23456789ABCDEFGHJKLMNPQRSTUVWXYZ`), validando unicidade contra a coluna `turmas.codigo_convite`. Caso o administrador informe um código manual via payload, este é validado e aplicado se não houver colisão (disparando `HTTP 409 INVITE_CODE_ALREADY_EXISTS` em caso de duplicidade).
+- **Nome Oficial Padrão:** Se o administrador não fornecer `nomeOficial` na aprovação, o backend compõe automaticamente o padrão: `"${ano} ${curso} - ${turno}"` (ex: `"3º Desenvolvimento de Sistemas - Manhã"`).
+- **Transação ACID via Stored Procedure:** A aprovação (`POST /api/admin/pedidos-turma/:id/aprovar`) invoca a procedure `aprovar_pedido_turma` no Postgres, que cria a nova turma, promove o aluno a `role = 'LIDER'`, vincula o `turma_id` e remove o pedido de forma totalmente atômica.
+- **Rejeição de Pedido:** `DELETE /api/admin/pedidos-turma/:id` remove o registro da solicitação da tabela `pedidos_turma`, liberando o perfil do aluno para novas tentativas.

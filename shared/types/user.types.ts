@@ -8,6 +8,7 @@ export type UserRole = NonNullable<Database['public']['Enums']['user_role']>;
 export interface TurmaSummaryDTO {
   id: string;
   nomeOficial: string;
+  codigoConvite?: string | null;
 }
 
 /**

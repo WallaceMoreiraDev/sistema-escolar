@@ -30,3 +30,32 @@ export interface CreateClassRequestPayload {
   localSala?: string | null;
   justificativa?: string | null;
 }
+
+/**
+  * DTO Oficial para a visualização do Administrador Geral na fila de moderação.
+  * Inclui os dados do aluno solicitante (join com usuarios).
+  */
+export interface AdminClassRequestDTO extends ClassRequestDTO {
+  solicitante: {
+    id: string;
+    nome: string;
+    email: string;
+  };
+}
+
+/**
+  * Payload para aprovação de pedido de turma (POST /api/admin/pedidos-turma/:id/aprovar).
+  */
+export interface ApproveClassRequestPayload {
+  nomeOficial?: string;
+  codigoConvite?: string;
+}
+
+/**
+  * Resposta de sucesso na aprovação de turma.
+  */
+export interface ApproveClassRequestResponse {
+  turmaId: string;
+  nomeOficial: string;
+  codigoConvite: string;
+}

@@ -1,66 +1,66 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { MOCK_PENDING_REQUESTS, PendingRequest } from '../data/mockPendingRequests';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { adminClassApi } from '../api/adminClassApi';
+import { ApproveClassRequestPayload } from '@shared/types';
+import { ApiError } from '@/utils/apiError';
 
-// Simulating database with a local variable for SSOT pattern
-let pendingRequestsDB: PendingRequest[] = [...MOCK_PENDING_REQUESTS];
+/**
+ * Hook para listar solicitações de turma pendentes de moderação pelo Admin Geral (5 itens por página).
+ */
+export function usePendingRequests(page: number = 1) {
+  const { session, user } = useAuth();
+  const token = session?.access_token;
+  const isAdmin = user?.role === 'ADMIN';
 
-export function usePendingRequests() {
   return useQuery({
-    queryKey: ['pendingRequests'],
-    queryFn: async () => {
-      await new Promise(resolve => setTimeout(resolve, 600));
-      // Sort by oldest first (standard moderation queue)
-      return [...pendingRequestsDB].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
-    }
+    queryKey: ['admin-pending-class-requests', page],
+    queryFn: () => adminClassApi.listPendingRequests(token!, page),
+    enabled: !!token && isAdmin,
+    staleTime: 1000 * 60, // 1 minuto de cache
   });
 }
 
+/**
+ * Hook de mutação para aprovar uma solicitação de turma (POST /api/admin/pedidos-turma/:id/aprovar).
+ * Ao aprovar, invalida o cache da fila de moderação e também das turmas ativas.
+ */
 export function useApproveRequest() {
   const queryClient = useQueryClient();
+  const { session } = useAuth();
+  const token = session?.access_token;
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      pendingRequestsDB = pendingRequestsDB.filter(req => req.id !== id);
-      return id;
+    mutationFn: ({ id, payload }: { id: string; payload?: ApproveClassRequestPayload }) => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      return adminClassApi.approveRequest(token, id, payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pendingRequests'] });
-    }
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-class-requests'] });
+      queryClient.invalidateQueries({ queryKey: ['activeClasses'] });
+    },
   });
 }
 
+/**
+ * Hook de mutação para rejeitar uma solicitação de turma (DELETE /api/admin/pedidos-turma/:id).
+ * Remove o registro pendente e invalida o cache da fila de moderação.
+ */
 export function useRejectRequest() {
   const queryClient = useQueryClient();
+  const { session } = useAuth();
+  const token = session?.access_token;
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      pendingRequestsDB = pendingRequestsDB.filter(req => req.id !== id);
-      return id;
+    mutationFn: (id: string) => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      return adminClassApi.rejectRequest(token, id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pendingRequests'] });
-    }
-  });
-}
-
-export function useCreateRequest() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async (data: Omit<PendingRequest, 'id' | 'createdAt'>) => {
-      await new Promise(resolve => setTimeout(resolve, 800));
-      const newRequest: PendingRequest = {
-        ...data,
-        id: `req-${Date.now()}`,
-        createdAt: new Date().toISOString()
-      };
-      pendingRequestsDB.push(newRequest);
-      return newRequest;
+      queryClient.invalidateQueries({ queryKey: ['admin-pending-class-requests'] });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['pendingRequests'] });
-    }
   });
 }
