@@ -2,13 +2,28 @@
 
 > Este documento serve como ponte de comunicação oficial entre o time de Backend (IA/Dev) e o time de Frontend (IA/Dev). Todas as ações que o Frontend precisar tomar devido a alterações de API, banco ou regras de negócio devem ser registradas aqui em formato estrito de checklist.
 
-## 🟡 Pendentes: Etapa 2 do Fluxo de Turmas (Moderação pelo Administrador Geral)
+## 🟢 Concluído: Exposição do Código de Convite da Turma no Perfil (`GET /api/me`)
+**Data/Contexto:** O endpoint `GET /api/me` agora expõe a propriedade `codigoConvite` no objeto `turma` do usuário autenticado (`user.turma.codigoConvite`), permitindo que o painel de liderança e gestão da turma exiba o código de convite real em vez de um mock.
+
+### Ações Exigidas para o Frontend:
+
+- [x] **Adoção do Tipo Atualizado (@shared/types):**
+  - [x] A interface `TurmaSummaryDTO` (em `UserProfileDTO`) agora inclui `codigoConvite?: string | null`.
+
+- [x] **Atualização do Componente `InviteSection.tsx` (`frontend/src/features/class-admin/components/InviteSection.tsx`):**
+  - [x] Obter os dados do usuário autenticado através do hook de autenticação/perfil (`useAuth` ou similar).
+  - [x] Substituir o valor estático `const inviteCode = "X8K9J4";` por `const inviteCode = user?.turma?.codigoConvite || "------";`.
+  - [x] Validar que o botão de cópia copia o código dinâmico da turma.
+
+---
+
+## 🟢 Concluído: Etapa 2 do Fluxo de Turmas (Moderação pelo Administrador Geral)
 **Data/Contexto:** Endpoints da API REST para gerenciamento da fila de moderação de solicitações de turmas pelo Administrador Geral (`/api/admin/pedidos-turma`).
 
 ### Ações Exigidas para o Frontend:
 
-- [ ] **Adoção dos Contratos e Schemas (@shared):**
-  - [ ] Importar `AdminClassRequestDTO`, `ApproveClassRequestPayload`, `ApproveClassRequestResponse`, `ApiResponse` de `@shared/types`:
+- [x] **Adoção dos Contratos e Schemas (@shared):**
+  - [x] Importar `AdminClassRequestDTO`, `ApproveClassRequestPayload`, `ApproveClassRequestResponse`, `ApiResponse` de `@shared/types`:
     ```typescript
     import {
       ApiResponse,
@@ -17,7 +32,7 @@
       ApproveClassRequestResponse,
     } from '@shared/types';
     ```
-  - [ ] Importar schemas Zod de moderação de `@shared/schemas/classSchema`:
+  - [x] Importar schemas Zod de moderação de `@shared/schemas/classSchema`:
     ```typescript
     import {
       approveClassRequestSchema,
@@ -25,9 +40,9 @@
     } from '@shared/schemas/classSchema';
     ```
 
-- [ ] **Integração das Chamadas de API (`/api/admin/pedidos-turma`):**
+- [x] **Integração das Chamadas de API (`/api/admin/pedidos-turma`):**
   - *Atenção:* Todas as rotas administrativas requerem usuário com `role = 'ADMIN'` e header `Authorization: Bearer <session.access_token>`. Se um usuário não-admin chamar estas rotas, o backend responderá com `HTTP 403 AUTH_FORBIDDEN`.
-  - [ ] **Listagem de Pedidos Pendentes (`GET /api/admin/pedidos-turma?page=1`):**
+  - [x] **Listagem de Pedidos Pendentes (`GET /api/admin/pedidos-turma?page=1`):**
     - Query param: `page` (default: 1).
     - Retorno de sucesso: status 200 com envelope:
       ```typescript
@@ -47,7 +62,7 @@
     - Cada item traz `solicitante: { id: string, nome: string, email: string }`, além de `ano`, `turno`, `curso`, `localSala`, `justificativa`, `status` e `createdAt`.
     - Ordenação em FIFO (`created_at ASC`), priorizando os pedidos solicitados há mais tempo.
     - Conectar ao componente de listagem `PendingRequestsSection.tsx` com paginação de 5 itens por página.
-  - [ ] **Aprovação de Turma (`POST /api/admin/pedidos-turma/:id/aprovar`):**
+  - [x] **Aprovação de Turma (`POST /api/admin/pedidos-turma/:id/aprovar`):**
     - Payload (opcional, pode ser `{}`):
       ```typescript
       {
@@ -70,7 +85,7 @@
       - `404 NOT_FOUND`: Pedido não encontrado ou já processado.
       - `409 CONFLICT` com `code: "INVITE_CODE_ALREADY_EXISTS"`: O código manual informado já está em uso por outra turma.
     - Pós-sucesso: Fechar modal `PendingRequestModal`, exibir feedback com o código de convite gerado e invalidar a query de pedidos pendentes (`['admin-pending-class-requests']`).
-  - [ ] **Rejeição de Pedido (`DELETE /api/admin/pedidos-turma/:id`):**
+  - [x] **Rejeição de Pedido (`DELETE /api/admin/pedidos-turma/:id`):**
     - Retorno de sucesso: status 200 com envelope `{ success: true, data: { message: "Solicitação de turma rejeitada com sucesso." } }`.
     - Pós-sucesso: Fechar modal e invalidar a query de pedidos pendentes (`['admin-pending-class-requests']`).
 
