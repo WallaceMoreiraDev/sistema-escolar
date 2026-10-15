@@ -46,3 +46,41 @@ export const createClassRequestSchema = z.object({
 });
 
 export type CreateClassRequestInput = z.infer<typeof createClassRequestSchema>;
+
+// ============================================================================
+// Schemas de Moderação e Aprovação de Turma (Admin Geral - GEMINI.md)
+// ============================================================================
+
+export const approveClassRequestSchema = z.object({
+  nomeOficial: z
+    .string()
+    .trim()
+    .min(3, 'O nome oficial da turma deve ter no mínimo 3 caracteres.')
+    .max(255, 'O nome oficial da turma deve ter no máximo 255 caracteres.')
+    .optional()
+    .nullable()
+    .transform((val) => (val && val.length > 0 ? val : undefined)),
+  codigoConvite: z
+    .string()
+    .trim()
+    .regex(
+      /^[A-Za-z0-9]{6}$/,
+      'O código de convite deve ter exatamente 6 caracteres alfanuméricos.'
+    )
+    .transform((val) => val.toUpperCase())
+    .optional()
+    .nullable()
+    .transform((val) => (val && val.length > 0 ? val : undefined)),
+});
+
+export const classRequestIdParamSchema = z.object({
+  id: z.string().uuid('ID do pedido de turma inválido.'),
+});
+
+export const adminClassPaginationQuerySchema = z.object({
+  page: z.coerce.number().int().min(1, 'A página deve ser maior ou igual a 1.').default(1),
+});
+
+export type ApproveClassRequestInput = z.infer<typeof approveClassRequestSchema>;
+export type ClassRequestIdParam = z.infer<typeof classRequestIdParamSchema>;
+export type AdminClassPaginationQuery = z.infer<typeof adminClassPaginationQuerySchema>;
