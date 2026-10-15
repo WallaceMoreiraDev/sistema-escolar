@@ -32,3 +32,15 @@
 - **Nome Oficial Padrão:** Se o administrador não fornecer `nomeOficial` na aprovação, o backend compõe automaticamente o padrão: `"${ano} ${curso} - ${turno}"` (ex: `"3º Desenvolvimento de Sistemas - Manhã"`).
 - **Transação ACID via Stored Procedure:** A aprovação (`POST /api/admin/pedidos-turma/:id/aprovar`) invoca a procedure `aprovar_pedido_turma` no Postgres, que cria a nova turma, promove o aluno a `role = 'LIDER'`, vincula o `turma_id` e remove o pedido de forma totalmente atômica.
 - **Rejeição de Pedido:** `DELETE /api/admin/pedidos-turma/:id` remove o registro da solicitação da tabela `pedidos_turma`, liberando o perfil do aluno para novas tentativas.
+
+---
+
+## 5. Diretrizes do Fluxo de Turmas - Etapa 3: Entrada na Turma via Código de Convite (`POST /api/turmas/entrar`)
+- **Controle de Acesso:** A rota é liberada para qualquer usuário autenticado (`authMiddleware`). Usuários sem turma podem se vincular informando um código de convite válido de 6 caracteres.
+- **Validação de Input (Zod):** O payload exige `codigoConvite` no padrão exato de 6 caracteres alfanuméricos (`/^[A-Za-z0-9]{6}$/`), transformados e normalizados em caixa alta.
+- **Transação ACID via Stored Procedure (`entrar_turma_por_codigo`):** O backend invoca a procedure PostgreSQL, que executa com `SECURITY DEFINER`: valida se a turma existe pelo código, trava a linha do usuário com `FOR UPDATE`, vincula `turma_id`, define `data_entrada_turma = NOW()` e limpa automaticamente eventuais pedidos pendentes em `pedidos_turma`.
+- **Tratamento de Exceções e Respostas:**
+  - Código inexistente/inválido: `HTTP 404 NOT_FOUND` com mensagem amigável ("Código de turma inválido ou inexistente.").
+  - Usuário já vinculado a uma turma: `HTTP 400 ALREADY_IN_CLASS` com mensagem amigável ("Você já está vinculado a uma turma.").
+  - Formato inválido: `HTTP 400 VALIDATION_ERROR` ("O código de convite deve possuir exatamente 6 caracteres.").
+  - Sucesso: `HTTP 200 OK` com envelope `{ success: true, data: { turmaId: string, nomeOficial: string } }`.
