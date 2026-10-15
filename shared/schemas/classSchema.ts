@@ -84,3 +84,20 @@ export const adminClassPaginationQuerySchema = z.object({
 export type ApproveClassRequestInput = z.infer<typeof approveClassRequestSchema>;
 export type ClassRequestIdParam = z.infer<typeof classRequestIdParamSchema>;
 export type AdminClassPaginationQuery = z.infer<typeof adminClassPaginationQuerySchema>;
+
+// ============================================================================
+// Schemas de Ingresso na Turma via Código de Convite (Etapa 3 - GEMINI.md)
+// ============================================================================
+
+export const joinClassSchema = z.object({
+  codigoConvite: z
+    .string({ required_error: 'O código de convite é obrigatório.' })
+    .trim()
+    .regex(
+      /^[A-Za-z0-9]{6}$/,
+      'O código de convite deve ter exatamente 6 caracteres alfanuméricos.'
+    )
+    .transform((val) => val.toUpperCase()),
+});
+
+export type JoinClassInput = z.infer<typeof joinClassSchema>;

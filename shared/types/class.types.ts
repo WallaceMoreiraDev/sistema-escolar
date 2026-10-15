@@ -59,3 +59,18 @@ export interface ApproveClassRequestResponse {
   nomeOficial: string;
   codigoConvite: string;
 }
+
+/**
+ * Payload para ingresso em turma por código de convite (POST /api/turmas/entrar).
+ */
+export interface JoinClassPayload {
+  codigoConvite: string;
+}
+
+/**
+ * Resposta de sucesso ao ingressar em uma turma por código.
+ */
+export interface JoinClassResponse {
+  turmaId: string;
+  nomeOficial: string;
+}
