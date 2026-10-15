@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { classRequestApi } from '../api/classRequestApi';
-import { CreateClassRequestPayload } from '@shared/types';
+import { CreateClassRequestPayload, JoinClassPayload, JoinClassResponse } from '@shared/types';
 import { ApiError } from '@/utils/apiError';
 
 /**
@@ -59,6 +59,30 @@ export function useCancelClassRequest() {
       return classRequestApi.cancelMyPendingRequest(token);
     },
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['my-pending-class-request'] });
+    },
+  });
+}
+
+/**
+ * Hook de mutação para ingresso em turma por código de convite (POST /api/turmas/entrar).
+ * Ao obter sucesso, invalida a query de perfil ['me'] e solicitação pendente ['my-pending-class-request']
+ * para atualizar reativamente a Dashboard e o layout para a visão "Com Turma".
+ */
+export function useJoinClass() {
+  const queryClient = useQueryClient();
+  const { session } = useAuth();
+  const token = session?.access_token;
+
+  return useMutation({
+    mutationFn: (payload: JoinClassPayload): Promise<JoinClassResponse> => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      return classRequestApi.joinByCode(token, payload);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['me'] });
       queryClient.invalidateQueries({ queryKey: ['my-pending-class-request'] });
     },
   });

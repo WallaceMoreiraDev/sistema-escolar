@@ -3,6 +3,8 @@ import {
   ApiErrorResponse,
   ClassRequestDTO,
   CreateClassRequestPayload,
+  JoinClassPayload,
+  JoinClassResponse,
 } from '@shared/types';
 import { ApiError } from '@/utils/apiError';
 
@@ -87,6 +89,36 @@ export const classRequestApi = {
     }
 
     const json = (await res.json()) as ApiResponse<{ message: string }>;
+    return json.data;
+  },
+
+  /**
+   * Permite que o aluno ingresse em uma turma existente através do código de convite (POST /api/turmas/entrar).
+   */
+  async joinByCode(
+    token: string,
+    payload: JoinClassPayload
+  ): Promise<JoinClassResponse> {
+    const res = await fetch(`${API_URL}/api/turmas/entrar`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!res.ok) {
+      const errorData = (await res.json().catch(() => null)) as ApiErrorResponse | null;
+      throw new ApiError(
+        errorData?.code || 'UNKNOWN_ERROR',
+        res.status,
+        errorData?.details,
+        errorData?.message
+      );
+    }
+
+    const json = (await res.json()) as ApiResponse<JoinClassResponse>;
     return json.data;
   },
 };

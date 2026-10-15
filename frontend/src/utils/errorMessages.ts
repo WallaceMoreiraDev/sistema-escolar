@@ -10,8 +10,8 @@ export const errorMessages: Record<string, string> = {
   AUTH_INVALID_TOKEN: 'Token de autenticação inválido ou corrompido.',
   AUTH_REQUIRED: 'Autenticação necessária para acessar este recurso.',
 
-  // Fluxo de Turmas (Solicitação e Moderação)
-  ALREADY_IN_CLASS: 'Você já está vinculado a uma turma e não pode solicitar uma nova.',
+  // Fluxo de Turmas (Solicitação, Moderação e Ingresso)
+  ALREADY_IN_CLASS: 'Você já está vinculado a uma turma.',
   CLASS_REQUEST_DUPLICATE: 'Você já possui uma solicitação de turma em andamento. Aguarde a avaliação do administrador da plataforma.',
   INVITE_CODE_ALREADY_EXISTS: 'O código de convite informado já está em uso por outra turma.',
   AUTH_FORBIDDEN: 'Acesso negado. Apenas o Administrador Geral pode executar esta moderação.',
