@@ -277,6 +277,7 @@ export type Database = {
         }
         Returns: string
       }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
       ano_type: "1º" | "2º" | "3º"
