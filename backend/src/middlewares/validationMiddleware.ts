@@ -55,7 +55,18 @@ export const validateBody = <T>(
 ): MiddlewareHandler<{ Variables: ValidatedBody<T> }> => {
   return async (c, next) => {
     try {
-      const raw: unknown = await c.req.json();
+      let raw: unknown;
+      try {
+        raw = await c.req.json();
+      } catch (jsonErr) {
+        // Se a requisição não tiver corpo, trata como objeto vazio para o schema avaliar
+        const text = await c.req.text().catch(() => '');
+        if (!text || text.trim() === '') {
+          raw = {};
+        } else {
+          throw jsonErr;
+        }
+      }
       const parsed = schema.parse(raw);
       c.set("validBody", parsed);
       await next();

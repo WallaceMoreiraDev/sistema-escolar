@@ -7,6 +7,7 @@ import { EnvConfig } from "./env";
 import { userRoutes } from "./routes/userRoutes";
 import { noticeRoutes } from "./routes/noticeRoutes";
 import { classRoutes } from "./routes/classRoutes";
+import { adminRoutes } from "./routes/adminRoutes";
 
 // Define the Bindings (Env Vars) and Variables (Context State) for the app
 type AppBindings = {
@@ -32,5 +33,6 @@ app.get("/health", (c) => {
 app.route("/api/me", userRoutes);
 app.route("/api/avisos", noticeRoutes);
 app.route("/api/turmas", classRoutes);
+app.route("/api/admin", adminRoutes);
 
 export default app;
