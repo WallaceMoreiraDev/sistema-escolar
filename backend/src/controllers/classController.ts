@@ -3,7 +3,13 @@ import { ClassRepository } from '../repositories/classRepository';
 import { UserRepository } from '../repositories/userRepository';
 import { ClassService } from '../services/classService';
 import { ClassDTOConverter } from '../dtos/classDto';
-import { ApiResponse, ClassRequestDTO, CreateClassRequestPayload } from '@shared/types';
+import {
+  ApiResponse,
+  ClassRequestDTO,
+  CreateClassRequestPayload,
+  JoinClassPayload,
+  JoinClassResponse,
+} from '@shared/types';
 
 export class ClassController {
   /**
@@ -72,6 +78,28 @@ export class ClassController {
       data: {
         message: 'Solicitação de turma cancelada com sucesso.',
       },
+    };
+
+    return c.json(response, 200);
+  }
+
+  /**
+   * POST /api/turmas/entrar
+   * Permite que o aluno ingresse em uma turma existente através do código de convite.
+   */
+  static async joinByCode(c: Context) {
+    const supabase = c.get('supabase');
+    const body = c.get('validBody') as JoinClassPayload;
+
+    const classRepo = new ClassRepository(supabase);
+    const userRepo = new UserRepository(supabase);
+    const service = new ClassService(classRepo, userRepo);
+
+    const result = await service.joinClassByCode(body.codigoConvite);
+
+    const response: ApiResponse<JoinClassResponse> = {
+      success: true,
+      data: result,
     };
 
     return c.json(response, 200);
