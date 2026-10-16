@@ -52,3 +52,20 @@
 - **RLS e Defense in Depth:** A leitura no banco é protegida pela policy `usuarios_select_mesma_turma` e filtrada no repositório por `turma_id`, garantindo que alunos só visualizem colegas de sua própria sala.
 - **Paginação e Ordenação no Banco:** Paginação fixada em **5 membros por página** com `.range(from, to)` e `{ count: 'exact' }`. Ordenação estrita no Postgres priorizando Líderes (`role DESC`) e desempatando em ordem alfabética (`nome ASC`).
 - **Contratos e DTO:** Exposição dos dados através de `ClassMemberDTO` em `camelCase` (`id`, `nome`, `email`, `role`, `dataEntradaTurma`).
+
+---
+
+## 7. Diretrizes do Fluxo de Turmas - Gestão de Membros: Fase 2 (Moderação e Poderes do Líder)
+- **Controle de Acesso em Camadas (Defense in Depth):**
+  - Rotas de moderação sob `/api/turmas/membros`:
+    - `PATCH /api/turmas/membros/:id/promover` (Promover a Líder)
+    - `PATCH /api/turmas/membros/:id/rebaixar` (Rebaixar a Aluno)
+    - `DELETE /api/turmas/membros/:id` (Expulsar Aluno da Turma)
+  - **Middleware como Primeiro Guarda-Costas:** Protegidas por `authMiddleware` e `requireRole(['LIDER', 'ADMIN'])`. Alunos comuns são barrados com `HTTP 403 AUTH_FORBIDDEN`.
+  - **Validação de Escopo e Transações no Banco:** Execução exclusiva via Postgres Stored Procedures (`promover_membro_lider`, `rebaixar_lider_membro`, `expulsar_membro_turma`), que garantem:
+    - O moderador chamador deve ser Líder da MESMA turma do membro alvo (ou Admin geral). Caso tente moderar membro de outra turma, dispara `HTTP 403 AUTH_FORBIDDEN`.
+- **Validação de Parâmetros (Zod):** O parâmetro `:id` é rigorosamente validado via `classMemberIdParamSchema` como formato UUID válido, rejeitando IDs maliciosos ou inválidos com `HTTP 400 VALIDATION_ERROR`.
+- **Regras Críticas de Integridade & Tratamento de Erros:**
+  - **Bloqueio de Auto-Ação (Self-Action Guard):** É expressamente proibido ao usuário rebaixar ou expulsar a si mesmo pelo painel de moderação. Dispara `HTTP 400 BAD_REQUEST` com código tipado `CANNOT_MODIFY_SELF` ("Você não pode realizar esta ação consigo mesmo pelo painel de moderação.").
+  - **Regra Anti-Orfandade (Orphan Prevention):** A turma nunca pode ficar desprovida de liderança ativa. Ao tentar rebaixar ou expulsar o único líder restante da turma, a operação é rejeitada com `HTTP 409 CONFLICT` e código tipado `LAST_LEADER_CONFLICT` ("A turma não pode ficar sem nenhum líder. Promova outro membro antes.").
+  - **Membro Inexistente ou Desvinculado:** Se o membro não for encontrado no banco ou não pertencer a nenhuma turma, dispara `HTTP 404 NOT_FOUND` ("Membro não encontrado ou não pertence a esta turma.").
