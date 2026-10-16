@@ -2,23 +2,23 @@
 
 > Este documento serve como ponte de comunicação oficial entre o time de Backend (IA/Dev) e o time de Frontend (IA/Dev). Todas as ações que o Frontend precisar tomar devido a alterações de API, banco ou regras de negócio devem ser registradas aqui em formato estrito de checklist.
 
-## 🟡 Pendentes: Fase 1 da Gestão de Membros da Turma (Listagem de Colegas de Sala)
+## 🟢 Concluído: Fase 1 da Gestão de Membros da Turma (Listagem de Colegas de Sala)
 **Data/Contexto:** Endpoint `GET /api/turmas/membros` permitindo que alunos e líderes de uma turma listem os colegas de sala com paginação e ordenação direta no banco (Líderes primeiro, depois ordem alfabética).
 
 ### Ações Exigidas para o Frontend:
 
-- [ ] **Adoção dos Contratos e Schemas (@shared):**
-  - [ ] Importar `ClassMemberDTO` e `ApiResponse` de `@shared/types`:
+- [x] **Adoção dos Contratos e Schemas (@shared):**
+  - [x] Importar `ClassMemberDTO` e `ApiResponse` de `@shared/types`:
     ```typescript
     import { ApiResponse, ClassMemberDTO } from '@shared/types';
     ```
-  - [ ] Importar `classMembersPaginationQuerySchema` de `@shared/schemas/classSchema`:
+  - [x] Importar `classMembersPaginationQuerySchema` de `@shared/schemas/classSchema`:
     ```typescript
     import { classMembersPaginationQuerySchema } from '@shared/schemas/classSchema';
     ```
 
-- [ ] **Integração da Chamada de API (`GET /api/turmas/membros`):**
-  - [ ] **Requisição de Listagem Paginada:**
+- [x] **Integração da Chamada de API (`GET /api/turmas/membros`):**
+  - [x] **Requisição de Listagem Paginada:**
     - Header: `Authorization: Bearer <session.access_token>`.
     - Query param: `page` (número inteiro, padrão: 1).
     - Exemplo de URL: `/api/turmas/membros?page=1`
@@ -46,10 +46,10 @@
     - Tratamento de Erros da API:
       - `400 BAD_REQUEST` com `code: "BAD_REQUEST"`: Usuário não pertence a nenhuma turma.
 
-- [ ] **Atualização do Hook e Componente de Membros (`MemberManagementSection.tsx`):**
-  - [ ] Atualizar o hook `useClassMembers(page: number)` para realizar requisição real via TanStack Query (`useQuery`) chamando `GET /api/turmas/membros?page=${page}` em vez do array mockado em memória.
-  - [ ] Substituir a paginação e ordenação feitas no client-side (`slice` e `sort`) pelo controle direto dos metadados recebidos do backend (`meta.pagination.totalPages`).
-  - [ ] Mapear os campos no render da tabela:
+- [x] **Atualização do Hook e Componente de Membros (`MemberManagementSection.tsx`):**
+  - [x] Atualizar o hook `useClassMembers(page: number)` para realizar requisição real via TanStack Query (`useQuery`) chamando `GET /api/turmas/membros?page=${page}` em vez do array mockado em memória.
+  - [x] Substituir a paginação e ordenação feitas no client-side (`slice` e `sort`) pelo controle direto dos metadados recebidos do backend (`meta.pagination.totalPages`).
+  - [x] Mapear os campos no render da tabela:
     - Nome: `member.nome`
     - Email: `member.email`
     - Cargo: `member.role === 'LIDER'` (exibir badge de Líder) ou `member.role === 'ALUNO'` (exibir badge de Aluno)
