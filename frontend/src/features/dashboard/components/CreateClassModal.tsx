@@ -5,6 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import {
   createClassRequestSchema,
   type CreateClassRequestInput,
+  type CreateClassRequestFormInput,
 } from '@shared/schemas/classSchema';
 import { useCreateClassRequest } from '../../class-requests/hooks/useClassRequests';
 import { ApiError } from '@/utils/apiError';
@@ -33,7 +34,7 @@ export function CreateClassModal({ isOpen, onClose, onSuccess }: CreateClassModa
     handleSubmit,
     reset,
     formState: { errors },
-  } = useForm<CreateClassRequestInput>({
+  } = useForm<CreateClassRequestFormInput, unknown, CreateClassRequestInput>({
     resolver: zodResolver(createClassRequestSchema),
     defaultValues: {
       ano: undefined,

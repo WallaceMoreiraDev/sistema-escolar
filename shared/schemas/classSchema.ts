@@ -17,12 +17,7 @@ export const pedidoStatusEnum = z.enum(['pendente', 'aprovado', 'rejeitado'], {
 });
 
 export const createClassRequestSchema = z.object({
-  ano: z.preprocess((val) => {
-    if (val === '1') return '1º';
-    if (val === '2') return '2º';
-    if (val === '3') return '3º';
-    return val;
-  }, anoTurmaEnum),
+  ano: anoTurmaEnum,
   turno: turnoTurmaEnum,
   curso: z
     .string({ required_error: 'O curso é obrigatório.' })
@@ -46,6 +41,7 @@ export const createClassRequestSchema = z.object({
 });
 
 export type CreateClassRequestInput = z.infer<typeof createClassRequestSchema>;
+export type CreateClassRequestFormInput = z.input<typeof createClassRequestSchema>;
 
 // ============================================================================
 // Schemas de Moderação e Aprovação de Turma (Admin Geral - GEMINI.md)
