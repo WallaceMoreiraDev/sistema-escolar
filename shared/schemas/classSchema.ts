@@ -101,3 +101,13 @@ export const joinClassSchema = z.object({
 });
 
 export type JoinClassInput = z.infer<typeof joinClassSchema>;
+
+// ============================================================================
+// Schemas da Gestão de Membros da Turma (Fase 1 - GEMINI.md)
+// ============================================================================
+
+export const classMembersPaginationQuerySchema = z.object({
+  page: z.coerce.number().int().min(1, 'A página deve ser maior ou igual a 1.').default(1),
+});
+
+export type ClassMembersPaginationQuery = z.infer<typeof classMembersPaginationQuerySchema>;

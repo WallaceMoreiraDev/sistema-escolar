@@ -1,4 +1,5 @@
 import { Database } from './database.types';
+import { UserRole } from './user.types';
 
 export type AnoTurma = Database['public']['Enums']['ano_type'];
 export type TurnoTurma = Database['public']['Enums']['turno_type'];
@@ -73,4 +74,15 @@ export interface JoinClassPayload {
 export interface JoinClassResponse {
   turmaId: string;
   nomeOficial: string;
+}
+
+/**
+ * DTO para membro da turma (colega de sala / liderança).
+ */
+export interface ClassMemberDTO {
+  id: string;
+  nome: string;
+  email: string;
+  role: UserRole;
+  dataEntradaTurma: string | null;
 }
