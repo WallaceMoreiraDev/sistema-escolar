@@ -1,69 +1,61 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { ClassMember, MemberRole } from '../types';
-import { MOCK_CLASS_MEMBERS } from '../data/mockMembers';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { classMemberApi } from '../api/classMemberApi';
+import { MemberRole } from '../types';
+import { ApiError } from '@/utils/apiError';
 
-let membersDB = [...MOCK_CLASS_MEMBERS];
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+/**
+ * Hook para buscar os membros da turma do usuário autenticado de forma paginada.
+ * Rota: GET /api/turmas/membros?page=${page}
+ */
+export function useClassMembers(page: number = 1) {
+  const { session, user } = useAuth();
+  const token = session?.access_token;
+  const hasClass = !!user?.turma;
 
-export function useClassMembers() {
   return useQuery({
-    queryKey: ['class-members'],
-    queryFn: async (): Promise<ClassMember[]> => {
-      await delay(600); // Simulate network latency
-      return [...membersDB]; // We return all for simplicity in the MVP, not paginating members yet
-    }
+    queryKey: ['class-members', page],
+    queryFn: async () => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      return classMemberApi.listMembers(token, page);
+    },
+    enabled: !!token && hasClass,
+    staleTime: 1000 * 30, // 30 segundos de cache
   });
 }
 
+/**
+ * Hook de mutação para atualizar o cargo de um membro da turma (Fase 2).
+ */
 export function useUpdateMemberRole() {
   const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async ({ id, newRole }: { id: string, newRole: MemberRole }) => {
-      await delay(500);
-      
-      // Regra de Negócio: Não pode rebaixar se for o último líder.
-      if (newRole === 'student') {
-        const leaderCount = membersDB.filter(m => m.role === 'leader').length;
-        if (leaderCount <= 1) {
-          throw new Error('A turma não pode ficar sem nenhum líder.');
-        }
-      }
 
-      const index = membersDB.findIndex(m => m.id === id);
-      if (index !== -1) {
-        membersDB[index] = { ...membersDB[index], role: newRole };
-        return membersDB[index];
-      }
-      throw new Error('Membro não encontrado');
+  return useMutation({
+    mutationFn: async ({ id, newRole }: { id: string; newRole: MemberRole }) => {
+      // Será implementado na Fase 2 integrado aos endpoints de promoção/rebaixamento
+      return { id, newRole };
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['class-members'] });
-    }
+    },
   });
 }
 
+/**
+ * Hook de mutação para remover/expulsar um aluno da turma (Fase 2).
+ */
 export function useRemoveMember() {
   const queryClient = useQueryClient();
-  
+
   return useMutation({
     mutationFn: async (id: string) => {
-      await delay(500);
-      const member = membersDB.find(m => m.id === id);
-      
-      // Regra de Negócio: Não pode remover se for o último líder.
-      if (member?.role === 'leader') {
-        const leaderCount = membersDB.filter(m => m.role === 'leader').length;
-        if (leaderCount <= 1) {
-          throw new Error('Não é possível remover o único líder da turma. Promova outro membro primeiro.');
-        }
-      }
-
-      membersDB = membersDB.filter(m => m.id !== id);
+      // Será implementado na Fase 2 integrado ao endpoint de remoção
       return id;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['class-members'] });
-    }
+    },
   });
 }
