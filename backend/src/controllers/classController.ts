@@ -6,10 +6,12 @@ import { ClassDTOConverter } from '../dtos/classDto';
 import {
   ApiResponse,
   ClassRequestDTO,
+  ClassMemberDTO,
   CreateClassRequestPayload,
   JoinClassPayload,
   JoinClassResponse,
 } from '@shared/types';
+import { ClassMembersPaginationQuery } from '@shared/schemas/classSchema';
 
 export class ClassController {
   /**
@@ -100,6 +102,33 @@ export class ClassController {
     const response: ApiResponse<JoinClassResponse> = {
       success: true,
       data: result,
+    };
+
+    return c.json(response, 200);
+  }
+
+  /**
+   * GET /api/turmas/membros
+   * Lista os membros da turma do aluno autenticado (paginado com 5 itens/página).
+   */
+  static async listMembers(c: Context) {
+    const supabase = c.get('supabase');
+    const user = c.get('user');
+    const query = (c.get('validQuery') as ClassMembersPaginationQuery) || { page: 1 };
+
+    const classRepo = new ClassRepository(supabase);
+    const userRepo = new UserRepository(supabase);
+    const service = new ClassService(classRepo, userRepo);
+
+    const { members, pagination } = await service.listMembers(user.id, query.page);
+    const dtos = ClassDTOConverter.toMemberDTOList(members);
+
+    const response: ApiResponse<ClassMemberDTO[]> = {
+      success: true,
+      data: dtos,
+      meta: {
+        pagination,
+      },
     };
 
     return c.json(response, 200);

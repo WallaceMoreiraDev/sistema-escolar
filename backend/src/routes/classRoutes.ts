@@ -1,8 +1,12 @@
 import { Hono } from 'hono';
 import { ClassController } from '../controllers/classController';
 import { authMiddleware, Variables } from '../middlewares/authMiddleware';
-import { validateBody } from '../middlewares/validationMiddleware';
-import { createClassRequestSchema, joinClassSchema } from '@shared/schemas/classSchema';
+import { validateBody, validateQuery } from '../middlewares/validationMiddleware';
+import {
+  createClassRequestSchema,
+  joinClassSchema,
+  classMembersPaginationQuerySchema,
+} from '@shared/schemas/classSchema';
 
 const classRoutes = new Hono<{ Variables: Variables }>();
 
@@ -33,6 +37,13 @@ classRoutes.post(
   '/entrar',
   validateBody(joinClassSchema),
   ClassController.joinByCode
+);
+
+// GET /api/turmas/membros - Listagem dos membros da turma do usuário autenticado
+classRoutes.get(
+  '/membros',
+  validateQuery(classMembersPaginationQuerySchema),
+  ClassController.listMembers
 );
 
 export { classRoutes };

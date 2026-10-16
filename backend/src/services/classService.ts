@@ -1,7 +1,8 @@
 import { ClassRepository } from '../repositories/classRepository';
 import { UserRepository } from '../repositories/userRepository';
-import { RawPedidoTurma } from '../dtos/classDto';
+import { RawPedidoTurma, RawClassMember } from '../dtos/classDto';
 import { CreateClassRequestPayload, JoinClassResponse } from '@shared/types/class.types';
+import { PaginationMeta } from '@shared/types/api.types';
 import { AppError } from '../utils/AppError';
 
 interface DatabaseErrorLike {
@@ -166,5 +167,49 @@ export class ClassService {
         'Falha ao ingressar na turma.'
       );
     }
+  }
+
+  /**
+   * Lista membros da turma do usuário autenticado com paginação fixa de 5 itens.
+   * Regra de negócio: Usuário precisa pertencer a uma turma (turma_id IS NOT NULL).
+   */
+  async listMembers(
+    userId: string,
+    page: number
+  ): Promise<{ members: RawClassMember[]; pagination: PaginationMeta }> {
+    const userProfile = await this.userRepo.getUserProfile(userId);
+    if (!userProfile?.turmas) {
+      throw new AppError(
+        'BAD_REQUEST',
+        400,
+        'Você não está vinculado a nenhuma turma.'
+      );
+    }
+
+    const turma = Array.isArray(userProfile.turmas)
+      ? userProfile.turmas[0]
+      : userProfile.turmas;
+
+    const turmaId = turma.id;
+    const limit = 5;
+    const safePage = page > 0 ? page : 1;
+
+    const { members, total } = await this.classRepo.listMembersPaginated(
+      turmaId,
+      safePage,
+      limit
+    );
+
+    const totalPages = total > 0 ? Math.ceil(total / limit) : 1;
+
+    return {
+      members,
+      pagination: {
+        page: safePage,
+        limit,
+        total,
+        totalPages,
+      },
+    };
   }
 }
