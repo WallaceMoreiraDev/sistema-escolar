@@ -10,7 +10,9 @@ export type ErrorCode =
   | "CLASS_REQUEST_DUPLICATE"
   | "ALREADY_IN_CLASS"
   | "INVITE_CODE_ALREADY_EXISTS"
-  | "APPROVAL_FAILED";
+  | "APPROVAL_FAILED"
+  | "LAST_LEADER_CONFLICT"
+  | "CANNOT_MODIFY_SELF";
 
 export class AppError extends Error {
   public readonly code: ErrorCode;
