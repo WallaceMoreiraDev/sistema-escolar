@@ -44,3 +44,11 @@
   - Usuário já vinculado a uma turma: `HTTP 400 ALREADY_IN_CLASS` com mensagem amigável ("Você já está vinculado a uma turma.").
   - Formato inválido: `HTTP 400 VALIDATION_ERROR` ("O código de convite deve possuir exatamente 6 caracteres.").
   - Sucesso: `HTTP 200 OK` com envelope `{ success: true, data: { turmaId: string, nomeOficial: string } }`.
+
+---
+
+## 6. Diretrizes do Fluxo de Turmas - Gestão de Membros: Fase 1 (Listagem de Colegas de Sala: `GET /api/turmas/membros`)
+- **Regra de Acesso e Pertencimento:** O usuário autenticado deve obrigatoriamente pertencer a uma turma (`turma_id IS NOT NULL`). Caso não esteja vinculado a nenhuma sala, a requisição é rejeitada com `HTTP 400 BAD_REQUEST` ("Você não está vinculado a nenhuma turma.").
+- **RLS e Defense in Depth:** A leitura no banco é protegida pela policy `usuarios_select_mesma_turma` e filtrada no repositório por `turma_id`, garantindo que alunos só visualizem colegas de sua própria sala.
+- **Paginação e Ordenação no Banco:** Paginação fixada em **5 membros por página** com `.range(from, to)` e `{ count: 'exact' }`. Ordenação estrita no Postgres priorizando Líderes (`role DESC`) e desempatando em ordem alfabética (`nome ASC`).
+- **Contratos e DTO:** Exposição dos dados através de `ClassMemberDTO` em `camelCase` (`id`, `nome`, `email`, `role`, `dataEntradaTurma`).

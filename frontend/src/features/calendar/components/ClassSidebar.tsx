@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { ShieldCheck } from 'lucide-react';
 
 import { useUsefulLinks } from '../../class-admin/hooks/useUsefulLinks';
 import { useClassMembers } from '../../class-admin/hooks/useClassMembers';
@@ -10,24 +11,17 @@ export function ClassSidebar() {
   const [linksPage, setLinksPage] = useState(1);
   const [membersPage, setMembersPage] = useState(1);
   const linksLimit = 4;
-  const membersLimit = 8;
   
   const { data: links, isLoading: isLoadingLinks } = useUsefulLinks();
-  const { data: members, isLoading: isLoadingMembers } = useClassMembers();
+  const { data: membersResponse, isLoading: isLoadingMembers } = useClassMembers(membersPage);
   
   const safeLinks = links || [];
   const linksTotalPages = Math.ceil(safeLinks.length / linksLimit);
   const paginatedLinks = safeLinks.slice((linksPage - 1) * linksLimit, linksPage * linksLimit);
 
-  // Líderes no topo e alfabético
-  const sortedMembers = members ? [...members].sort((a, b) => {
-    if (a.role === 'leader' && b.role !== 'leader') return -1;
-    if (a.role !== 'leader' && b.role === 'leader') return 1;
-    return a.name.localeCompare(b.name);
-  }) : [];
-  
-  const membersTotalPages = Math.ceil(sortedMembers.length / membersLimit);
-  const paginatedMembers = sortedMembers.slice((membersPage - 1) * membersLimit, membersPage * membersLimit);
+  const membersList = membersResponse?.data || [];
+  const membersTotalPages = membersResponse?.meta?.pagination?.totalPages || 1;
+  const totalMembersCount = membersResponse?.meta?.pagination?.total || membersList.length;
 
   const handleLeaveClass = () => {
     // Redireciona para o dashboard com estado vazio
@@ -99,33 +93,33 @@ export function ClassSidebar() {
               Membros
             </h3>
             <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-lg text-xs font-bold">
-              {members?.length || 0} Alunos
+              {totalMembersCount} Alunos
             </span>
           </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-1">
             {isLoadingMembers ? (
-              Array.from({ length: 8 }).map((_, i) => (
+              Array.from({ length: 5 }).map((_, i) => (
                 <div key={`sk-member-${i}`} className="flex items-center justify-between px-3 py-2.5 rounded-xl border border-transparent animate-pulse h-10">
                   <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/2"></div>
                 </div>
               ))
-            ) : paginatedMembers.map(member => (
+            ) : membersList.map(member => (
               <div 
                 key={member.id} 
                 className={`flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors ${
-                  member.role === 'leader' 
+                  member.role === 'LIDER' 
                     ? 'bg-amber-50/50 dark:bg-amber-900/10 border border-amber-100 dark:border-amber-900/30' 
                     : 'hover:bg-slate-50 dark:hover:bg-slate-800/50 border border-transparent'
                 }`}
               >
-                <span className={`text-sm font-semibold truncate ${member.role === 'leader' ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300'}`}>
-                  {member.name}
+                <span className={`text-sm font-semibold truncate ${member.role === 'LIDER' ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300'}`}>
+                  {member.nome}
                 </span>
                 
-                {member.role === 'leader' && (
+                {member.role === 'LIDER' && (
                   <span className="flex shrink-0 items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-amber-600 bg-amber-100 dark:bg-amber-900/40 px-2 py-1 rounded-md">
-                    <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
+                    <ShieldCheck className="w-3 h-3" />
                     Líder
                   </span>
                 )}

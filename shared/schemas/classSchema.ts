@@ -17,12 +17,7 @@ export const pedidoStatusEnum = z.enum(['pendente', 'aprovado', 'rejeitado'], {
 });
 
 export const createClassRequestSchema = z.object({
-  ano: z.preprocess((val) => {
-    if (val === '1') return '1º';
-    if (val === '2') return '2º';
-    if (val === '3') return '3º';
-    return val;
-  }, anoTurmaEnum),
+  ano: anoTurmaEnum,
   turno: turnoTurmaEnum,
   curso: z
     .string({ required_error: 'O curso é obrigatório.' })
@@ -46,6 +41,7 @@ export const createClassRequestSchema = z.object({
 });
 
 export type CreateClassRequestInput = z.infer<typeof createClassRequestSchema>;
+export type CreateClassRequestFormInput = z.input<typeof createClassRequestSchema>;
 
 // ============================================================================
 // Schemas de Moderação e Aprovação de Turma (Admin Geral - GEMINI.md)
@@ -101,3 +97,13 @@ export const joinClassSchema = z.object({
 });
 
 export type JoinClassInput = z.infer<typeof joinClassSchema>;
+
+// ============================================================================
+// Schemas da Gestão de Membros da Turma (Fase 1 - GEMINI.md)
+// ============================================================================
+
+export const classMembersPaginationQuerySchema = z.object({
+  page: z.coerce.number().int().min(1, 'A página deve ser maior ou igual a 1.').default(1),
+});
+
+export type ClassMembersPaginationQuery = z.infer<typeof classMembersPaginationQuerySchema>;

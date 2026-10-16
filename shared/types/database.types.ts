@@ -281,6 +281,7 @@ export type Database = {
         Args: { p_codigo_convite: string }
         Returns: Json
       }
+      get_my_turma_id: { Args: never; Returns: string }
       is_admin: { Args: never; Returns: boolean }
     }
     Enums: {

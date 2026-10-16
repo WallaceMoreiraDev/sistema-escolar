@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@shared/types/database.types';
-import { RawPedidoTurma } from '../dtos/classDto';
+import { RawPedidoTurma, RawClassMember } from '../dtos/classDto';
 
 export type InsertPedidoTurma = Database['public']['Tables']['pedidos_turma']['Insert'];
 
@@ -84,5 +84,35 @@ export class ClassRepository {
     }
 
     return data as { turma_id: string; nome_oficial: string };
+  }
+
+  /**
+   * Lista membros da turma de forma paginada e ordenada diretamente no banco.
+   * Ordena Líderes primeiro (role DESC) e depois por ordem alfabética de nome (nome ASC).
+   */
+  async listMembersPaginated(
+    turmaId: string,
+    page: number,
+    limit: number
+  ): Promise<{ members: RawClassMember[]; total: number }> {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data, count, error } = await this.supabase
+      .from('usuarios')
+      .select('id, nome, email, role, data_entrada_turma', { count: 'exact' })
+      .eq('turma_id', turmaId)
+      .order('role', { ascending: false, nullsFirst: false })
+      .order('nome', { ascending: true })
+      .range(from, to);
+
+    if (error) {
+      throw error;
+    }
+
+    return {
+      members: (data as RawClassMember[]) || [],
+      total: count ?? 0,
+    };
   }
 }

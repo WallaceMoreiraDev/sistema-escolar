@@ -2,6 +2,61 @@
 
 > Este documento serve como ponte de comunicação oficial entre o time de Backend (IA/Dev) e o time de Frontend (IA/Dev). Todas as ações que o Frontend precisar tomar devido a alterações de API, banco ou regras de negócio devem ser registradas aqui em formato estrito de checklist.
 
+## 🟢 Concluído: Fase 1 da Gestão de Membros da Turma (Listagem de Colegas de Sala)
+**Data/Contexto:** Endpoint `GET /api/turmas/membros` permitindo que alunos e líderes de uma turma listem os colegas de sala com paginação e ordenação direta no banco (Líderes primeiro, depois ordem alfabética).
+
+### Ações Exigidas para o Frontend:
+
+- [x] **Adoção dos Contratos e Schemas (@shared):**
+  - [x] Importar `ClassMemberDTO` e `ApiResponse` de `@shared/types`:
+    ```typescript
+    import { ApiResponse, ClassMemberDTO } from '@shared/types';
+    ```
+  - [x] Importar `classMembersPaginationQuerySchema` de `@shared/schemas/classSchema`:
+    ```typescript
+    import { classMembersPaginationQuerySchema } from '@shared/schemas/classSchema';
+    ```
+
+- [x] **Integração da Chamada de API (`GET /api/turmas/membros`):**
+  - [x] **Requisição de Listagem Paginada:**
+    - Header: `Authorization: Bearer <session.access_token>`.
+    - Query param: `page` (número inteiro, padrão: 1).
+    - Exemplo de URL: `/api/turmas/membros?page=1`
+    - Retorno de Sucesso: `HTTP 200 OK` com envelope:
+      ```typescript
+      {
+        success: true,
+        data: ClassMemberDTO[], // Array com até 5 itens ordenados (Líderes primeiro, depois nome ASC)
+        meta: {
+          pagination: {
+            page: number,
+            limit: 5,
+            total: number,
+            totalPages: number
+          }
+        }
+      }
+      ```
+    - Cada item em `data` possui os campos:
+      - `id: string`
+      - `nome: string`
+      - `email: string`
+      - `role: 'ALUNO' | 'LIDER' | 'ADMIN'`
+      - `dataEntradaTurma: string | null` (ISO 8601 UTC)
+    - Tratamento de Erros da API:
+      - `400 BAD_REQUEST` com `code: "BAD_REQUEST"`: Usuário não pertence a nenhuma turma.
+
+- [x] **Atualização do Hook e Componente de Membros (`MemberManagementSection.tsx`):**
+  - [x] Atualizar o hook `useClassMembers(page: number)` para realizar requisição real via TanStack Query (`useQuery`) chamando `GET /api/turmas/membros?page=${page}` em vez do array mockado em memória.
+  - [x] Substituir a paginação e ordenação feitas no client-side (`slice` e `sort`) pelo controle direto dos metadados recebidos do backend (`meta.pagination.totalPages`).
+  - [x] Mapear os campos no render da tabela:
+    - Nome: `member.nome`
+    - Email: `member.email`
+    - Cargo: `member.role === 'LIDER'` (exibir badge de Líder) ou `member.role === 'ALUNO'` (exibir badge de Aluno)
+    - Data de Entrada: `member.dataEntradaTurma ? new Date(member.dataEntradaTurma).toLocaleDateString('pt-BR') : '-'`
+
+---
+
 ## 🟢 Concluído: Etapa 3 do Fluxo de Turmas (Entrada via Código de Convite)
 **Data/Contexto:** Endpoint `POST /api/turmas/entrar` permitindo que alunos autenticados sem turma ingressem em uma sala existente através de código de convite de 6 caracteres alfanuméricos.
 
