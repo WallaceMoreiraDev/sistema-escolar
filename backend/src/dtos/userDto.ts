@@ -1,9 +1,13 @@
-import { UserProfileDTO, UserRole } from '@shared/types/user.types';
+import { UserProfileDTO, UserRole, AnoTurma, TurnoTurma } from '@shared/types';
 
 export type RawTurmaJoin = {
   id: string;
   nome_oficial: string;
   codigo_convite?: string | null;
+  ano?: AnoTurma | null;
+  curso?: string | null;
+  turno?: TurnoTurma | null;
+  local_sala?: string | null;
 };
 
 export type RawUserWithTurma = {
@@ -35,6 +39,10 @@ export class UserDTO {
             id: turmaRaw.id,
             nomeOficial: turmaRaw.nome_oficial,
             codigoConvite: turmaRaw.codigo_convite ?? null,
+            ano: turmaRaw.ano ?? null,
+            curso: turmaRaw.curso ?? null,
+            turno: turmaRaw.turno ?? null,
+            localSala: turmaRaw.local_sala ?? null,
           }
         : null,
     };
