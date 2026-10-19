@@ -107,3 +107,13 @@ export const classMembersPaginationQuerySchema = z.object({
 });
 
 export type ClassMembersPaginationQuery = z.infer<typeof classMembersPaginationQuerySchema>;
+
+// ============================================================================
+// Schemas da Moderação de Membros da Turma (Fase 2 - GEMINI.md)
+// ============================================================================
+
+export const classMemberIdParamSchema = z.object({
+  id: z.string().uuid('ID do membro deve ser um UUID válido.'),
+});
+
+export type ClassMemberIdParam = z.infer<typeof classMemberIdParamSchema>;

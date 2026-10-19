@@ -212,4 +212,237 @@ export class ClassService {
       },
     };
   }
+
+  /**
+   * Promove um aluno da turma a líder via procedure 'promover_membro_lider'.
+   */
+  async promoteMember(memberId: string): Promise<void> {
+    try {
+      await this.classRepo.promoteMemberToLeader(memberId);
+    } catch (error: unknown) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+
+      const dbErr = error as DatabaseErrorLike;
+      const message = dbErr?.message || '';
+
+      if (message.includes('USER_NOT_FOUND')) {
+        throw new AppError(
+          'NOT_FOUND',
+          404,
+          'Membro não encontrado ou não pertence a esta turma.'
+        );
+      }
+
+      if (message.includes('USER_WITHOUT_CLASS')) {
+        throw new AppError(
+          'BAD_REQUEST',
+          400,
+          'O membro não pertence a nenhuma turma.'
+        );
+      }
+
+      if (message.includes('ALREADY_LEADER')) {
+        throw new AppError(
+          'BAD_REQUEST',
+          400,
+          'O usuário já é um líder desta turma.'
+        );
+      }
+
+      if (message.includes('CANNOT_ALTER_ADMIN')) {
+        throw new AppError(
+          'BAD_REQUEST',
+          400,
+          'Administradores gerais não podem ser alterados para líder de turma.'
+        );
+      }
+
+      if (message.includes('FORBIDDEN')) {
+        throw new AppError(
+          'AUTH_FORBIDDEN',
+          403,
+          'Apenas líderes da turma ou administradores podem promover membros.'
+        );
+      }
+
+      if (message.includes('AUTH_UNAUTHORIZED')) {
+        throw new AppError(
+          'AUTH_UNAUTHORIZED',
+          401,
+          'Usuário não autenticado.'
+        );
+      }
+
+      throw new AppError(
+        'INTERNAL_SERVER_ERROR',
+        500,
+        'Falha ao promover membro a líder.'
+      );
+    }
+  }
+
+  /**
+   * Rebaixa um líder da turma para o cargo de aluno via procedure 'rebaixar_lider_membro'.
+   * Regras:
+   * 1. Bloqueio de auto-rebaixamento.
+   * 2. Regra Anti-Orfandade (não rebaixar o único líder da turma).
+   */
+  async demoteMember(callerId: string, memberId: string): Promise<void> {
+    if (callerId === memberId) {
+      throw new AppError(
+        'CANNOT_MODIFY_SELF',
+        400,
+        'Você não pode realizar esta ação consigo mesmo pelo painel de moderação.'
+      );
+    }
+
+    try {
+      await this.classRepo.demoteLeaderToMember(memberId);
+    } catch (error: unknown) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+
+      const dbErr = error as DatabaseErrorLike;
+      const message = dbErr?.message || '';
+
+      if (message.includes('LAST_LEADER_CANNOT_BE_DEMOTED')) {
+        throw new AppError(
+          'LAST_LEADER_CONFLICT',
+          409,
+          'A turma não pode ficar sem nenhum líder. Promova outro membro antes.'
+        );
+      }
+
+      if (message.includes('CANNOT_DEMOTE_SELF')) {
+        throw new AppError(
+          'CANNOT_MODIFY_SELF',
+          400,
+          'Você não pode realizar esta ação consigo mesmo pelo painel de moderação.'
+        );
+      }
+
+      if (message.includes('USER_NOT_FOUND')) {
+        throw new AppError(
+          'NOT_FOUND',
+          404,
+          'Membro não encontrado ou não pertence a esta turma.'
+        );
+      }
+
+      if (message.includes('NOT_A_LEADER')) {
+        throw new AppError(
+          'BAD_REQUEST',
+          400,
+          'O usuário não possui o cargo de líder.'
+        );
+      }
+
+      if (message.includes('FORBIDDEN')) {
+        throw new AppError(
+          'AUTH_FORBIDDEN',
+          403,
+          'Apenas líderes da turma ou administradores podem rebaixar líderes.'
+        );
+      }
+
+      if (message.includes('AUTH_UNAUTHORIZED')) {
+        throw new AppError(
+          'AUTH_UNAUTHORIZED',
+          401,
+          'Usuário não autenticado.'
+        );
+      }
+
+      throw new AppError(
+        'INTERNAL_SERVER_ERROR',
+        500,
+        'Falha ao rebaixar líder para aluno.'
+      );
+    }
+  }
+
+  /**
+   * Expulsa um aluno da turma via procedure 'expulsar_membro_turma'.
+   * Regras:
+   * 1. Bloqueio de auto-expulsão.
+   * 2. Regra Anti-Orfandade (se for o último líder).
+   */
+  async expelMember(callerId: string, memberId: string): Promise<void> {
+    if (callerId === memberId) {
+      throw new AppError(
+        'CANNOT_MODIFY_SELF',
+        400,
+        'Você não pode realizar esta ação consigo mesmo pelo painel de moderação.'
+      );
+    }
+
+    try {
+      await this.classRepo.expelMemberFromClass(memberId);
+    } catch (error: unknown) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+
+      const dbErr = error as DatabaseErrorLike;
+      const message = dbErr?.message || '';
+
+      if (message.includes('LAST_LEADER_CANNOT_BE_EXPELLED')) {
+        throw new AppError(
+          'LAST_LEADER_CONFLICT',
+          409,
+          'O último líder não pode ser expulso da turma. Promova outro membro a líder antes de desvinculá-lo.'
+        );
+      }
+
+      if (message.includes('CANNOT_EXPEL_SELF')) {
+        throw new AppError(
+          'CANNOT_MODIFY_SELF',
+          400,
+          'Você não pode realizar esta ação consigo mesmo pelo painel de moderação.'
+        );
+      }
+
+      if (message.includes('USER_NOT_FOUND')) {
+        throw new AppError(
+          'NOT_FOUND',
+          404,
+          'Membro não encontrado ou não pertence a esta turma.'
+        );
+      }
+
+      if (message.includes('USER_ALREADY_WITHOUT_CLASS')) {
+        throw new AppError(
+          'BAD_REQUEST',
+          400,
+          'O usuário já não pertence a nenhuma turma.'
+        );
+      }
+
+      if (message.includes('FORBIDDEN')) {
+        throw new AppError(
+          'AUTH_FORBIDDEN',
+          403,
+          'Apenas líderes da turma ou administradores podem expulsar membros.'
+        );
+      }
+
+      if (message.includes('AUTH_UNAUTHORIZED')) {
+        throw new AppError(
+          'AUTH_UNAUTHORIZED',
+          401,
+          'Usuário não autenticado.'
+        );
+      }
+
+      throw new AppError(
+        'INTERNAL_SERVER_ERROR',
+        500,
+        'Falha ao expulsar membro da turma.'
+      );
+    }
+  }
 }
+

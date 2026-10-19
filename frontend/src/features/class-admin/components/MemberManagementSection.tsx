@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Users,
   ShieldCheck,
@@ -9,21 +9,41 @@ import {
   ChevronLeft,
   ChevronRight,
   AlertCircle,
+  CheckCircle2,
 } from 'lucide-react';
-import { useClassMembers, useUpdateMemberRole, useRemoveMember } from '../hooks/useClassMembers';
+import {
+  useClassMembers,
+  usePromoteMember,
+  useDemoteMember,
+  useExpelMember,
+} from '../hooks/useClassMembers';
 import { ClassMemberDTO } from '@shared/types';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ConfirmModal } from '../../../components/ui/ConfirmModal';
+import { ApiError } from '@/utils/apiError';
+import { getErrorMessage } from '@/utils/errorMessages';
 
 export function MemberManagementSection() {
   const { user } = useAuth();
   const [page, setPage] = useState(1);
 
   const { data, isLoading, isError } = useClassMembers(page);
-  const updateRoleMutation = useUpdateMemberRole();
-  const removeMutation = useRemoveMember();
+  const promoteMutation = usePromoteMember();
+  const demoteMutation = useDemoteMember();
+  const expelMutation = useExpelMember();
 
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [successMsg, setSuccessMsg] = useState<string | null>(null);
+
+  // Auto-dismiss da mensagem de sucesso
+  useEffect(() => {
+    if (successMsg) {
+      const timer = setTimeout(() => setSuccessMsg(null), 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [successMsg]);
+
+
 
   // Controle do Modal de Confirmação
   const [confirmModal, setConfirmModal] = useState<{
@@ -31,6 +51,7 @@ export function MemberManagementSection() {
     title: string;
     message: string;
     isDestructive: boolean;
+    confirmText?: string;
     action: () => void;
   }>({
     isOpen: false,
@@ -41,39 +62,77 @@ export function MemberManagementSection() {
   });
 
   const loggedUserId = user?.id;
+  const isCurrentUserLeaderOrAdmin = user?.role === 'LIDER' || user?.role === 'ADMIN';
   const members: ClassMemberDTO[] = data?.data || [];
   const totalPages = data?.meta?.pagination?.totalPages || 1;
+  const isActionPending =
+    promoteMutation.isPending || demoteMutation.isPending || expelMutation.isPending;
+
+  const extractApiErrorMessage = (err: unknown, fallback: string): string => {
+    if (err instanceof ApiError) {
+      if (err.code === 'LAST_LEADER_CONFLICT') {
+        return getErrorMessage(
+          'LAST_LEADER_CONFLICT',
+          'A turma não pode ficar sem nenhum líder. Promova outro membro antes.'
+        );
+      }
+      if (err.code === 'CANNOT_MODIFY_SELF') {
+        return getErrorMessage(
+          'CANNOT_MODIFY_SELF',
+          'Você não pode realizar esta ação consigo mesmo pelo painel de moderação.'
+        );
+      }
+      return getErrorMessage(err.code, err.message || fallback);
+    }
+    if (err instanceof Error) {
+      return err.message;
+    }
+    return fallback;
+  };
 
   const handlePromote = (member: ClassMemberDTO) => {
     setErrorMsg(null);
-    updateRoleMutation.mutate(
-      { id: member.id, newRole: 'leader' },
-      {
-        onError: (err: unknown) =>
-          setErrorMsg(err instanceof Error ? err.message : 'Erro ao promover membro.'),
-      }
-    );
+    setConfirmModal({
+      isOpen: true,
+      title: 'Promover a Líder',
+      message: `Tem certeza que deseja promover ${member.nome} a Líder da turma? O membro passará a ter permissão para gerenciar a sala.`,
+      isDestructive: false,
+      confirmText: 'Promover a Líder',
+      action: () => {
+        promoteMutation.mutate(member.id, {
+          onSuccess: (res) => {
+            setSuccessMsg(res.data.message || 'Membro promovido a líder com sucesso.');
+          },
+          onError: (err: unknown) => {
+            setErrorMsg(extractApiErrorMessage(err, 'Erro ao promover membro a líder.'));
+          },
+        });
+        setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+      },
+    });
   };
 
   const handleDemote = (member: ClassMemberDTO) => {
     setErrorMsg(null);
     if (member.id === loggedUserId) {
-      setErrorMsg('Você não pode rebaixar a si mesmo.');
+      setErrorMsg('Você não pode realizar esta ação consigo mesmo pelo painel de moderação.');
       return;
     }
     setConfirmModal({
       isOpen: true,
       title: 'Rebaixar Líder',
-      message: `Tem certeza que deseja remover o cargo de líder de ${member.nome}?`,
+      message: `Tem certeza que deseja remover o cargo de líder de ${member.nome}? O membro voltará a ser Aluno comum.`,
       isDestructive: true,
+      confirmText: 'Rebaixar para Aluno',
       action: () => {
-        updateRoleMutation.mutate(
-          { id: member.id, newRole: 'student' },
-          {
-            onError: (err: unknown) =>
-              setErrorMsg(err instanceof Error ? err.message : 'Erro ao rebaixar membro.'),
-          }
-        );
+        demoteMutation.mutate(member.id, {
+          onSuccess: (res) => {
+            setSuccessMsg(res.data.message || 'Líder rebaixado para aluno com sucesso.');
+          },
+          onError: (err: unknown) => {
+            setErrorMsg(extractApiErrorMessage(err, 'Erro ao rebaixar líder.'));
+          },
+        });
         setConfirmModal((prev) => ({ ...prev, isOpen: false }));
       },
     });
@@ -87,13 +146,21 @@ export function MemberManagementSection() {
     }
     setConfirmModal({
       isOpen: true,
-      title: 'Remover Aluno',
-      message: `Tem certeza que deseja expulsar ${member.nome} da turma? Essa ação não pode ser desfeita.`,
+      title: 'Remover Aluno da Turma',
+      message: `Tem certeza que deseja remover ${member.nome} da turma? Essa ação revoga o acesso do aluno à sala.`,
       isDestructive: true,
+      confirmText: 'Remover da Turma',
       action: () => {
-        removeMutation.mutate(member.id, {
-          onError: (err: unknown) =>
-            setErrorMsg(err instanceof Error ? err.message : 'Erro ao remover membro.'),
+        expelMutation.mutate(member.id, {
+          onSuccess: (res) => {
+            setSuccessMsg(res.data.message || 'Aluno removido da turma com sucesso.');
+            if (members.length === 1 && page > 1) {
+              setPage((p) => Math.max(1, p - 1));
+            }
+          },
+          onError: (err: unknown) => {
+            setErrorMsg(extractApiErrorMessage(err, 'Erro ao remover aluno da turma.'));
+          },
         });
         setConfirmModal((prev) => ({ ...prev, isOpen: false }));
       },
@@ -109,10 +176,33 @@ export function MemberManagementSection() {
         <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Gestão de Membros</h2>
       </div>
 
+      {successMsg && (
+        <div className="mb-6 p-4 rounded-xl bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-800 font-medium text-sm flex items-center justify-between animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <CheckCircle2 className="w-5 h-5 shrink-0" />
+            <span>{successMsg}</span>
+          </div>
+          <button
+            onClick={() => setSuccessMsg(null)}
+            className="text-xs text-emerald-600 hover:text-emerald-800 dark:hover:text-emerald-200 font-bold ml-4"
+          >
+            Fechar
+          </button>
+        </div>
+      )}
+
       {errorMsg && (
-        <div className="mb-6 p-4 rounded-xl bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 border border-red-100 dark:border-red-900 font-medium text-sm flex items-center gap-2 animate-in fade-in">
-          <AlertCircle className="w-5 h-5 shrink-0" />
-          <span>{errorMsg}</span>
+        <div className="mb-6 p-4 rounded-xl bg-red-50 text-red-600 dark:bg-red-900/20 dark:text-red-400 border border-red-100 dark:border-red-900 font-medium text-sm flex items-center justify-between animate-in fade-in">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 shrink-0" />
+            <span>{errorMsg}</span>
+          </div>
+          <button
+            onClick={() => setErrorMsg(null)}
+            className="text-xs text-red-600 hover:text-red-800 dark:hover:text-red-200 font-bold ml-4"
+          >
+            Fechar
+          </button>
         </div>
       )}
 
@@ -165,6 +255,7 @@ export function MemberManagementSection() {
                 ) : (
                   members.map((member) => {
                     const isLeader = member.role === 'LIDER';
+                    const isAdmin = member.role === 'ADMIN';
                     const isMe = member.id === loggedUserId;
 
                     return (
@@ -179,6 +270,16 @@ export function MemberManagementSection() {
                               {isMe && (
                                 <span className="px-1.5 py-0.5 rounded text-[9px] bg-slate-200 text-slate-600 dark:bg-slate-700 dark:text-slate-300 uppercase tracking-widest font-semibold">
                                   Você
+                                </span>
+                              )}
+                              {isLeader && (
+                                <span className="px-1.5 py-0.5 rounded text-[9px] bg-primary/10 text-primary border border-primary/20 uppercase tracking-widest font-semibold">
+                                  Líder
+                                </span>
+                              )}
+                              {isAdmin && (
+                                <span className="px-1.5 py-0.5 rounded text-[9px] bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 uppercase tracking-widest font-semibold">
+                                  Admin
                                 </span>
                               )}
                             </span>
@@ -209,36 +310,48 @@ export function MemberManagementSection() {
                             : '-'}
                         </td>
                         <td className="px-6 py-4 text-right">
-                          <div className="flex justify-end gap-2">
-                            {isLeader ? (
-                              <button
-                                onClick={() => handleDemote(member)}
-                                disabled={isMe || updateRoleMutation.isPending}
-                                title="Rebaixar para Aluno"
-                                className="p-2 text-slate-400 hover:text-amber-500 transition-colors bg-white dark:bg-slate-800 shadow-sm rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
-                              >
-                                <ArrowDown className="w-4 h-4" />
-                              </button>
-                            ) : (
-                              <button
-                                onClick={() => handlePromote(member)}
-                                disabled={updateRoleMutation.isPending}
-                                title="Promover a Líder"
-                                className="p-2 text-slate-400 hover:text-primary transition-colors bg-white dark:bg-slate-800 shadow-sm rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-30"
-                              >
-                                <ArrowUp className="w-4 h-4" />
-                              </button>
-                            )}
+                          {isCurrentUserLeaderOrAdmin ? (
+                            <div className="flex justify-end gap-2">
+                              {member.role === 'ALUNO' && (
+                                <button
+                                  onClick={() => handlePromote(member)}
+                                  disabled={isActionPending}
+                                  title="Promover a Líder"
+                                  className="p-2 text-slate-400 hover:text-primary transition-colors bg-white dark:bg-slate-800 shadow-sm rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                                >
+                                  <ArrowUp className="w-4 h-4" />
+                                </button>
+                              )}
 
-                            <button
-                              onClick={() => handleRemove(member)}
-                              disabled={isMe || removeMutation.isPending}
-                              title="Remover Aluno da Turma"
-                              className="p-2 text-slate-400 hover:text-rose-500 transition-colors bg-white dark:bg-slate-800 shadow-sm rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
-                            >
-                              <UserMinus className="w-4 h-4" />
-                            </button>
-                          </div>
+                              {member.role === 'LIDER' && (
+                                <button
+                                  onClick={() => handleDemote(member)}
+                                  disabled={isMe || isActionPending}
+                                  title={isMe ? 'Você não pode rebaixar a si mesmo' : 'Rebaixar para Aluno'}
+                                  className="p-2 text-slate-400 hover:text-amber-500 transition-colors bg-white dark:bg-slate-800 shadow-sm rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                                >
+                                  <ArrowDown className="w-4 h-4" />
+                                </button>
+                              )}
+
+                              <button
+                                onClick={() => handleRemove(member)}
+                                disabled={isMe || member.role === 'ADMIN' || isActionPending}
+                                title={
+                                  isMe
+                                    ? 'Você não pode remover a si mesmo'
+                                    : member.role === 'ADMIN'
+                                    ? 'Administradores gerais não podem ser removidos'
+                                    : 'Remover Aluno da Turma'
+                                }
+                                className="p-2 text-slate-400 hover:text-rose-500 transition-colors bg-white dark:bg-slate-800 shadow-sm rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-30 disabled:cursor-not-allowed"
+                              >
+                                <UserMinus className="w-4 h-4" />
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-slate-400 text-xs">-</span>
+                          )}
                         </td>
                       </tr>
                     );
@@ -282,11 +395,10 @@ export function MemberManagementSection() {
         title={confirmModal.title}
         message={confirmModal.message}
         isDestructive={confirmModal.isDestructive}
-        confirmText={confirmModal.isDestructive ? 'Sim, tenho certeza' : 'Confirmar'}
+        confirmText={confirmModal.confirmText || (confirmModal.isDestructive ? 'Sim, tenho certeza' : 'Confirmar')}
         onConfirm={confirmModal.action}
         onCancel={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
       />
     </section>
   );
 }
-

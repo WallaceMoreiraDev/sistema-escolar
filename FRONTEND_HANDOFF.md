@@ -2,7 +2,63 @@
 
 > Este documento serve como ponte de comunicação oficial entre o time de Backend (IA/Dev) e o time de Frontend (IA/Dev). Todas as ações que o Frontend precisar tomar devido a alterações de API, banco ou regras de negócio devem ser registradas aqui em formato estrito de checklist.
 
+## 🟢 Concluído: Fase 2 da Gestão de Membros da Turma (Moderação & Poderes do Líder)
+**Data/Contexto:** Endpoints da API REST para permitir que Líderes de Turma (e Administradores Gerais) gerenciem o quadro de alunos e liderança de sua sala, promovendo alunos a líder, rebaixando líderes para aluno e desvinculando/expulsando membros.
+
+### Endpoints Disponíveis:
+1. **Promover a Líder:** `PATCH /api/turmas/membros/:id/promover`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Param: `:id` (UUID do membro alvo).
+   - Sucesso: `HTTP 200 OK` -> `{ success: true, data: { message: "Membro promovido a líder com sucesso." } }`
+2. **Rebaixar para Aluno:** `PATCH /api/turmas/membros/:id/rebaixar`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Param: `:id` (UUID do líder alvo).
+   - Sucesso: `HTTP 200 OK` -> `{ success: true, data: { message: "Líder rebaixado para aluno com sucesso." } }`
+3. **Expulsar da Turma:** `DELETE /api/turmas/membros/:id`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Param: `:id` (UUID do membro alvo).
+   - Sucesso: `HTTP 200 OK` -> `{ success: true, data: { message: "Aluno removido da turma com sucesso." } }`
+
+### Códigos de Erro da API:
+- `403 FORBIDDEN` (`AUTH_FORBIDDEN`): Usuário autenticado não é Líder da turma nem Administrador Geral, ou está tentando moderar membro de outra turma.
+- `409 CONFLICT` (`LAST_LEADER_CONFLICT`): Regra Anti-Orfandade violada. Tentativa de rebaixar ou expulsar o único líder restante da turma ("A turma não pode ficar sem nenhum líder. Promova outro membro antes.").
+- `400 BAD_REQUEST` (`CANNOT_MODIFY_SELF`): Tentativa de rebaixar ou expulsar a si mesmo ("Você não pode realizar esta ação consigo mesmo pelo painel de moderação.").
+- `400 BAD_REQUEST` (`VALIDATION_ERROR`): O `:id` informado não é um UUID válido.
+- `404 NOT_FOUND` (`NOT_FOUND`): Membro não encontrado ou não pertence a esta turma.
+
+### Ações Exigidas para o Frontend:
+
+- [x] **Adoção dos Schemas e Tipos (@shared):**
+  - [x] Utilizar o schema de validação `classMemberIdParamSchema` de `@shared/schemas/classSchema` se necessário para validar IDs antes do disparo.
+  - [x] Consumir envelope padronizado `ApiResponse<{ message: string }>` de `@shared/types`.
+
+- [x] **Atualização dos Mutations em `useClassMembers.ts`:**
+  - [x] Atualizar ou implementar mutation de promoção (`usePromoteMember` ou similar) apontando para `PATCH /api/turmas/membros/${memberId}/promover`.
+  - [x] Atualizar ou implementar mutation de rebaixamento (`useDemoteMember` ou similar) apontando para `PATCH /api/turmas/membros/${memberId}/rebaixar`.
+  - [x] Atualizar ou implementar mutation de expulsão (`useExpelMember` ou similar) apontando para `DELETE /api/turmas/membros/${memberId}`.
+  - [x] Após o sucesso de qualquer uma das mutações:
+    - [x] Invalidar a query dos membros da turma (`queryClient.invalidateQueries({ queryKey: ['class-members'] })`).
+    - [x] Exibir toast/feedback amigável de sucesso com a mensagem retornada pelo backend (`data.message`).
+
+- [x] **Integração no Componente `MemberManagementSection.tsx`:**
+  - [x] **Botão "Promover a Líder":**
+    - Exibir apenas para membros com `role === 'ALUNO'` quando o usuário logado for `LIDER` ou `ADMIN`.
+    - Disparar a mutação correspondente com modal/confirmação amigável estilizado com Tailwind/shadcn.
+  - [x] **Botão "Rebaixar para Aluno":**
+    - Exibir apenas para líderes (`role === 'LIDER'`), exceto para a linha do próprio usuário logado (`member.id === currentUser.id`).
+    - Ao confirmar no modal, acionar a mutação de rebaixamento.
+    - Se a API retornar `409 LAST_LEADER_CONFLICT`, capturar no `onError` e exibir toast explicativo: *"A turma não pode ficar sem nenhum líder. Promova outro membro antes."*
+  - [x] **Botão "Remover da Turma" / "Expulsar":**
+    - Desabilitar ou ocultar para a linha do próprio usuário logado (`member.id === currentUser.id`).
+    - Ao confirmar no modal de remoção, acionar a mutação de expulsão.
+    - Se a API retornar `409 LAST_LEADER_CONFLICT`, capturar no `onError` e exibir toast explicativo de proteção do último líder.
+  - [x] **Garantia de Regra Visual (GEMINI.md):**
+    - Nunca usar `window.confirm` ou `window.alert` nativos; usar os diálogos padronizados já existentes no componente com ícones Lucide React (sem emojis).
+
+---
+
 ## 🟢 Concluído: Fase 1 da Gestão de Membros da Turma (Listagem de Colegas de Sala)
+
 **Data/Contexto:** Endpoint `GET /api/turmas/membros` permitindo que alunos e líderes de uma turma listem os colegas de sala com paginação e ordenação direta no banco (Líderes primeiro, depois ordem alfabética).
 
 ### Ações Exigidas para o Frontend:

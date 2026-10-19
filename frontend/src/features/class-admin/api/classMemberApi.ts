@@ -1,4 +1,10 @@
-import { ApiResponse, ApiErrorResponse, ClassMemberDTO } from '@shared/types';
+import {
+  ApiResponse,
+  ApiErrorResponse,
+  ClassMemberDTO,
+  ClassMemberActionResponse,
+} from '@shared/types';
+import { classMemberIdParamSchema } from '@shared/schemas/classSchema';
 import { ApiError } from '@/utils/apiError';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
@@ -30,4 +36,92 @@ export const classMemberApi = {
 
     return (await res.json()) as ApiResponse<ClassMemberDTO[]>;
   },
+
+  /**
+   * Promove um aluno da turma a líder (PATCH /api/turmas/membros/:id/promover).
+   */
+  async promoteMember(
+    token: string,
+    memberId: string
+  ): Promise<ApiResponse<ClassMemberActionResponse>> {
+    classMemberIdParamSchema.parse({ id: memberId });
+
+    const res = await fetch(`${API_URL}/api/turmas/membros/${memberId}/promover`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errorData = (await res.json().catch(() => null)) as ApiErrorResponse | null;
+      throw new ApiError(
+        errorData?.code || 'UNKNOWN_ERROR',
+        res.status,
+        errorData?.details,
+        errorData?.message
+      );
+    }
+
+    return (await res.json()) as ApiResponse<ClassMemberActionResponse>;
+  },
+
+  /**
+   * Rebaixa um líder da turma para o cargo de aluno (PATCH /api/turmas/membros/:id/rebaixar).
+   */
+  async demoteMember(
+    token: string,
+    memberId: string
+  ): Promise<ApiResponse<ClassMemberActionResponse>> {
+    classMemberIdParamSchema.parse({ id: memberId });
+
+    const res = await fetch(`${API_URL}/api/turmas/membros/${memberId}/rebaixar`, {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errorData = (await res.json().catch(() => null)) as ApiErrorResponse | null;
+      throw new ApiError(
+        errorData?.code || 'UNKNOWN_ERROR',
+        res.status,
+        errorData?.details,
+        errorData?.message
+      );
+    }
+
+    return (await res.json()) as ApiResponse<ClassMemberActionResponse>;
+  },
+
+  /**
+   * Expulsa/remove um aluno da turma (DELETE /api/turmas/membros/:id).
+   */
+  async expelMember(
+    token: string,
+    memberId: string
+  ): Promise<ApiResponse<ClassMemberActionResponse>> {
+    classMemberIdParamSchema.parse({ id: memberId });
+
+    const res = await fetch(`${API_URL}/api/turmas/membros/${memberId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errorData = (await res.json().catch(() => null)) as ApiErrorResponse | null;
+      throw new ApiError(
+        errorData?.code || 'UNKNOWN_ERROR',
+        res.status,
+        errorData?.details,
+        errorData?.message
+      );
+    }
+
+    return (await res.json()) as ApiResponse<ClassMemberActionResponse>;
+  },
 };
+

@@ -86,3 +86,10 @@ export interface ClassMemberDTO {
   role: UserRole;
   dataEntradaTurma: string | null;
 }
+
+/**
+ * Resposta de sucesso em operações de moderação de membros da turma (promover, rebaixar, expulsar).
+ */
+export interface ClassMemberActionResponse {
+  message: string;
+}

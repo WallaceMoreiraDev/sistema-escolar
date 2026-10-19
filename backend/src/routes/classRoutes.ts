@@ -1,11 +1,17 @@
 import { Hono } from 'hono';
 import { ClassController } from '../controllers/classController';
 import { authMiddleware, Variables } from '../middlewares/authMiddleware';
-import { validateBody, validateQuery } from '../middlewares/validationMiddleware';
+import { requireRole } from '../middlewares/roleMiddleware';
+import {
+  validateBody,
+  validateQuery,
+  validateParam,
+} from '../middlewares/validationMiddleware';
 import {
   createClassRequestSchema,
   joinClassSchema,
   classMembersPaginationQuerySchema,
+  classMemberIdParamSchema,
 } from '@shared/schemas/classSchema';
 
 const classRoutes = new Hono<{ Variables: Variables }>();
@@ -44,6 +50,30 @@ classRoutes.get(
   '/membros',
   validateQuery(classMembersPaginationQuerySchema),
   ClassController.listMembers
+);
+
+// PATCH /api/turmas/membros/:id/promover - Promove membro a líder
+classRoutes.patch(
+  '/membros/:id/promover',
+  requireRole(['LIDER', 'ADMIN']),
+  validateParam(classMemberIdParamSchema),
+  ClassController.promoteMember
+);
+
+// PATCH /api/turmas/membros/:id/rebaixar - Rebaixa líder a aluno
+classRoutes.patch(
+  '/membros/:id/rebaixar',
+  requireRole(['LIDER', 'ADMIN']),
+  validateParam(classMemberIdParamSchema),
+  ClassController.demoteMember
+);
+
+// DELETE /api/turmas/membros/:id - Expulsa aluno da turma
+classRoutes.delete(
+  '/membros/:id',
+  requireRole(['LIDER', 'ADMIN']),
+  validateParam(classMemberIdParamSchema),
+  ClassController.expelMember
 );
 
 export { classRoutes };

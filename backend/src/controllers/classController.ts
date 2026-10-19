@@ -11,7 +11,10 @@ import {
   JoinClassPayload,
   JoinClassResponse,
 } from '@shared/types';
-import { ClassMembersPaginationQuery } from '@shared/schemas/classSchema';
+import {
+  ClassMembersPaginationQuery,
+  ClassMemberIdParam,
+} from '@shared/schemas/classSchema';
 
 export class ClassController {
   /**
@@ -128,6 +131,80 @@ export class ClassController {
       data: dtos,
       meta: {
         pagination,
+      },
+    };
+
+    return c.json(response, 200);
+  }
+
+  /**
+   * PATCH /api/turmas/membros/:id/promover
+   * Promove um membro da turma ao cargo de Líder.
+   */
+  static async promoteMember(c: Context) {
+    const supabase = c.get('supabase');
+    const { id } = c.get('validParams') as ClassMemberIdParam;
+
+    const classRepo = new ClassRepository(supabase);
+    const userRepo = new UserRepository(supabase);
+    const service = new ClassService(classRepo, userRepo);
+
+    await service.promoteMember(id);
+
+    const response: ApiResponse<{ message: string }> = {
+      success: true,
+      data: {
+        message: 'Membro promovido a líder com sucesso.',
+      },
+    };
+
+    return c.json(response, 200);
+  }
+
+  /**
+   * PATCH /api/turmas/membros/:id/rebaixar
+   * Rebaixa um líder da turma para o cargo de Aluno.
+   */
+  static async demoteMember(c: Context) {
+    const supabase = c.get('supabase');
+    const caller = c.get('user');
+    const { id } = c.get('validParams') as ClassMemberIdParam;
+
+    const classRepo = new ClassRepository(supabase);
+    const userRepo = new UserRepository(supabase);
+    const service = new ClassService(classRepo, userRepo);
+
+    await service.demoteMember(caller.id, id);
+
+    const response: ApiResponse<{ message: string }> = {
+      success: true,
+      data: {
+        message: 'Líder rebaixado para aluno com sucesso.',
+      },
+    };
+
+    return c.json(response, 200);
+  }
+
+  /**
+   * DELETE /api/turmas/membros/:id
+   * Expulsa/remove um aluno da turma.
+   */
+  static async expelMember(c: Context) {
+    const supabase = c.get('supabase');
+    const caller = c.get('user');
+    const { id } = c.get('validParams') as ClassMemberIdParam;
+
+    const classRepo = new ClassRepository(supabase);
+    const userRepo = new UserRepository(supabase);
+    const service = new ClassService(classRepo, userRepo);
+
+    await service.expelMember(caller.id, id);
+
+    const response: ApiResponse<{ message: string }> = {
+      success: true,
+      data: {
+        message: 'Aluno removido da turma com sucesso.',
       },
     };
 

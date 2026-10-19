@@ -115,4 +115,43 @@ export class ClassRepository {
       total: count ?? 0,
     };
   }
+
+  /**
+   * Promove um aluno da turma a Líder via procedure PostgreSQL 'promover_membro_lider'.
+   */
+  async promoteMemberToLeader(memberId: string): Promise<void> {
+    const { error } = await this.supabase.rpc('promover_membro_lider', {
+      p_membro_id: memberId,
+    });
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Rebaixa um líder da turma a Aluno via procedure PostgreSQL 'rebaixar_lider_membro'.
+   */
+  async demoteLeaderToMember(memberId: string): Promise<void> {
+    const { error } = await this.supabase.rpc('rebaixar_lider_membro', {
+      p_membro_id: memberId,
+    });
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Expulsa um membro da turma via procedure PostgreSQL 'expulsar_membro_turma'.
+   */
+  async expelMemberFromClass(memberId: string): Promise<void> {
+    const { error } = await this.supabase.rpc('expulsar_membro_turma', {
+      p_membro_id: memberId,
+    });
+
+    if (error) {
+      throw error;
+    }
+  }
 }

@@ -281,8 +281,20 @@ export type Database = {
         Args: { p_codigo_convite: string }
         Returns: Json
       }
+      expulsar_membro_turma: {
+        Args: { p_membro_id: string }
+        Returns: undefined
+      }
       get_my_turma_id: { Args: never; Returns: string }
       is_admin: { Args: never; Returns: boolean }
+      promover_membro_lider: {
+        Args: { p_membro_id: string }
+        Returns: undefined
+      }
+      rebaixar_lider_membro: {
+        Args: { p_membro_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       ano_type: "1º" | "2º" | "3º"

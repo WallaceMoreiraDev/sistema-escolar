@@ -1,7 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { classMemberApi } from '../api/classMemberApi';
-import { MemberRole } from '../types';
 import { ApiError } from '@/utils/apiError';
 
 /**
@@ -27,15 +26,20 @@ export function useClassMembers(page: number = 1) {
 }
 
 /**
- * Hook de mutação para atualizar o cargo de um membro da turma (Fase 2).
+ * Hook de mutação para promover um aluno a líder da turma.
+ * Rota: PATCH /api/turmas/membros/:id/promover
  */
-export function useUpdateMemberRole() {
+export function usePromoteMember() {
   const queryClient = useQueryClient();
+  const { session } = useAuth();
+  const token = session?.access_token;
 
   return useMutation({
-    mutationFn: async ({ id, newRole }: { id: string; newRole: MemberRole }) => {
-      // Será implementado na Fase 2 integrado aos endpoints de promoção/rebaixamento
-      return { id, newRole };
+    mutationFn: async (memberId: string) => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      return classMemberApi.promoteMember(token, memberId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['class-members'] });
@@ -44,18 +48,46 @@ export function useUpdateMemberRole() {
 }
 
 /**
- * Hook de mutação para remover/expulsar um aluno da turma (Fase 2).
+ * Hook de mutação para rebaixar um líder da turma a aluno.
+ * Rota: PATCH /api/turmas/membros/:id/rebaixar
  */
-export function useRemoveMember() {
+export function useDemoteMember() {
   const queryClient = useQueryClient();
+  const { session } = useAuth();
+  const token = session?.access_token;
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      // Será implementado na Fase 2 integrado ao endpoint de remoção
-      return id;
+    mutationFn: async (memberId: string) => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      return classMemberApi.demoteMember(token, memberId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['class-members'] });
     },
   });
 }
+
+/**
+ * Hook de mutação para expulsar/remover um aluno da turma.
+ * Rota: DELETE /api/turmas/membros/:id
+ */
+export function useExpelMember() {
+  const queryClient = useQueryClient();
+  const { session } = useAuth();
+  const token = session?.access_token;
+
+  return useMutation({
+    mutationFn: async (memberId: string) => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      return classMemberApi.expelMember(token, memberId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['class-members'] });
+    },
+  });
+}
+
