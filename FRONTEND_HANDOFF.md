@@ -2,6 +2,15 @@
 
 > Este documento serve como ponte de comunicação oficial entre o time de Backend (IA/Dev) e o time de Frontend (IA/Dev). Todas as ações que o Frontend precisar tomar devido a alterações de API, banco ou regras de negócio devem ser registradas aqui em formato estrito de checklist.
 
+## 🟡 Em Andamento: Calendário e Eventos da Turma (Fase de Banco de Dados / RLS)
+**Data/Contexto:** Migration de segurança (RLS), integridade de autoria e índice composto aplicada para a tabela `public.eventos`.
+- [x] Políticas de RLS habilitadas para `SELECT`, `INSERT`, `UPDATE` e `DELETE` em `public.eventos`.
+- [x] Helper `public.is_lider()` criado com `SECURITY DEFINER` e tipado no schema Supabase (`shared/types/database.types.ts`).
+- [x] Coluna `criado_por` com default automático para `auth.uid()`.
+- [x] Índice de alta performance `idx_eventos_turma_data_limite` criado em `(turma_id, data_hora_limite ASC)`.
+- [ ] Implementação de contratos DTOs/Schemas no `@shared` e rotas no Backend Node.js (próxima etapa).
+
+
 ## 🟢 Concluído: Fase 2 da Gestão de Membros da Turma (Moderação & Poderes do Líder)
 **Data/Contexto:** Endpoints da API REST para permitir que Líderes de Turma (e Administradores Gerais) gerenciem o quadro de alunos e liderança de sua sala, promovendo alunos a líder, rebaixando líderes para aluno e desvinculando/expulsando membros.
 

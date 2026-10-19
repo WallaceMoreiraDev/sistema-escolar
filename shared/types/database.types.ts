@@ -287,6 +287,7 @@ export type Database = {
       }
       get_my_turma_id: { Args: never; Returns: string }
       is_admin: { Args: never; Returns: boolean }
+      is_lider: { Args: never; Returns: boolean }
       promover_membro_lider: {
         Args: { p_membro_id: string }
         Returns: undefined
