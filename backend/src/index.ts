@@ -7,6 +7,7 @@ import { EnvConfig } from "./env";
 import { userRoutes } from "./routes/userRoutes";
 import { noticeRoutes } from "./routes/noticeRoutes";
 import { classRoutes } from "./routes/classRoutes";
+import { eventRoutes } from "./routes/eventRoutes";
 import { adminRoutes } from "./routes/adminRoutes";
 
 // Define the Bindings (Env Vars) and Variables (Context State) for the app
@@ -32,6 +33,7 @@ app.get("/health", (c) => {
 // Register Route Groups
 app.route("/api/me", userRoutes);
 app.route("/api/avisos", noticeRoutes);
+app.route("/api/turmas/eventos", eventRoutes);
 app.route("/api/turmas", classRoutes);
 app.route("/api/admin", adminRoutes);
 
