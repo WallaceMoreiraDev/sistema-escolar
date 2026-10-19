@@ -14,13 +14,18 @@ export const errorMessages: Record<string, string> = {
   ALREADY_IN_CLASS: 'Você já está vinculado a uma turma.',
   CLASS_REQUEST_DUPLICATE: 'Você já possui uma solicitação de turma em andamento. Aguarde a avaliação do administrador da plataforma.',
   INVITE_CODE_ALREADY_EXISTS: 'O código de convite informado já está em uso por outra turma.',
-  AUTH_FORBIDDEN: 'Acesso negado. Apenas o Administrador Geral pode executar esta moderação.',
+  AUTH_FORBIDDEN: 'Você não possui permissão para realizar esta operação de moderação.',
   NOT_FOUND: 'O recurso solicitado não foi encontrado ou já foi processado.',
   CLASS_NOT_FOUND: 'Turma não encontrada.',
   INVALID_INVITE_CODE: 'Código de convite inválido ou expirado.',
+  LAST_LEADER_CONFLICT: 'A turma não pode ficar sem nenhum líder. Promova outro membro antes.',
+  CANNOT_MODIFY_SELF: 'Você não pode realizar esta ação consigo mesmo pelo painel de moderação.',
+  ALREADY_LEADER: 'O usuário já é um líder desta turma.',
+  NOT_A_LEADER: 'O usuário não possui o cargo de líder.',
+  CANNOT_ALTER_ADMIN: 'Administradores gerais não podem ter seu cargo alterado na turma.',
 
   // Validação e Genéricos
-  VALIDATION_ERROR: 'Por favor, revise os dados preenchidos no formulário.',
+  VALIDATION_ERROR: 'Por favor, revise os dados informados.',
   INTERNAL_SERVER_ERROR: 'Ocorreu um erro interno no servidor. Tente novamente em instantes.',
   UNKNOWN_ERROR: 'Ocorreu um erro inesperado. Tente novamente mais tarde.',
 };
