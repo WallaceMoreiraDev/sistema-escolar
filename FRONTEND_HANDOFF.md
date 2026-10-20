@@ -2,7 +2,7 @@
 
 > Este documento serve como ponte de comunicação oficial entre o time de Backend (IA/Dev) e o time de Frontend (IA/Dev). Todas as ações que o Frontend precisar tomar devido a alterações de API, banco ou regras de negócio devem ser registradas aqui em formato estrito de checklist.
 
-## 🟡 Pendentes: Fase 1 do Calendário e Eventos da Turma (Exibição & Gestão de Eventos)
+## 🟢 Concluído: Fase 1 do Calendário e Eventos da Turma (Exibição & Gestão de Eventos)
 **Data/Contexto:** Endpoints da API REST para consulta por período, criação, edição e exclusão de eventos da turma (`/api/turmas/eventos`), além da inclusão dos dados cadastrais completos da turma (`ano`, `curso`, `turno`, `localSala`) no cabeçalho do perfil do usuário (`GET /api/me`).
 
 ### 1. Dados Reais da Turma no Cabeçalho (Auth / Sessão):
@@ -65,21 +65,21 @@ O objeto `turma` retornado em `GET /api/me` e `PUT /api/me/profile` (`TurmaSumma
 
 ### Ações Exigidas para o Frontend:
 
-- [ ] **Integração dos Dados da Turma no Cabeçalho:**
-  - [ ] Consumir `user?.turma` expandido (`ano`, `curso`, `turno`, `localSala`) para exibir o resumo completo da sala no cabeçalho das páginas e no painel da turma.
+- [x] **Integração dos Dados da Turma no Cabeçalho:**
+  - [x] Consumir `user?.turma` expandido (`ano`, `curso`, `turno`, `localSala`) para exibir o resumo completo da sala no cabeçalho das páginas e no painel da turma.
 
-- [ ] **Adoção dos Novos Schemas e Tipos (@shared):**
-  - [ ] Importar `EventDTO`, `CreateEventPayload`, `UpdateEventPayload` de `@shared/types`.
-  - [ ] Importar `createEventSchema`, `updateEventSchema`, `listEventsQuerySchema` de `@shared/schemas/eventSchema`.
+- [x] **Adoção dos Novos Schemas e Tipos (@shared):**
+  - [x] Importar `EventDTO`, `CreateEventPayload`, `UpdateEventPayload` de `@shared/types`.
+  - [x] Importar `createEventSchema`, `updateEventSchema`, `listEventsQuerySchema` de `@shared/schemas/eventSchema`.
 
-- [ ] **Integração das Chamadas de API no Hook de Eventos:**
-  - [ ] Conectar `useClassEvents.ts` à rota `GET /api/turmas/eventos?startDate=${start}&endDate=${end}` via TanStack Query.
-  - [ ] Conectar as mutações de criação (`POST`), edição (`PUT /:id`) e exclusão (`DELETE /:id`).
-  - [ ] Invalidar a query `['class-events']` após o sucesso de qualquer mutação.
+- [x] **Integração das Chamadas de API no Hook de Eventos:**
+  - [x] Conectar `useClassEvents.ts` à rota `GET /api/turmas/eventos?startDate=${start}&endDate=${end}` via TanStack Query.
+  - [x] Conectar as mutações de criação (`POST`), edição (`PUT /:id`) e exclusão (`DELETE /:id`).
+  - [x] Invalidar a query `['class-events']` após o sucesso de qualquer mutação.
 
-- [ ] **Atualização do Modal de Eventos (`EventForm.tsx`):**
-  - [ ] Atualizar formulário para mapear os campos canônicos (`materia`, `categoria`, `dataHoraLimite`, `descricao`, `anexoUrl`).
-  - [ ] Remover campos/mocks obsoletos (`subject`, `dueDate`, etc.).
+- [x] **Atualização do Modal de Eventos (`EventForm.tsx`):**
+  - [x] Atualizar formulário para mapear os campos canônicos (`materia`, `categoria`, `dataHoraLimite`, `descricao`, `anexoUrl`).
+  - [x] Remover campos/mocks obsoletos (`subject`, `dueDate`, etc.).
 
 ---
 
