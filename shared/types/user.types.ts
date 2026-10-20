@@ -1,4 +1,5 @@
 import { Database } from './database.types';
+import { AnoTurma, TurnoTurma } from './class.types';
 
 export type UserRole = NonNullable<Database['public']['Enums']['user_role']>;
 
@@ -9,6 +10,10 @@ export interface TurmaSummaryDTO {
   id: string;
   nomeOficial: string;
   codigoConvite?: string | null;
+  ano?: AnoTurma | null;
+  curso?: string | null;
+  turno?: TurnoTurma | null;
+  localSala?: string | null;
 }
 
 /**

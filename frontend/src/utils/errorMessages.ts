@@ -23,6 +23,8 @@ export const errorMessages: Record<string, string> = {
   ALREADY_LEADER: 'O usuário já é um líder desta turma.',
   NOT_A_LEADER: 'O usuário não possui o cargo de líder.',
   CANNOT_ALTER_ADMIN: 'Administradores gerais não podem ter seu cargo alterado na turma.',
+  USER_WITHOUT_CLASS: 'Você precisa estar enturmado para gerenciar eventos.',
+  TURMA_REQUIRED: 'A identificação da turma é obrigatória para esta operação.',
 
   // Validação e Genéricos
   VALIDATION_ERROR: 'Por favor, revise os dados informados.',

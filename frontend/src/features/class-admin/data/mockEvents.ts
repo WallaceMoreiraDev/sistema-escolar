@@ -17,10 +17,13 @@ export const MOCK_CLASS_EVENTS: ClassEvent[] = Array.from({ length: 20 }).map((_
 
   return {
     id: `evt-${i + 1}`,
-    subject: ['Matemática', 'Física', 'Desenvolvimento de Sistemas', 'Banco de Dados', 'Inglês', 'Química'][i % 6],
-    category: (['Prova', 'Trabalho', 'Tarefa'] as const)[i % 3],
-    dueDate: date.toISOString(),
-    description: `Descrição detalhada do evento ${i + 1}. Estudar capítulos e preparar material.`,
+    turmaId: 'mock-turma-id',
+    materia: ['Matemática', 'Física', 'Desenvolvimento de Sistemas', 'Banco de Dados', 'Inglês', 'Química'][i % 6],
+    categoria: (['Prova', 'Trabalho', 'Tarefa'] as const)[i % 3],
+    dataHoraLimite: date.toISOString(),
+    descricao: `Descrição detalhada do evento ${i + 1}. Estudar capítulos e preparar material.`,
+    anexoUrl: null,
+    criadoPor: null,
     createdAt: new Date().toISOString(),
   };
 });

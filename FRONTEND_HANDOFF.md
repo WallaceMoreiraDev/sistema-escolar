@@ -2,6 +2,88 @@
 
 > Este documento serve como ponte de comunicação oficial entre o time de Backend (IA/Dev) e o time de Frontend (IA/Dev). Todas as ações que o Frontend precisar tomar devido a alterações de API, banco ou regras de negócio devem ser registradas aqui em formato estrito de checklist.
 
+## 🟢 Concluído: Fase 1 do Calendário e Eventos da Turma (Exibição & Gestão de Eventos)
+**Data/Contexto:** Endpoints da API REST para consulta por período, criação, edição e exclusão de eventos da turma (`/api/turmas/eventos`), além da inclusão dos dados cadastrais completos da turma (`ano`, `curso`, `turno`, `localSala`) no cabeçalho do perfil do usuário (`GET /api/me`).
+
+### 1. Dados Reais da Turma no Cabeçalho (Auth / Sessão):
+O objeto `turma` retornado em `GET /api/me` e `PUT /api/me/profile` (`TurmaSummaryDTO`) foi expandido e agora inclui:
+- `id`: string (UUID da turma)
+- `nomeOficial`: string (ex: "3º TDS Manhã")
+- `codigoConvite`: string | null (código de 6 caracteres)
+- `ano`: "1º" | "2º" | "3º" | null
+- `curso`: string | null (ex: "Desenvolvimento de Sistemas")
+- `turno`: "Manhã" | "Tarde" | "Noite" | "Integral" | null
+- `localSala`: string | null (ex: "Laboratório 3")
+
+### 2. Endpoints de Eventos Disponíveis:
+1. **Listar Eventos da Turma:** `GET /api/turmas/eventos?startDate=${start}&endDate=${end}`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Query Params:
+     - `startDate`: string (data inicial ISO 8601).
+     - `endDate`: string (data final ISO 8601).
+     - `turmaId`: string opcional (apenas para Admin Geral consultar turma específica).
+   - **Regra de Validação:** Intervalo entre `startDate` e `endDate` não pode exceder **45 dias**.
+   - Ordenação: Cronológica ascendente por `dataHoraLimite ASC`.
+   - Sucesso: `HTTP 200 OK` -> `{ success: true, data: EventDTO[] }`
+   - O campo `descricao` é retornado na íntegra sem truncamento no backend.
+
+2. **Criar Evento de Turma:** `POST /api/turmas/eventos`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Permissão: Apenas `LIDER` da respectiva turma ou `ADMIN` geral.
+   - Body:
+     ```typescript
+     {
+       materia: string; // min 2, max 100 caracteres
+       categoria: "Prova" | "Trabalho" | "Tarefa" | "Aviso";
+       dataHoraLimite: string; // ISO 8601 UTC
+       descricao?: string | null; // max 1000 caracteres
+       anexoUrl?: string | null; // URL válida, max 500 caracteres
+     }
+     ```
+   - Sucesso: `HTTP 201 Created` -> `{ success: true, data: EventDTO }`
+
+3. **Atualizar Evento:** `PUT /api/turmas/eventos/:id`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Param: `:id` (UUID do evento).
+   - Permissão: Apenas `LIDER` da respectiva turma ou `ADMIN` geral.
+   - Body: campos parciais de `createEventSchema`.
+   - Sucesso: `HTTP 200 OK` -> `{ success: true, data: EventDTO }`
+
+4. **Excluir Evento:** `DELETE /api/turmas/eventos/:id`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Param: `:id` (UUID do evento).
+   - Permissão: Apenas `LIDER` da respectiva turma ou `ADMIN` geral.
+   - Sucesso: `HTTP 200 OK` -> `{ success: true, data: { message: "Evento removido com sucesso." } }`
+
+### Códigos de Erro da API:
+- `400 BAD_REQUEST` (`VALIDATION_ERROR`): Falha no schema Zod (ex: intervalo superior a 45 dias, categoria inválida, data mal formatada).
+- `400 BAD_REQUEST` (`USER_WITHOUT_CLASS`): Usuário autenticado não está enturmado.
+- `400 BAD_REQUEST` (`TURMA_REQUIRED`): Administrador não informou `turmaId` e não possui turma vinculada.
+- `401 UNAUTHORIZED` (`AUTH_UNAUTHORIZED`): Token ausente ou inválido.
+- `403 FORBIDDEN` (`AUTH_FORBIDDEN`): Acesso restrito a Líderes/Admin, ou tentativa de gerenciar eventos de outra turma.
+- `404 NOT_FOUND` (`NOT_FOUND`): Evento não encontrado.
+
+### Ações Exigidas para o Frontend:
+
+- [x] **Integração dos Dados da Turma no Cabeçalho:**
+  - [x] Consumir `user?.turma` expandido (`ano`, `curso`, `turno`, `localSala`) para exibir o resumo completo da sala no cabeçalho das páginas e no painel da turma.
+
+- [x] **Adoção dos Novos Schemas e Tipos (@shared):**
+  - [x] Importar `EventDTO`, `CreateEventPayload`, `UpdateEventPayload` de `@shared/types`.
+  - [x] Importar `createEventSchema`, `updateEventSchema`, `listEventsQuerySchema` de `@shared/schemas/eventSchema`.
+
+- [x] **Integração das Chamadas de API no Hook de Eventos:**
+  - [x] Conectar `useClassEvents.ts` à rota `GET /api/turmas/eventos?startDate=${start}&endDate=${end}` via TanStack Query.
+  - [x] Conectar as mutações de criação (`POST`), edição (`PUT /:id`) e exclusão (`DELETE /:id`).
+  - [x] Invalidar a query `['class-events']` após o sucesso de qualquer mutação.
+
+- [x] **Atualização do Modal de Eventos (`EventForm.tsx`):**
+  - [x] Atualizar formulário para mapear os campos canônicos (`materia`, `categoria`, `dataHoraLimite`, `descricao`, `anexoUrl`).
+  - [x] Remover campos/mocks obsoletos (`subject`, `dueDate`, etc.).
+
+---
+
+
 ## 🟢 Concluído: Fase 2 da Gestão de Membros da Turma (Moderação & Poderes do Líder)
 **Data/Contexto:** Endpoints da API REST para permitir que Líderes de Turma (e Administradores Gerais) gerenciem o quadro de alunos e liderança de sua sala, promovendo alunos a líder, rebaixando líderes para aluno e desvinculando/expulsando membros.
 

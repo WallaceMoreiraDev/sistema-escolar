@@ -12,7 +12,9 @@ export type ErrorCode =
   | "INVITE_CODE_ALREADY_EXISTS"
   | "APPROVAL_FAILED"
   | "LAST_LEADER_CONFLICT"
-  | "CANNOT_MODIFY_SELF";
+  | "CANNOT_MODIFY_SELF"
+  | "USER_WITHOUT_CLASS"
+  | "TURMA_REQUIRED";
 
 export class AppError extends Error {
   public readonly code: ErrorCode;

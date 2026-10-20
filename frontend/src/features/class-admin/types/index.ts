@@ -1,16 +1,7 @@
-export type EventCategory = 'Prova' | 'Trabalho' | 'Tarefa' | 'Lembrete';
+import { EventDTO, EventoCategoria } from '@shared/types';
 
-export interface ClassEvent {
-  id: string;
-  subject: string;
-  category: EventCategory;
-  dueDate: string;
-  description: string;
-  attachmentUrl?: string;
-  attachmentName?: string;
-  attachmentType?: string;
-  createdAt: string;
-}
+export type EventCategory = EventoCategoria;
+export type ClassEvent = EventDTO;
 
 export interface PaginatedResponse<T> {
   data: T[];

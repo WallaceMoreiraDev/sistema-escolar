@@ -36,6 +36,10 @@ export function MuralPreview() {
               </div>
             </div>
           ))
+        ) : notices.length === 0 ? (
+          <div className="col-span-full p-8 text-center text-slate-500 glass-card rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 font-medium">
+            Nenhum aviso escolar recente no momento.
+          </div>
         ) : (
           notices.slice(0, 3).map((notice: NoticeDTO) => {
             const typeConfig = getNoticeTypeConfig(notice.badgeDestaque);

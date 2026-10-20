@@ -13,7 +13,7 @@ export class UserRepository {
   async getUserProfile(userId: string): Promise<RawUserWithTurma | null> {
     const { data, error } = await this.supabase
       .from('usuarios')
-      .select('id, nome, email, role, onboarding_concluido, turmas (id, nome_oficial, codigo_convite)')
+      .select('id, nome, email, role, onboarding_concluido, turmas (id, nome_oficial, codigo_convite, ano, curso, turno, local_sala)')
       .eq('id', userId)
       .single();
 
@@ -40,7 +40,7 @@ export class UserRepository {
       .from('usuarios')
       .update({ nome, onboarding_concluido: true })
       .eq('id', userId)
-      .select('id, nome, email, role, onboarding_concluido, turmas (id, nome_oficial, codigo_convite)')
+      .select('id, nome, email, role, onboarding_concluido, turmas (id, nome_oficial, codigo_convite, ano, curso, turno, local_sala)')
       .single();
 
     if (error || !data) {

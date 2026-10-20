@@ -1,120 +1,140 @@
-import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
-import { ClassEvent, PaginatedResponse } from '../types';
-import { type EventFormValues } from '@shared/schemas/eventSchema';
-import { MOCK_CLASS_EVENTS } from '../data/mockEvents';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { eventApi } from '../api/eventApi';
+import {
+  CreateEventPayload,
+  UpdateEventPayload,
+} from '@shared/types';
+import { ApiError } from '@/utils/apiError';
 
-let eventsDB = [...MOCK_CLASS_EVENTS];
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+/**
+ * Hook para buscar eventos da turma por período (máximo de 45 dias).
+ * Rota: GET /api/turmas/eventos?startDate=${start}&endDate=${end}
+ */
+export function useClassEvents(
+  startDate?: string,
+  endDate?: string,
+  turmaId?: string
+) {
+  const { session, user } = useAuth();
+  const token = session?.access_token;
+  const hasClassAccess = !!user?.turma || user?.role === 'ADMIN';
 
-export function useClassEvents(page: number = 1, limit: number = 5) {
+  // Se o período não for informado, calcula default de 35 dias a partir de hoje
+  const now = new Date();
+  const defaultStart = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate(),
+    0,
+    0,
+    0,
+    0
+  ).toISOString();
+  const defaultEnd = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 35,
+    23,
+    59,
+    59,
+    999
+  ).toISOString();
+
+  const start = startDate || defaultStart;
+  const end = endDate || defaultEnd;
+
   return useQuery({
-    queryKey: ['class-events', page, limit],
-    queryFn: async (): Promise<PaginatedResponse<ClassEvent>> => {
-      await delay(600); // Simulate network latency
-      const start = (page - 1) * limit;
-      const end = start + limit;
-      const paginatedData = eventsDB.slice(start, end);
-      return {
-        data: paginatedData,
-        meta: {
-          total: eventsDB.length,
-          page,
-          limit,
-          totalPages: Math.ceil(eventsDB.length / limit)
-        }
-      };
+    queryKey: ['class-events', { startDate: start, endDate: end, turmaId }],
+    queryFn: async () => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      return eventApi.listEvents(token, {
+        startDate: start,
+        endDate: end,
+        turmaId,
+      });
     },
-    placeholderData: keepPreviousData,
-    staleTime: 1000 * 60 * 5, // 5 minutos de cache sem re-fetch automático
+    enabled: !!token && hasClassAccess,
+    staleTime: 1000 * 60 * 2, // 2 minutos de cache
   });
 }
 
+/**
+ * Hook de mutação para criar um novo evento na turma.
+ * Rota: POST /api/turmas/eventos
+ */
 export function useCreateEvent() {
   const queryClient = useQueryClient();
-  
+  const { session } = useAuth();
+  const token = session?.access_token;
+
   return useMutation({
-    mutationFn: async (data: EventFormValues) => {
-      await delay(800);
-      let attachmentUrl = undefined;
-      let attachmentName = undefined;
-      let attachmentType = undefined;
-      
-      if (data.attachment && data.attachment.length > 0) {
-        attachmentUrl = URL.createObjectURL(data.attachment[0]);
-        attachmentName = data.attachment[0].name;
-        attachmentType = data.attachment[0].type;
+    mutationFn: async ({
+      payload,
+      turmaId,
+    }: {
+      payload: CreateEventPayload;
+      turmaId?: string;
+    }) => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
       }
-
-      const newEvent: ClassEvent = {
-        id: `evt-${Date.now()}`,
-        subject: data.subject,
-        category: data.category,
-        dueDate: data.dueDate,
-        description: data.description || '',
-        attachmentUrl,
-        attachmentName,
-        attachmentType,
-        createdAt: new Date().toISOString(),
-      };
-      eventsDB = [newEvent, ...eventsDB]; // Add to top
-      return newEvent;
+      return eventApi.createEvent(token, payload, turmaId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['class-events'] });
-    }
-  });
-}
-
-export function useDeleteEvent() {
-  const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async (id: string) => {
-      await delay(500);
-      eventsDB = eventsDB.filter(e => e.id !== id);
-      return id;
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['class-events'] });
-    }
   });
 }
 
+/**
+ * Hook de mutação para atualizar parcialmente um evento existente.
+ * Rota: PUT /api/turmas/eventos/:id
+ */
 export function useUpdateEvent() {
   const queryClient = useQueryClient();
-  
-  return useMutation({
-    mutationFn: async ({ id, data }: { id: string, data: EventFormValues }) => {
-      await delay(800);
-      const index = eventsDB.findIndex(e => e.id === id);
-      let attachmentUrl = eventsDB[index].attachmentUrl;
-      let attachmentName = eventsDB[index].attachmentName;
-      let attachmentType = eventsDB[index].attachmentType;
-      
-      // Só atualiza se o usuário selecionou um arquivo novo
-      if (data.attachment && data.attachment.length > 0) {
-        attachmentUrl = URL.createObjectURL(data.attachment[0]);
-        attachmentName = data.attachment[0].name;
-        attachmentType = data.attachment[0].type;
-      }
+  const { session } = useAuth();
+  const token = session?.access_token;
 
-      if (index !== -1) {
-        eventsDB[index] = {
-          ...eventsDB[index],
-          subject: data.subject,
-          category: data.category,
-          dueDate: data.dueDate,
-          description: data.description || '',
-          attachmentUrl,
-          attachmentName,
-          attachmentType,
-        };
-        return eventsDB[index];
+  return useMutation({
+    mutationFn: async ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: UpdateEventPayload;
+    }) => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
       }
-      throw new Error('Evento não encontrado');
+      return eventApi.updateEvent(token, id, data);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['class-events'] });
-    }
+    },
+  });
+}
+
+/**
+ * Hook de mutação para excluir um evento da turma.
+ * Rota: DELETE /api/turmas/eventos/:id
+ */
+export function useDeleteEvent() {
+  const queryClient = useQueryClient();
+  const { session } = useAuth();
+  const token = session?.access_token;
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      return eventApi.deleteEvent(token, id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['class-events'] });
+    },
   });
 }
