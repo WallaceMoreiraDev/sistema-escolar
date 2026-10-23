@@ -2,7 +2,79 @@
 
 > Este documento serve como ponte de comunicação oficial entre o time de Backend (IA/Dev) e o time de Frontend (IA/Dev). Todas as ações que o Frontend precisar tomar devido a alterações de API, banco ou regras de negócio devem ser registradas aqui em formato estrito de checklist.
 
+## 🟢 Concluído: Meta de Contribuição e Financiamento Coletivo (/api/financiamento)
+**Data/Contexto:** Endpoints da API REST para transparência e gestão da meta global de contribuição/arrecadação mensal da plataforma (`/api/financiamento`).
+
+### 1. Endpoints Disponíveis:
+1. **Consultar Arrecadação Global:** `GET /api/financiamento`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Permissão: Liberado para qualquer usuário autenticado (`ALUNO`, `LIDER`, `ADMIN`).
+   - Retorno de Sucesso: `HTTP 200 OK`
+     ```typescript
+     {
+       success: true,
+       data: {
+         metaArrecadadaMes: number, // Valor em reais (ex: 250.00)
+         updatedAt: string | null   // ISO 8601 UTC da última alteração
+       }
+     }
+     ```
+
+2. **Atualizar Arrecadação Mensal:** `PUT /api/financiamento`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Permissão: Acesso restrito exclusivo para Administrador Geral (`ADMIN`). Usuários sem perfil ADMIN recebem `403 AUTH_FORBIDDEN`.
+   - Body (`UpdateFundingPayload`):
+     ```json
+     {
+       "metaArrecadadaMes": 350.50
+     }
+     ```
+   - Retorno de Sucesso: `HTTP 200 OK`
+     ```typescript
+     {
+       success: true,
+       data: {
+         metaArrecadadaMes: number,
+         updatedAt: string | null
+       }
+     }
+     ```
+   - Erros da API:
+     - `400 BAD_REQUEST` com `code: "VALIDATION_ERROR"`: Se o valor for negativo (`< 0`) ou ultrapassar o teto permitido (`100000`).
+     - `403 FORBIDDEN` com `code: "AUTH_FORBIDDEN"`: Usuário não possui perfil `ADMIN`.
+
+---
+
+### Ações Exigidas para o Frontend:
+
+- [x] **Adoção dos Contratos e Schemas (@shared):**
+  - [x] Importar `FundingDTO`, `UpdateFundingPayload` e `ApiResponse` de `@shared/types`:
+    ```typescript
+    import { ApiResponse, FundingDTO, UpdateFundingPayload } from '@shared/types';
+    ```
+  - [x] Importar `updateFundingSchema`, `UpdateFundingInput` de `@shared/schemas/fundingSchema`:
+    ```typescript
+    import { updateFundingSchema, type UpdateFundingInput } from '@shared/schemas/fundingSchema';
+    ```
+
+- [x] **Integração do Hook `useFunding.ts` (`frontend/src/features/system-admin/hooks/useFunding.ts`):**
+  - [x] Substituir o mock em memória por chamadas reais via TanStack Query:
+    - [x] `useFunding()`: Consumir `GET /api/financiamento` retornando `FundingDTO` (ou `data.data.metaArrecadadaMes`).
+    - [x] `useUpdateFunding()`: Consumir `PUT /api/financiamento` enviando `{ metaArrecadadaMes: amount }`.
+    - [x] Após sucesso da mutação, invalidar a query `['funding']` para sincronizar instantaneamente todos os componentes inscritos.
+
+- [x] **Atualização dos Componentes de Visualização:**
+  - [x] **`CrowdfundingBanner.tsx` (`frontend/src/features/dashboard/components/CrowdfundingBanner.tsx`):**
+    - [x] Consumir o valor reativo retornado por `useFunding()`.
+    - [x] Garantir formatação monetária correta e exibição da barra de progresso em relação à meta de R$ 50,00.
+  - [x] **`FundingSection.tsx` (`frontend/src/features/system-admin/components/FundingSection.tsx`):**
+    - [x] Conectar formulário ao `useUpdateFunding()` enviando o número informado no input.
+    - [x] Exibir toast/feedback amigável com a resposta do backend e tratar eventuais erros da API.
+
+---
+
 ## 🟢 Concluído: Links Úteis da Turma e Desvinculação Voluntária (Sair da Turma)
+
 **Data/Contexto:** Endpoints da API REST para gerenciamento de links úteis da sala (`/api/turmas/links`) e desvinculação voluntária de membro autenticado (`POST /api/turmas/sair`).
 
 ### 1. Endpoints de Links Úteis Disponíveis:
