@@ -2,7 +2,115 @@
 
 > Este documento serve como ponte de comunicação oficial entre o time de Backend (IA/Dev) e o time de Frontend (IA/Dev). Todas as ações que o Frontend precisar tomar devido a alterações de API, banco ou regras de negócio devem ser registradas aqui em formato estrito de checklist.
 
+## 🟢 Concluído: Links Úteis da Turma e Desvinculação Voluntária (Sair da Turma)
+**Data/Contexto:** Endpoints da API REST para gerenciamento de links úteis da sala (`/api/turmas/links`) e desvinculação voluntária de membro autenticado (`POST /api/turmas/sair`).
+
+### 1. Endpoints de Links Úteis Disponíveis:
+1. **Listar Links Úteis:** `GET /api/turmas/links`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Query opcional (apenas Admin geral): `?turmaId=<uuid>`
+   - Sucesso: `HTTP 200 OK`
+     ```typescript
+     {
+       success: true,
+       data: LinkDTO[] // Array de links ordenados por createdAt DESC
+     }
+     ```
+   - Cada item (`LinkDTO`) possui:
+     - `id: string` (UUID)
+     - `turmaId: string` (UUID)
+     - `titulo: string`
+     - `urlLink: string`
+     - `criadoPor: string | null` (UUID)
+     - `createdAt: string` (ISO 8601 UTC)
+
+2. **Criar Link Útil:** `POST /api/turmas/links`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Permissão: Apenas `LIDER` ou `ADMIN` (alunos recebem `403 AUTH_FORBIDDEN`).
+   - Body (`CreateLinkPayload`):
+     ```json
+     {
+       "titulo": "Pasta do Drive da Sala",
+       "urlLink": "https://drive.google.com/..."
+     }
+     ```
+   - Sucesso: `HTTP 201 CREATED`
+     ```typescript
+     {
+       success: true,
+       data: LinkDTO
+     }
+     ```
+
+3. **Excluir Link Útil:** `DELETE /api/turmas/links/:id`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Permissão: Apenas `LIDER` da respectiva turma ou `ADMIN` (alunos recebem `403 AUTH_FORBIDDEN`).
+   - Param: `:id` (UUID do link a ser excluído).
+   - Sucesso: `HTTP 200 OK`
+     ```typescript
+     {
+       success: true,
+       data: {
+         message: "Link útil excluído com sucesso."
+       }
+     }
+     ```
+
+### 2. Endpoint de Sair da Turma Disponível:
+1. **Desvincular-se Voluntariamente da Turma:** `POST /api/turmas/sair`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Permissão: Qualquer usuário autenticado pertencente a uma turma (`ALUNO`, `LIDER`, `ADMIN`).
+   - Sem payload de entrada.
+   - Sucesso: `HTTP 200 OK`
+     ```typescript
+     {
+       success: true,
+       data: {
+         message: "Você saiu da turma com sucesso."
+       }
+     }
+     ```
+   - Tratamento de Erros da API:
+     - `400 BAD_REQUEST` com `code: "LAST_LEADER_CANNOT_LEAVE"`: Regra Anti-Orfandade violada. O usuário é o único líder ativo e a turma possui outros alunos ("Você é o único líder da turma. Promova outro membro a líder antes de sair da turma.").
+     - `400 BAD_REQUEST` com `code: "USER_ALREADY_WITHOUT_CLASS"`: Usuário não pertence a nenhuma turma.
+
+---
+
+### Ações Exigidas para o Frontend:
+
+- [x] **Adoção dos Contratos e Schemas (@shared):**
+  - [x] Importar `LinkDTO`, `CreateLinkPayload` e `ApiResponse` de `@shared/types`:
+    ```typescript
+    import { ApiResponse, LinkDTO, CreateLinkPayload } from '@shared/types';
+    ```
+  - [x] Importar `createLinkSchema`, `CreateLinkInput` de `@shared/schemas/linkSchema`:
+    ```typescript
+    import { createLinkSchema, type CreateLinkInput } from '@shared/schemas/linkSchema';
+    ```
+
+- [x] **Integração do Hook `useUsefulLinks.ts` (`frontend/src/features/class-admin/hooks/useUsefulLinks.ts`):**
+  - [x] Substituir o array mockado `linksDB` por chamadas reais via TanStack Query:
+    - [x] `useUsefulLinks()`: Consumir `GET /api/turmas/links` retornando `LinkDTO[]`.
+    - [x] `useCreateLink()`: Consumir `POST /api/turmas/links` enviando `{ titulo, urlLink }`.
+    - [x] `useDeleteLink()`: Consumir `DELETE /api/turmas/links/${id}`.
+    - [x] Invalidar a query `['useful-links']` após criação e exclusão bem-sucedidas.
+
+- [x] **Atualização dos Componentes de Visualização e Gestão:**
+  - [x] **`UsefulLinksSection.tsx` (`frontend/src/features/class-admin/components/UsefulLinksSection.tsx`):**
+    - [x] Atualizar o formulário do React Hook Form para utilizar `createLinkSchema` com os campos `titulo` e `urlLink`.
+    - [x] Mapear a tabela para exibir `link.titulo` e `link.urlLink` (com link clicável `href={link.urlLink}`).
+  - [x] **`ClassSidebar.tsx` (`frontend/src/features/calendar/components/ClassSidebar.tsx`):**
+    - [x] Mapear `link.titulo` e `link.urlLink` no bloco de Links Rápidos.
+    - [x] No bloco "Sair da Turma", conectar a função `handleLeaveClass` ao endpoint real `POST /api/turmas/sair` via mutation (`useMutation`).
+    - [x] Tratar erro `400 LAST_LEADER_CANNOT_LEAVE` exibindo feedback visual integrado (banner) amigável para promover outro líder antes.
+    - [x] No sucesso de `sair_da_turma`, invalidar a query `['me']` e redirecionar para `/app/dashboard`.
+  - [x] **`FixedLinks.tsx` / `QuickAccess.tsx` (Dashboard):**
+    - [x] Garantir consumo reativo dos links reais da turma com `link.titulo` e `link.urlLink`.
+
+---
+
 ## 🟢 Concluído: Fase 1 do Calendário e Eventos da Turma (Exibição & Gestão de Eventos)
+
 **Data/Contexto:** Endpoints da API REST para consulta por período, criação, edição e exclusão de eventos da turma (`/api/turmas/eventos`), além da inclusão dos dados cadastrais completos da turma (`ano`, `curso`, `turno`, `localSala`) no cabeçalho do perfil do usuário (`GET /api/me`).
 
 ### 1. Dados Reais da Turma no Cabeçalho (Auth / Sessão):
