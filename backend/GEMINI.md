@@ -90,3 +90,18 @@
     - Se o usuário não estiver em nenhuma turma, rejeita com `HTTP 400 BAD_REQUEST` e código tipado `USER_ALREADY_WITHOUT_CLASS`.
     - Ao sair, reseta `turma_id = NULL`, `data_entrada_turma = NULL` e rebaixa `LIDER` para `ALUNO` (preservando `ADMIN`).
 
+---
+
+## 9. Diretrizes de Financiamento Coletivo e Meta Global (`/api/financiamento`)
+- **Controle de Acesso em Camadas (Defense in Depth):**
+  - `GET /api/financiamento`: Leitura pública para todos os usuários autenticados (`ALUNO`, `LIDER`, `ADMIN`), protegida por RLS (`configuracao_global_select_authenticated`). Permite a exibição da meta e arrecadação no Dashboard de alunos e líderes.
+  - `PUT /api/financiamento`: Atualização de acesso estrito e exclusivo para Administradores Gerais (`ADMIN`), protegida por `requireRole(['ADMIN'])` e RLS (`configuracao_global_update_admin`). Alunos e líderes recebem `HTTP 403 AUTH_FORBIDDEN`.
+- **Integridade e Modelo Singleton:**
+  - A tabela `public.configuracao_global` possui um único registro persistente (`id = 1`). Mutações operam exclusivamente sobre este ID.
+  - A coluna `meta_arrecadada_mes` possui restrição check (`meta_arrecadada_mes >= 0`), impedindo valores negativos no banco.
+  - A coluna de auditoria `updated_at` é atualizada automaticamente a cada mutação (`NOW()`).
+- **Validação de Input (Zod):**
+  - Payload validado por `updateFundingSchema`:
+    - `metaArrecadadaMes`: número obrigatório, não negativo (`min(0)`), com teto de segurança (`max(100000)`).
+- **Contratos e DTO:** Exposição dos dados via `FundingDTO` em `camelCase` (`metaArrecadadaMes`, `updatedAt`).
+
