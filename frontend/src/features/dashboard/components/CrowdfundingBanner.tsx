@@ -1,13 +1,35 @@
-import { useState } from 'react'
-import { PixModal } from './PixModal'
-import { useFunding } from '../../system-admin/hooks/useFunding'
+import { useState } from 'react';
+import { PixModal } from './PixModal';
+import { useFunding } from '../../system-admin/hooks/useFunding';
 
 export function CrowdfundingBanner() {
   const [isPixOpen, setIsPixOpen] = useState(false);
-  const { data: currentFunding = 0 } = useFunding();
+  const { data: funding, isLoading } = useFunding();
   const goal = 50.00;
-  
+
+  if (isLoading) {
+    return (
+      <div className="glass-panel p-8 rounded-3xl mb-10 bg-gradient-to-br from-primary/5 via-transparent to-transparent relative overflow-hidden animate-pulse">
+        <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          <div className="flex-1 space-y-3 w-full">
+            <div className="w-28 h-6 bg-slate-200 dark:bg-slate-800 rounded-full"></div>
+            <div className="w-56 h-8 bg-slate-200 dark:bg-slate-800 rounded-xl"></div>
+            <div className="w-80 max-w-full h-4 bg-slate-200 dark:bg-slate-800 rounded"></div>
+            <div className="w-full h-3 bg-slate-200 dark:bg-slate-800 rounded-full mt-4"></div>
+            <div className="w-48 h-3 bg-slate-200 dark:bg-slate-800 rounded mt-2"></div>
+          </div>
+          <div className="w-full md:w-48 h-12 bg-slate-200 dark:bg-slate-800 rounded-xl shrink-0"></div>
+        </div>
+      </div>
+    );
+  }
+
+  const currentFunding = funding?.metaArrecadadaMes ?? 0;
   const percentage = Math.min(100, Math.round((currentFunding / goal) * 100));
+  const formattedFunding = currentFunding.toLocaleString('pt-BR', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
   return (
     <>
@@ -35,7 +57,7 @@ export function CrowdfundingBanner() {
               </div>
               <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{percentage}%</span>
             </div>
-            <p className="text-xs text-slate-400 mt-2 font-medium">R$ {currentFunding.toFixed(2).replace('.', ',')} arrecadados de R$ 50,00</p>
+            <p className="text-xs text-slate-400 mt-2 font-medium">R$ {formattedFunding} arrecadados de R$ 50,00</p>
           </div>
           
           <button 
@@ -49,5 +71,5 @@ export function CrowdfundingBanner() {
 
       <PixModal isOpen={isPixOpen} onClose={() => setIsPixOpen(false)} />
     </>
-  )
+  );
 }

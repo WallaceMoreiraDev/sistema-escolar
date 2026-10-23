@@ -10,6 +10,7 @@ import { classRoutes } from "./routes/classRoutes";
 import { eventRoutes } from "./routes/eventRoutes";
 import { linkRoutes } from "./routes/linkRoutes";
 import { adminRoutes } from "./routes/adminRoutes";
+import { fundingRoutes } from "./routes/fundingRoutes";
 
 // Define the Bindings (Env Vars) and Variables (Context State) for the app
 type AppBindings = {
@@ -38,5 +39,7 @@ app.route("/api/turmas/eventos", eventRoutes);
 app.route("/api/turmas/links", linkRoutes);
 app.route("/api/turmas", classRoutes);
 app.route("/api/admin", adminRoutes);
+app.route("/api/financiamento", fundingRoutes);
+
 
 export default app;
