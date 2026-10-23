@@ -123,5 +123,29 @@ export const classMemberApi = {
 
     return (await res.json()) as ApiResponse<ClassMemberActionResponse>;
   },
+
+  /**
+   * Desvincula voluntariamente o usuário autenticado de sua turma (POST /api/turmas/sair).
+   */
+  async leaveClass(token: string): Promise<ApiResponse<{ message: string }>> {
+    const res = await fetch(`${API_URL}/api/turmas/sair`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errorData = (await res.json().catch(() => null)) as ApiErrorResponse | null;
+      throw new ApiError(
+        errorData?.code || 'UNKNOWN_ERROR',
+        res.status,
+        errorData?.details,
+        errorData?.message
+      );
+    }
+
+    return (await res.json()) as ApiResponse<{ message: string }>;
+  },
 };
 

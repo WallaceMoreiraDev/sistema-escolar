@@ -1,31 +1,48 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShieldCheck } from 'lucide-react';
+import { ShieldCheck, LogOut, AlertCircle, Loader2 } from 'lucide-react';
 
 import { useUsefulLinks } from '../../class-admin/hooks/useUsefulLinks';
-import { useClassMembers } from '../../class-admin/hooks/useClassMembers';
+import { useClassMembers, useLeaveClass } from '../../class-admin/hooks/useClassMembers';
+import { ApiError } from '@/utils/apiError';
+import { getErrorMessage } from '@/utils/errorMessages';
 
 export function ClassSidebar() {
   const navigate = useNavigate();
   const [showConfirmLeave, setShowConfirmLeave] = useState(false);
+  const [leaveError, setLeaveError] = useState<string | null>(null);
   const [linksPage, setLinksPage] = useState(1);
   const [membersPage, setMembersPage] = useState(1);
   const linksLimit = 4;
   
   const { data: links, isLoading: isLoadingLinks } = useUsefulLinks();
   const { data: membersResponse, isLoading: isLoadingMembers } = useClassMembers(membersPage);
+  const { mutate: leaveClass, isPending: isLeaving } = useLeaveClass();
   
   const safeLinks = links || [];
-  const linksTotalPages = Math.ceil(safeLinks.length / linksLimit);
-  const paginatedLinks = safeLinks.slice((linksPage - 1) * linksLimit, linksPage * linksLimit);
+  const linksTotalPages = Math.ceil(safeLinks.length / linksLimit) || 1;
+  const currentLinksPage = Math.min(linksPage, linksTotalPages);
+  const paginatedLinks = safeLinks.slice((currentLinksPage - 1) * linksLimit, currentLinksPage * linksLimit);
 
   const membersList = membersResponse?.data || [];
   const membersTotalPages = membersResponse?.meta?.pagination?.totalPages || 1;
   const totalMembersCount = membersResponse?.meta?.pagination?.total || membersList.length;
 
   const handleLeaveClass = () => {
-    // Redireciona para o dashboard com estado vazio
-    navigate('/app/dashboard');
+    setLeaveError(null);
+    leaveClass(undefined, {
+      onSuccess: () => {
+        setShowConfirmLeave(false);
+        navigate('/app/dashboard');
+      },
+      onError: (err: unknown) => {
+        if (err instanceof ApiError) {
+          setLeaveError(getErrorMessage(err.code));
+        } else {
+          setLeaveError('Ocorreu um erro ao sair da turma. Tente novamente.');
+        }
+      },
+    });
   };
 
   return (
@@ -48,12 +65,12 @@ export function ClassSidebar() {
           ) : paginatedLinks.length > 0 ? paginatedLinks.map(link => (
             <a 
               key={link.id} 
-              href={link.url}
+              href={link.urlLink}
               target="_blank"
               rel="noreferrer"
               className="px-4 py-3 bg-white/50 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-800 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 transition-colors flex items-center justify-between group shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
             >
-              <span className="line-clamp-1">{link.title}</span>
+              <span className="line-clamp-1">{link.titulo}</span>
               <svg className="w-4 h-4 text-slate-300 group-hover:text-primary transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
             </a>
           )) : (
@@ -64,17 +81,17 @@ export function ClassSidebar() {
             <div className="flex justify-between items-center p-2 mt-1">
               <button 
                 onClick={() => setLinksPage(p => Math.max(1, p - 1))}
-                disabled={linksPage === 1}
+                disabled={currentLinksPage === 1}
                 className="px-2 py-1 text-[10px] font-bold text-slate-600 disabled:opacity-30 hover:text-slate-900 transition-colors"
               >
                 &larr; Ant
               </button>
               <span className="text-[10px] font-bold text-slate-500">
-                Página {linksPage} de {linksTotalPages}
+                Página {currentLinksPage} de {linksTotalPages}
               </span>
               <button 
                 onClick={() => setLinksPage(p => Math.min(linksTotalPages, p + 1))}
-                disabled={linksPage === linksTotalPages}
+                disabled={currentLinksPage === linksTotalPages}
                 className="px-2 py-1 text-[10px] font-bold text-slate-600 disabled:opacity-30 hover:text-slate-900 transition-colors"
               >
                 Próx &rarr;
@@ -169,27 +186,48 @@ export function ClassSidebar() {
         <div className="mt-2">
           {!showConfirmLeave ? (
             <button 
-              onClick={() => setShowConfirmLeave(true)}
+              onClick={() => {
+                setLeaveError(null);
+                setShowConfirmLeave(true);
+              }}
               className="w-full md:w-auto md:px-8 py-3.5 flex items-center justify-center gap-2 text-sm font-bold text-rose-500 hover:text-white bg-rose-50 hover:bg-rose-500 dark:bg-rose-950/30 dark:hover:bg-rose-600 rounded-2xl transition-all border border-rose-100 dark:border-rose-900/50 ml-auto"
             >
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" /></svg>
+              <LogOut className="w-4 h-4" />
               Sair da Turma
             </button>
           ) : (
-            <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-900/50 animate-in fade-in zoom-in-95 duration-200 ml-auto w-full md:w-96">
-              <p className="text-sm font-bold text-rose-700 dark:text-rose-300 mb-3 text-center">Tem certeza que deseja sair?</p>
+            <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-900/20 border border-rose-200 dark:border-rose-900/50 animate-in fade-in zoom-in-95 duration-200 ml-auto w-full md:w-96 space-y-3">
+              {leaveError && (
+                <div className="p-2.5 rounded-xl bg-red-100 dark:bg-red-900/40 border border-red-200 dark:border-red-800 text-xs font-semibold text-red-700 dark:text-red-300 flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-red-500 mt-0.5" />
+                  <span>{leaveError}</span>
+                </div>
+              )}
+              <p className="text-sm font-bold text-rose-700 dark:text-rose-300 text-center">Tem certeza que deseja sair da turma?</p>
               <div className="flex items-center gap-2">
                 <button 
-                  onClick={() => setShowConfirmLeave(false)}
-                  className="flex-1 py-2 text-xs font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors"
+                  onClick={() => {
+                    setLeaveError(null);
+                    setShowConfirmLeave(false);
+                  }}
+                  disabled={isLeaving}
+                  className="flex-1 py-2 text-xs font-bold text-slate-500 hover:bg-slate-200 dark:hover:bg-slate-800 rounded-lg transition-colors disabled:opacity-50"
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={handleLeaveClass}
-                  className="flex-1 py-2 text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 rounded-lg transition-colors shadow-sm"
+                  disabled={isLeaving}
+                  className="flex-1 py-2 text-xs font-bold text-white bg-rose-500 hover:bg-rose-600 rounded-lg transition-colors shadow-sm disabled:opacity-50 flex items-center justify-center gap-1.5"
                 >
-                  Sim, Sair
+                  {isLeaving ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      Saindo...
+                    </>
+                  ) : (
+                    'Sim, Sair'
+                  )}
                 </button>
               </div>
             </div>

@@ -1,7 +1,8 @@
-import { EventDTO, EventoCategoria } from '@shared/types';
+import { EventDTO, EventoCategoria, LinkDTO } from '@shared/types';
 
 export type EventCategory = EventoCategoria;
 export type ClassEvent = EventDTO;
+export type UsefulLink = LinkDTO;
 
 export interface PaginatedResponse<T> {
   data: T[];
@@ -23,9 +24,4 @@ export interface ClassMember {
   joinedAt: string;
 }
 
-export interface UsefulLink {
-  id: string;
-  title: string;
-  url: string;
-  createdAt: string;
-}
+

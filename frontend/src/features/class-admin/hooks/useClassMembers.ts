@@ -91,3 +91,29 @@ export function useExpelMember() {
   });
 }
 
+/**
+ * Hook de mutação para o usuário desvincular-se voluntariamente de sua turma.
+ * Rota: POST /api/turmas/sair
+ */
+export function useLeaveClass() {
+  const queryClient = useQueryClient();
+  const { session } = useAuth();
+  const token = session?.access_token;
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      return classMemberApi.leaveClass(token);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['me'] });
+      queryClient.invalidateQueries({ queryKey: ['class-members'] });
+      queryClient.invalidateQueries({ queryKey: ['useful-links'] });
+      queryClient.invalidateQueries({ queryKey: ['class-events'] });
+    },
+  });
+}
+
+

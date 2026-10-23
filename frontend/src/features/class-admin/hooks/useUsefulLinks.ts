@@ -1,60 +1,78 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { UsefulLink } from '../types';
-import { type LinkFormValues } from '@shared/schemas/linkSchema';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { usefulLinkApi } from '../api/usefulLinkApi';
+import { CreateLinkPayload } from '@shared/types';
+import { ApiError } from '@/utils/apiError';
 
-let linksDB: UsefulLink[] = [
-  { id: 'lnk-1', title: 'Pasta do Drive da Sala', url: 'https://drive.google.com', createdAt: new Date().toISOString() },
-  { id: 'lnk-2', title: 'Grupo do WhatsApp', url: 'https://chat.whatsapp.com', createdAt: new Date().toISOString() },
-  { id: 'lnk-3', title: 'Portal NSA (Notas)', url: 'https://nsa.cps.sp.gov.br', createdAt: new Date().toISOString() },
-  { id: 'lnk-4', title: 'Plano de Ensino (PDF)', url: 'https://docs.google.com/document/d/...', createdAt: new Date().toISOString() },
-  { id: 'lnk-5', title: 'Cronograma do Semestre', url: 'https://docs.google.com/spreadsheets/d/...', createdAt: new Date().toISOString() },
-  { id: 'lnk-6', title: 'Canal do YouTube (Aulas Gravação)', url: 'https://youtube.com', createdAt: new Date().toISOString() },
-  { id: 'lnk-7', title: 'Link Extra para Teste de Pág 2', url: 'https://example.com', createdAt: new Date().toISOString() },
-];
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+/**
+ * Hook para buscar todos os links úteis da turma do usuário autenticado.
+ * Rota: GET /api/turmas/links
+ */
+export function useUsefulLinks(turmaId?: string) {
+  const { session, user } = useAuth();
+  const token = session?.access_token;
+  const hasAccess = !!user?.turma || user?.role === 'ADMIN';
 
-export function useUsefulLinks() {
   return useQuery({
-    queryKey: ['useful-links'],
-    queryFn: async (): Promise<UsefulLink[]> => {
-      await delay(500);
-      return [...linksDB];
-    }
+    queryKey: ['useful-links', turmaId],
+    queryFn: async () => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      const response = await usefulLinkApi.list(token, turmaId);
+      return response.data;
+    },
+    enabled: !!token && hasAccess,
+    staleTime: 1000 * 60 * 2, // 2 minutos de cache
   });
 }
 
+/**
+ * Hook de mutação para criar um novo link útil na turma.
+ * Rota: POST /api/turmas/links
+ */
 export function useCreateLink() {
   const queryClient = useQueryClient();
-  
+  const { session } = useAuth();
+  const token = session?.access_token;
+
   return useMutation({
-    mutationFn: async (data: LinkFormValues) => {
-      await delay(600);
-      const newLink: UsefulLink = {
-        id: `lnk-${Date.now()}`,
-        title: data.title,
-        url: data.url,
-        createdAt: new Date().toISOString()
-      };
-      linksDB = [newLink, ...linksDB];
-      return newLink;
+    mutationFn: async ({
+      payload,
+      turmaId,
+    }: {
+      payload: CreateLinkPayload;
+      turmaId?: string;
+    }) => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      return usefulLinkApi.create(token, payload, turmaId);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['useful-links'] });
-    }
+    },
   });
 }
 
+/**
+ * Hook de mutação para excluir um link útil da turma.
+ * Rota: DELETE /api/turmas/links/:id
+ */
 export function useDeleteLink() {
   const queryClient = useQueryClient();
-  
+  const { session } = useAuth();
+  const token = session?.access_token;
+
   return useMutation({
     mutationFn: async (id: string) => {
-      await delay(500);
-      linksDB = linksDB.filter(l => l.id !== id);
-      return id;
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      return usefulLinkApi.delete(token, id);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['useful-links'] });
-    }
+    },
   });
 }
