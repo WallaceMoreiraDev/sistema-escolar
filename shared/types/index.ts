@@ -5,3 +5,4 @@ export * from './notice.types';
 export * from './class.types';
 export * from './event.types';
 export * from './link.types';
+export * from './funding.types';
