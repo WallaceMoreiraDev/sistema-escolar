@@ -69,3 +69,24 @@
   - **Bloqueio de Auto-Ação (Self-Action Guard):** É expressamente proibido ao usuário rebaixar ou expulsar a si mesmo pelo painel de moderação. Dispara `HTTP 400 BAD_REQUEST` com código tipado `CANNOT_MODIFY_SELF` ("Você não pode realizar esta ação consigo mesmo pelo painel de moderação.").
   - **Regra Anti-Orfandade (Orphan Prevention):** A turma nunca pode ficar desprovida de liderança ativa. Ao tentar rebaixar ou expulsar o único líder restante da turma, a operação é rejeitada com `HTTP 409 CONFLICT` e código tipado `LAST_LEADER_CONFLICT` ("A turma não pode ficar sem nenhum líder. Promova outro membro antes.").
   - **Membro Inexistente ou Desvinculado:** Se o membro não for encontrado no banco ou não pertencer a nenhuma turma, dispara `HTTP 404 NOT_FOUND` ("Membro não encontrado ou não pertence a esta turma.").
+
+---
+
+## 8. Diretrizes do Fluxo de Turmas - Links Úteis e Desvinculação Voluntária
+- **Links Úteis da Turma (`/api/turmas/links`):**
+  - **Controle de Acesso em Camadas (Defense in Depth):**
+    - `GET /api/turmas/links`: Leitura liberada para qualquer membro autenticado da respectiva turma ou Administrador Geral. Protegida por RLS (`links_uteis_select_membro_ou_admin`).
+    - `POST /api/turmas/links` e `DELETE /api/turmas/links/:id`: Mutações de acesso restrito exclusivo para `LIDER` da turma ou `ADMIN` geral via `requireRole(['LIDER', 'ADMIN'])` e RLS (`links_uteis_insert_lider_ou_admin` e `links_uteis_delete_lider_ou_admin`).
+  - **Performance e Ordenação:** A busca é acelerada pelo índice composto `idx_links_uteis_turma_created_at` (`turma_id, created_at DESC`), retornando os links ordenados do mais recente para o mais antigo.
+  - **Validação Estrita (Zod):**
+    - Payload de criação validado com `createLinkSchema` (`titulo`: min 2, max 100 caracteres; `urlLink`: URL válida, max 500 caracteres).
+    - Parâmetro `:id` de exclusão validado como UUID estrito (`linkIdParamSchema`).
+  - **Contratos e DTO:** Mapeamento obrigatório para `LinkDTO` em `camelCase` (`id`, `turmaId`, `titulo`, `urlLink`, `criadoPor`, `createdAt`).
+- **Desvinculação Voluntária da Turma (`POST /api/turmas/sair`):**
+  - **Permissão e Autonomia:** Qualquer usuário autenticado pertencente a uma turma (`ALUNO`, `LIDER`, `ADMIN`) pode solicitar sua própria saída voluntária.
+  - **Transação ACID via Stored Procedure (`sair_da_turma`):**
+    - A desvinculação ocorre com `SECURITY DEFINER` e trava `FOR UPDATE` para consistência e prevenção de race conditions.
+    - **Regra Crítica Anti-Orfandade:** Se o usuário for o único líder restante na turma (`qtd_lideres <= 1`) e ainda houver outros alunos na sala (`total_membros > 1`), a operação é bloqueada com `HTTP 400 BAD_REQUEST` e código tipado `LAST_LEADER_CANNOT_LEAVE` ("Você é o único líder da turma. Promova outro membro a líder antes de sair da turma.").
+    - Se o usuário não estiver em nenhuma turma, rejeita com `HTTP 400 BAD_REQUEST` e código tipado `USER_ALREADY_WITHOUT_CLASS`.
+    - Ao sair, reseta `turma_id = NULL`, `data_entrada_turma = NULL` e rebaixa `LIDER` para `ALUNO` (preservando `ADMIN`).
+

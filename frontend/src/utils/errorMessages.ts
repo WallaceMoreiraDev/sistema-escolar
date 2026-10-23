@@ -25,6 +25,8 @@ export const errorMessages: Record<string, string> = {
   CANNOT_ALTER_ADMIN: 'Administradores gerais não podem ter seu cargo alterado na turma.',
   USER_WITHOUT_CLASS: 'Você precisa estar enturmado para gerenciar eventos.',
   TURMA_REQUIRED: 'A identificação da turma é obrigatória para esta operação.',
+  LAST_LEADER_CANNOT_LEAVE: 'Você é o único líder da turma. Promova outro membro a líder antes de sair da turma.',
+  USER_ALREADY_WITHOUT_CLASS: 'Você já não pertence a nenhuma turma.',
 
   // Validação e Genéricos
   VALIDATION_ERROR: 'Por favor, revise os dados informados.',

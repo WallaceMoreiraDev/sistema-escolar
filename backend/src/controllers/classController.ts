@@ -210,4 +210,28 @@ export class ClassController {
 
     return c.json(response, 200);
   }
+
+  /**
+   * POST /api/turmas/sair
+   * Desvincula voluntariamente o usuário autenticado de sua turma.
+   */
+  static async leaveClass(c: Context) {
+    const supabase = c.get('supabase');
+
+    const classRepo = new ClassRepository(supabase);
+    const userRepo = new UserRepository(supabase);
+    const service = new ClassService(classRepo, userRepo);
+
+    await service.leaveClass();
+
+    const response: ApiResponse<{ message: string }> = {
+      success: true,
+      data: {
+        message: 'Você saiu da turma com sucesso.',
+      },
+    };
+
+    return c.json(response, 200);
+  }
 }
+

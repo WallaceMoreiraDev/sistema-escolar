@@ -76,4 +76,11 @@ classRoutes.delete(
   ClassController.expelMember
 );
 
+// POST /api/turmas/sair - Desvinculação voluntária da turma pelo usuário autenticado
+classRoutes.post(
+  '/sair',
+  ClassController.leaveClass
+);
+
 export { classRoutes };
+

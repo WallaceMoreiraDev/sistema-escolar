@@ -296,6 +296,7 @@ export type Database = {
         Args: { p_membro_id: string }
         Returns: undefined
       }
+      sair_da_turma: { Args: never; Returns: undefined }
     }
     Enums: {
       ano_type: "1º" | "2º" | "3º"
