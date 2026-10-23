@@ -44,15 +44,18 @@ export type Database = {
       configuracao_global: {
         Row: {
           id: number
-          meta_arrecadada_mes: number | null
+          meta_arrecadada_mes: number
+          updated_at: string | null
         }
         Insert: {
           id?: number
-          meta_arrecadada_mes?: number | null
+          meta_arrecadada_mes?: number
+          updated_at?: string | null
         }
         Update: {
           id?: number
-          meta_arrecadada_mes?: number | null
+          meta_arrecadada_mes?: number
+          updated_at?: string | null
         }
         Relationships: []
       }
