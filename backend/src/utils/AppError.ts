@@ -14,7 +14,9 @@ export type ErrorCode =
   | "LAST_LEADER_CONFLICT"
   | "CANNOT_MODIFY_SELF"
   | "USER_WITHOUT_CLASS"
-  | "TURMA_REQUIRED";
+  | "TURMA_REQUIRED"
+  | "LAST_LEADER_CANNOT_LEAVE"
+  | "USER_ALREADY_WITHOUT_CLASS";
 
 export class AppError extends Error {
   public readonly code: ErrorCode;

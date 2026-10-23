@@ -444,5 +444,61 @@ export class ClassService {
       );
     }
   }
+
+  /**
+   * Desvincula o usuário autenticado voluntariamente de sua turma via procedure 'sair_da_turma'.
+   * Trata a regra anti-orfandade e estado de vínculo prévio.
+   */
+  async leaveClass(): Promise<void> {
+    try {
+      await this.classRepo.leaveClass();
+    } catch (error: unknown) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+
+      const dbErr = error as DatabaseErrorLike;
+      const message = dbErr?.message || '';
+
+      if (message.includes('LAST_LEADER_CANNOT_LEAVE')) {
+        throw new AppError(
+          'LAST_LEADER_CANNOT_LEAVE',
+          400,
+          'Você é o único líder da turma. Promova outro membro a líder antes de sair da turma.'
+        );
+      }
+
+      if (message.includes('USER_ALREADY_WITHOUT_CLASS')) {
+        throw new AppError(
+          'USER_ALREADY_WITHOUT_CLASS',
+          400,
+          'Você já não pertence a nenhuma turma.'
+        );
+      }
+
+      if (message.includes('AUTH_UNAUTHORIZED')) {
+        throw new AppError(
+          'AUTH_UNAUTHORIZED',
+          401,
+          'Usuário não autenticado.'
+        );
+      }
+
+      if (message.includes('USER_NOT_FOUND')) {
+        throw new AppError(
+          'NOT_FOUND',
+          404,
+          'Usuário não encontrado.'
+        );
+      }
+
+      throw new AppError(
+        'INTERNAL_SERVER_ERROR',
+        500,
+        'Falha ao desvincular da turma.'
+      );
+    }
+  }
 }
+
 

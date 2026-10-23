@@ -154,4 +154,16 @@ export class ClassRepository {
       throw error;
     }
   }
+
+  /**
+   * Desvincula o usuário autenticado de sua turma via procedure PostgreSQL 'sair_da_turma'.
+   */
+  async leaveClass(): Promise<void> {
+    const { error } = await this.supabase.rpc('sair_da_turma');
+
+    if (error) {
+      throw error;
+    }
+  }
 }
+
