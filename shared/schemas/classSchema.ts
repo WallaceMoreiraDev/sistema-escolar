@@ -104,6 +104,7 @@ export type JoinClassInput = z.infer<typeof joinClassSchema>;
 
 export const classMembersPaginationQuerySchema = z.object({
   page: z.coerce.number().int().min(1, 'A página deve ser maior ou igual a 1.').default(1),
+  turmaId: z.string().uuid('ID da turma deve ser um UUID válido.').optional(),
 });
 
 export type ClassMembersPaginationQuery = z.infer<typeof classMembersPaginationQuerySchema>;
@@ -117,3 +118,21 @@ export const classMemberIdParamSchema = z.object({
 });
 
 export type ClassMemberIdParam = z.infer<typeof classMemberIdParamSchema>;
+
+// ============================================================================
+// Schemas de Gestão de Turmas Ativas no Admin (Admin Geral)
+// ============================================================================
+
+export const classIdParamSchema = z.object({
+  id: z.string().uuid('ID da turma deve ser um UUID válido.'),
+});
+
+export type ClassIdParam = z.infer<typeof classIdParamSchema>;
+
+export const adminActiveClassesPaginationQuerySchema = z.object({
+  page: z.coerce.number().int().min(1, 'A página deve ser maior ou igual a 1.').default(1),
+  limit: z.coerce.number().int().min(1, 'O limite deve ser no mínimo 1.').max(50, 'O limite máximo é 50.').default(5),
+});
+
+export type AdminActiveClassesPaginationQuery = z.infer<typeof adminActiveClassesPaginationQuerySchema>;
+

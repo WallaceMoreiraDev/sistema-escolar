@@ -113,6 +113,7 @@ export class ClassController {
   /**
    * GET /api/turmas/membros
    * Lista os membros da turma do aluno autenticado (paginado com 5 itens/página).
+   * Suporta parâmetro turmaId na query quando requisitado por administradores gerais (God Mode).
    */
   static async listMembers(c: Context) {
     const supabase = c.get('supabase');
@@ -123,7 +124,11 @@ export class ClassController {
     const userRepo = new UserRepository(supabase);
     const service = new ClassService(classRepo, userRepo);
 
-    const { members, pagination } = await service.listMembers(user.id, query.page);
+    const { members, pagination } = await service.listMembers(
+      user.id,
+      query.page,
+      query.turmaId
+    );
     const dtos = ClassDTOConverter.toMemberDTOList(members);
 
     const response: ApiResponse<ClassMemberDTO[]> = {

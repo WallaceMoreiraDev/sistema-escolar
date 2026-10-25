@@ -23,11 +23,11 @@ export class LinkService {
     const isAdmin = userProfile.role === 'ADMIN';
     let turmaId: string | undefined;
 
-    if (userProfile.turmas) {
+    if (isAdmin && queryTurmaId) {
+      turmaId = queryTurmaId;
+    } else if (userProfile.turmas) {
       const turma = Array.isArray(userProfile.turmas) ? userProfile.turmas[0] : userProfile.turmas;
       turmaId = turma.id;
-    } else if (isAdmin && queryTurmaId) {
-      turmaId = queryTurmaId;
     }
 
     if (!turmaId) {
@@ -64,11 +64,11 @@ export class LinkService {
     const isAdmin = userProfile.role === 'ADMIN';
     let turmaId: string | undefined;
 
-    if (userProfile.turmas) {
+    if (isAdmin && queryTurmaId) {
+      turmaId = queryTurmaId;
+    } else if (userProfile.turmas) {
       const turma = Array.isArray(userProfile.turmas) ? userProfile.turmas[0] : userProfile.turmas;
       turmaId = turma.id;
-    } else if (isAdmin && queryTurmaId) {
-      turmaId = queryTurmaId;
     }
 
     if (!turmaId) {

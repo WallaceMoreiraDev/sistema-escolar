@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@shared/types/database.types';
-import { RawAdminPedidoTurma } from '../dtos/adminClassDto';
+import { RawAdminPedidoTurma, RawActiveClass } from '../dtos/adminClassDto';
 import { RawPedidoTurma } from '../dtos/classDto';
 
 export class AdminClassRepository {
@@ -126,4 +126,68 @@ export class AdminClassRepository {
 
     return (count ?? 0) > 0;
   }
+
+  /**
+   * Lista turmas ativas com paginação e contagem de membros vinculados.
+   * Ordenadas de forma decrescente pela data de criação.
+   */
+  async listActiveClasses(
+    page: number,
+    limit: number
+  ): Promise<{ classes: RawActiveClass[]; total: number }> {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data, count, error } = await this.supabase
+      .from('turmas')
+      .select(
+        'id, nome_oficial, codigo_convite, ano, curso, turno, local_sala, data_criacao, usuarios(count)',
+        { count: 'exact' }
+      )
+      .order('data_criacao', { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      throw error;
+    }
+
+    return {
+      classes: (data as unknown as RawActiveClass[]) || [],
+      total: count ?? 0,
+    };
+  }
+
+  /**
+   * Executa a procedure PostgreSQL transacional 'excluir_turma'.
+   * Dispara a trigger de integridade handle_turma_delete que desvincula membros e rebaixa líderes.
+   */
+  async deleteClass(classId: string): Promise<void> {
+    const { error } = await this.supabase.rpc('excluir_turma', {
+      p_turma_id: classId,
+    });
+
+    if (error) {
+      throw error;
+    }
+  }
+
+  /**
+   * Busca dados cadastrais de uma turma ativa com contagem de membros por ID.
+   */
+  async getClassById(classId: string): Promise<RawActiveClass | null> {
+    const { data, error } = await this.supabase
+      .from('turmas')
+      .select(
+        'id, nome_oficial, codigo_convite, ano, curso, turno, local_sala, data_criacao, usuarios(count)'
+      )
+      .eq('id', classId)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    return (data as unknown as RawActiveClass) || null;
+  }
 }
+

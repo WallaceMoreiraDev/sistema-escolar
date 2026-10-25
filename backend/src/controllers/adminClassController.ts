@@ -1,16 +1,22 @@
 import { Context } from 'hono';
 import { AdminClassRepository } from '../repositories/adminClassRepository';
 import { AdminClassService } from '../services/adminClassService';
-import { AdminClassDTOConverter } from '../dtos/adminClassDto';
+import {
+  AdminClassDTOConverter,
+  ActiveClassDTOConverter,
+} from '../dtos/adminClassDto';
 import {
   ApiResponse,
   AdminClassRequestDTO,
+  ActiveClassDTO,
   ApproveClassRequestPayload,
   ApproveClassRequestResponse,
 } from '@shared/types';
 import {
   AdminClassPaginationQuery,
+  AdminActiveClassesPaginationQuery,
   ClassRequestIdParam,
+  ClassIdParam,
 } from '@shared/schemas/classSchema';
 
 export class AdminClassController {
@@ -83,4 +89,76 @@ export class AdminClassController {
 
     return c.json(response, 200);
   }
+
+  /**
+   * GET /api/admin/turmas
+   * Lista turmas ativas com paginação e contagem de membros vinculados.
+   */
+  static async listActiveClasses(c: Context) {
+    const supabase = c.get('supabase');
+    const query =
+      (c.get('validQuery') as AdminActiveClassesPaginationQuery) || { page: 1, limit: 5 };
+
+    const repo = new AdminClassRepository(supabase);
+    const service = new AdminClassService(repo);
+
+    const { classes, pagination } = await service.listActiveClasses(query.page, query.limit);
+    const dtos = ActiveClassDTOConverter.toDTOList(classes);
+
+    const response: ApiResponse<ActiveClassDTO[]> = {
+      success: true,
+      data: dtos,
+      meta: {
+        pagination,
+      },
+    };
+
+    return c.json(response, 200);
+  }
+
+  /**
+   * GET /api/admin/turmas/:id
+   * Obtém detalhes cadastrais e contagem de membros de uma turma ativa.
+   */
+  static async getClassDetails(c: Context) {
+    const supabase = c.get('supabase');
+    const { id } = c.get('validParams') as ClassIdParam;
+
+    const repo = new AdminClassRepository(supabase);
+    const service = new AdminClassService(repo);
+
+    const rawClass = await service.getClassById(id);
+    const dto = ActiveClassDTOConverter.toDTO(rawClass);
+
+    const response: ApiResponse<ActiveClassDTO> = {
+      success: true,
+      data: dto,
+    };
+
+    return c.json(response, 200);
+  }
+
+  /**
+   * DELETE /api/admin/turmas/:id
+   * Exclui/destrói uma turma ativa via procedure RPC 'excluir_turma'.
+   */
+  static async deleteClass(c: Context) {
+    const supabase = c.get('supabase');
+    const { id } = c.get('validParams') as ClassIdParam;
+
+    const repo = new AdminClassRepository(supabase);
+    const service = new AdminClassService(repo);
+
+    await service.deleteClass(id);
+
+    const response: ApiResponse<{ message: string }> = {
+      success: true,
+      data: {
+        message: 'Turma destruída com sucesso.',
+      },
+    };
+
+    return c.json(response, 200);
+  }
 }
+

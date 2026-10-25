@@ -11,6 +11,8 @@ import {
   adminClassPaginationQuerySchema,
   approveClassRequestSchema,
   classRequestIdParamSchema,
+  adminActiveClassesPaginationQuerySchema,
+  classIdParamSchema,
 } from '@shared/schemas/classSchema';
 
 const adminRoutes = new Hono<{ Variables: Variables }>();
@@ -38,6 +40,27 @@ adminRoutes.delete(
   '/pedidos-turma/:id',
   validateParam(classRequestIdParamSchema),
   AdminClassController.rejectRequest
+);
+
+// GET /api/admin/turmas - Listagem de turmas ativas com paginação
+adminRoutes.get(
+  '/turmas',
+  validateQuery(adminActiveClassesPaginationQuerySchema),
+  AdminClassController.listActiveClasses
+);
+
+// GET /api/admin/turmas/:id - Detalhes cadastrais de uma turma ativa
+adminRoutes.get(
+  '/turmas/:id',
+  validateParam(classIdParamSchema),
+  AdminClassController.getClassDetails
+);
+
+// DELETE /api/admin/turmas/:id - Exclusão/destruição de turma ativa e desvinculação de membros
+adminRoutes.delete(
+  '/turmas/:id',
+  validateParam(classIdParamSchema),
+  AdminClassController.deleteClass
 );
 
 export { adminRoutes };
