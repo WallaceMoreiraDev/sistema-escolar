@@ -12,13 +12,19 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 export const classMemberApi = {
   /**
    * Busca a lista paginada de colegas de turma do usuário autenticado (GET /api/turmas/membros?page=${page}).
+   * Permite que administradores passem turmaId para inspecionar qualquer turma (Modo God).
    * Retorna envelope ApiResponse contendo data: ClassMemberDTO[] e meta.pagination.
    */
   async listMembers(
     token: string,
-    page: number = 1
+    page: number = 1,
+    turmaId?: string
   ): Promise<ApiResponse<ClassMemberDTO[]>> {
-    const res = await fetch(`${API_URL}/api/turmas/membros?page=${page}`, {
+    const url = turmaId
+      ? `${API_URL}/api/turmas/membros?page=${page}&turmaId=${encodeURIComponent(turmaId)}`
+      : `${API_URL}/api/turmas/membros?page=${page}`;
+
+    const res = await fetch(url, {
       headers: {
         Authorization: `Bearer ${token}`,
       },

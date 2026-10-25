@@ -9,8 +9,12 @@ import { UsefulLink } from '../types';
 import { getErrorMessage } from '@/utils/errorMessages';
 import { ApiError } from '@/utils/apiError';
 
-export function UsefulLinksSection() {
-  const { data: links, isLoading, isError, error } = useUsefulLinks();
+interface UsefulLinksSectionProps {
+  turmaId?: string;
+}
+
+export function UsefulLinksSection({ turmaId }: UsefulLinksSectionProps = {}) {
+  const { data: links, isLoading, isError, error } = useUsefulLinks(turmaId);
   const createLinkMutation = useCreateLink();
   const deleteLinkMutation = useDeleteLink();
 
@@ -36,7 +40,7 @@ export function UsefulLinksSection() {
     setSuccessMessage(null);
 
     createLinkMutation.mutate(
-      { payload: data },
+      { payload: data, turmaId },
       {
         onSuccess: () => {
           reset();

@@ -23,11 +23,15 @@ import { ConfirmModal } from '../../../components/ui/ConfirmModal';
 import { ApiError } from '@/utils/apiError';
 import { getErrorMessage } from '@/utils/errorMessages';
 
-export function MemberManagementSection() {
+interface MemberManagementSectionProps {
+  turmaId?: string;
+}
+
+export function MemberManagementSection({ turmaId }: MemberManagementSectionProps = {}) {
   const { user } = useAuth();
   const [page, setPage] = useState(1);
 
-  const { data, isLoading, isError } = useClassMembers(page);
+  const { data, isLoading, isError } = useClassMembers(page, turmaId);
   const promoteMutation = usePromoteMember();
   const demoteMutation = useDemoteMember();
   const expelMutation = useExpelMember();

@@ -2,12 +2,20 @@ import { useState } from 'react';
 import { UserPlus, Copy, Check, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 
-export function InviteSection() {
+interface InviteSectionProps {
+  turma?: {
+    codigoConvite?: string | null;
+    nomeOficial?: string | null;
+  } | null;
+}
+
+export function InviteSection({ turma }: InviteSectionProps = {}) {
   const { user, isLoading } = useAuth();
   const [copied, setCopied] = useState(false);
 
-  const inviteCode = user?.turma?.codigoConvite || null;
+  const inviteCode = turma !== undefined ? turma?.codigoConvite || null : user?.turma?.codigoConvite || null;
   const displayCode = inviteCode || '------';
+  const className = turma !== undefined ? turma?.nomeOficial : user?.turma?.nomeOficial;
 
   const handleCopy = () => {
     if (!inviteCode) return;
@@ -24,9 +32,9 @@ export function InviteSection() {
         </div>
         <div>
           <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Convite de Alunos</h2>
-          {user?.turma?.nomeOficial && (
+          {className && (
             <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
-              Turma: <span className="font-semibold text-slate-700 dark:text-slate-300">{user.turma.nomeOficial}</span>
+              Turma: <span className="font-semibold text-slate-700 dark:text-slate-300">{className}</span>
             </p>
           )}
         </div>

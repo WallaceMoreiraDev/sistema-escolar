@@ -32,7 +32,7 @@ export function RoleProtectedRoute({
   }
 
   const hasAllowedRole = !allowedRoles || allowedRoles.includes(user.role);
-  const hasTurma = !requireTurma || !!user.turma;
+  const hasTurma = !requireTurma || !!user.turma || user.role === 'ADMIN';
 
   // Se violar role ou turma exigida, redireciona para o dashboard
   if (!hasAllowedRole || !hasTurma) {

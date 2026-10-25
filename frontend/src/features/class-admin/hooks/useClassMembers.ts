@@ -4,23 +4,24 @@ import { classMemberApi } from '../api/classMemberApi';
 import { ApiError } from '@/utils/apiError';
 
 /**
- * Hook para buscar os membros da turma do usuário autenticado de forma paginada.
- * Rota: GET /api/turmas/membros?page=${page}
+ * Hook para buscar os membros da turma de forma paginada (GET /api/turmas/membros?page=${page}).
+ * Suporta Modo God para Administradores Gerais inspecionarem qualquer turma via turmaId.
  */
-export function useClassMembers(page: number = 1) {
+export function useClassMembers(page: number = 1, turmaId?: string) {
   const { session, user } = useAuth();
   const token = session?.access_token;
   const hasClass = !!user?.turma;
+  const isGodModeOrAdmin = !!turmaId || user?.role === 'ADMIN';
 
   return useQuery({
-    queryKey: ['class-members', page],
+    queryKey: ['class-members', page, turmaId],
     queryFn: async () => {
       if (!token) {
         throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
       }
-      return classMemberApi.listMembers(token, page);
+      return classMemberApi.listMembers(token, page, turmaId);
     },
-    enabled: !!token && hasClass,
+    enabled: !!token && (hasClass || isGodModeOrAdmin),
     staleTime: 1000 * 30, // 30 segundos de cache
   });
 }
