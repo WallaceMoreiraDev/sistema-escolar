@@ -105,3 +105,20 @@
     - `metaArrecadadaMes`: número obrigatório, não negativo (`min(0)`), com teto de segurança (`max(100000)`).
 - **Contratos e DTO:** Exposição dos dados via `FundingDTO` em `camelCase` (`metaArrecadadaMes`, `updatedAt`).
 
+---
+
+## 10. Gestão e Exclusão de Turmas Ativas no Admin (`/api/admin/turmas`) e Modo God
+- **Controle de Acesso em Camadas:**
+  - Todas as rotas sob `/api/admin/turmas` são estritamente restritas a Administradores Gerais (`ADMIN`), protegidas por `authMiddleware`, `requireRole(['ADMIN'])` e políticas de RLS (`turmas_delete_admin` para exclusões).
+- **Listagem e Consulta Cadastral de Turmas Ativas:**
+  - `GET /api/admin/turmas`: Listagem paginada (padrão 5 itens/página, configurável até 50 via query `page` e `limit`), com ordenação cronológica decrescente (`data_criacao DESC`) acelerada pelo índice `idx_turmas_data_criacao`. Inclui a contagem de membros ativos matriculados (`usuarios(count)`) otimizada pelo índice parcial `idx_usuarios_turma_id`.
+  - `GET /api/admin/turmas/:id`: Consulta os detalhes cadastrais e a contagem de membros de uma turma específica pelo UUID. Dispara `AppError('CLASS_NOT_FOUND', 404)` se inexistente.
+- **Exclusão/Destruição de Turma Ativa (`DELETE /api/admin/turmas/:id`):**
+  - Aciona a procedure RPC transacional PostgreSQL `public.excluir_turma(p_turma_id)`.
+  - **Trigger de Integridade Pré-Exclusão (`handle_turma_delete`):** Dispara `BEFORE DELETE` na tabela `turmas`, desvinculando automaticamente todos os membros matriculados (`turma_id = NULL`, `data_entrada_turma = NULL`) e rebaixando membros com papel `LIDER` para `ALUNO` (preservando `ADMIN`), prevenindo orfandade ou inconsistência de líderes sem sala.
+  - **Fail-Fast:** Se a turma não for encontrada, a procedure levanta exceção com código `P0002` / `CLASS_NOT_FOUND`, traduzida para `HTTP 404 NOT_FOUND` com código tipado `CLASS_NOT_FOUND`.
+- **Modo God na Gestão de Membros (`GET /api/turmas/membros`):**
+  - Administradores Gerais (`ADMIN`) podem inspecionar membros de qualquer turma informando o parâmetro opcional `turmaId` na query string (`/api/turmas/membros?turmaId=<UUID>`). Alunos e líderes continuam restritos à própria turma vinculada.
+- **Contratos e DTOs Compartilhados:**
+  - `ActiveClassDTO`: `id`, `nomeOficial`, `codigoConvite`, `ano`, `curso`, `turno`, `localSala`, `dataCriacao`, `activeMembers` (com aliases de conveniência `name`, `shift`, `createdAt`).
+
