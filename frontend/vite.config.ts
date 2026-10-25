@@ -23,7 +23,7 @@ function spaFallbackPlugin(): Plugin {
 }
 
 export default defineConfig({
-  base: '/sistema-escolar/',
+  base: '/',
   plugins: [react(), spaFallbackPlugin()],
   resolve: {
     alias: {

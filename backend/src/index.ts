@@ -28,6 +28,10 @@ app.use("*", cors());
 app.onError(errorHandler);
 
 // Public Health Check Route
+app.get("/", (c) => {
+  return c.json({ success: true, message: "Backend is running and healthy!" });
+});
+
 app.get("/health", (c) => {
   return c.json({ success: true, message: "Backend is running and healthy!" });
 });
