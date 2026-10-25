@@ -1,83 +1,49 @@
 import { useQuery, useMutation, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { adminClassApi } from '../api/adminClassApi';
+import { ApiError } from '@/utils/apiError';
+import { ActiveClassDTO, ApiResponse } from '@shared/types';
 
-export interface ActiveClass {
-  id: string;
-  name: string;
-  shift: 'Manhã' | 'Tarde' | 'Noite' | 'Integral';
-  activeMembers: number;
-  createdAt: string;
-}
+export type ActiveClass = ActiveClassDTO;
 
-export interface PaginatedResponse<T> {
-  data: T[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
-}
-
-let mockActiveClasses: ActiveClass[] = [
-  {
-    id: 'cls-1',
-    name: '3º B - Desenvolvimento de Sistemas',
-    shift: 'Manhã',
-    activeMembers: 32,
-    createdAt: '2023-01-15T10:00:00.000Z'
-  },
-  {
-    id: 'cls-2',
-    name: '2º A - Enfermagem',
-    shift: 'Tarde',
-    activeMembers: 28,
-    createdAt: '2023-02-20T14:30:00.000Z'
-  },
-  {
-    id: 'cls-3',
-    name: '1º C - Administração',
-    shift: 'Noite',
-    activeMembers: 45,
-    createdAt: '2023-03-05T19:00:00.000Z'
-  }
-];
-
-const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
+/**
+ * Hook para listar turmas ativas gerenciadas pelo Administrador Geral (GET /api/admin/turmas?page=X&limit=Y).
+ */
 export function useActiveClasses(page: number = 1, limit: number = 5) {
-  return useQuery({
-    queryKey: ['active-classes', page, limit],
-    queryFn: async (): Promise<PaginatedResponse<ActiveClass>> => {
-      await delay(600); // Fake network delay
-      const start = (page - 1) * limit;
-      const end = start + limit;
-      const paginatedData = mockActiveClasses.slice(start, end);
-      return {
-        data: paginatedData,
-        meta: {
-          total: mockActiveClasses.length,
-          page,
-          limit,
-          totalPages: Math.ceil(mockActiveClasses.length / limit)
-        }
-      };
+  const { session } = useAuth();
+  const token = session?.access_token;
+
+  return useQuery<ApiResponse<ActiveClassDTO[]>>({
+    queryKey: ['admin-active-classes', page, limit],
+    queryFn: async () => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      return adminClassApi.listActiveClasses(token, page, limit);
     },
     placeholderData: keepPreviousData,
-    staleTime: 1000 * 60 * 5,
+    enabled: !!token,
+    staleTime: 1000 * 30, // 30 segundos de cache
   });
 }
 
+/**
+ * Hook de mutação para excluir/destruir uma turma ativa permanentemente (DELETE /api/admin/turmas/:id).
+ */
 export function useDeleteClass() {
   const queryClient = useQueryClient();
-  
-  return useMutation({
+  const { session } = useAuth();
+  const token = session?.access_token;
+
+  return useMutation<{ message: string }, ApiError, string>({
     mutationFn: async (id: string) => {
-      await delay(800);
-      mockActiveClasses = mockActiveClasses.filter(c => c.id !== id);
-      return id;
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      return adminClassApi.deleteClass(token, id);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['active-classes'] });
-    }
+      queryClient.invalidateQueries({ queryKey: ['admin-active-classes'] });
+    },
   });
 }

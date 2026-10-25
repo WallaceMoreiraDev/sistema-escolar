@@ -25,11 +25,11 @@ export class EventService {
     const isAdmin = userProfile.role === 'ADMIN';
     let turmaId: string | undefined;
 
-    if (userProfile.turmas) {
+    if (isAdmin && query.turmaId) {
+      turmaId = query.turmaId;
+    } else if (userProfile.turmas) {
       const turma = Array.isArray(userProfile.turmas) ? userProfile.turmas[0] : userProfile.turmas;
       turmaId = turma.id;
-    } else if (isAdmin && query.turmaId) {
-      turmaId = query.turmaId;
     }
 
     if (!turmaId) {
@@ -66,14 +66,21 @@ export class EventService {
     const isAdmin = userProfile.role === 'ADMIN';
     let turmaId: string | undefined;
 
-    if (userProfile.turmas) {
+    if (isAdmin && queryTurmaId) {
+      turmaId = queryTurmaId;
+    } else if (userProfile.turmas) {
       const turma = Array.isArray(userProfile.turmas) ? userProfile.turmas[0] : userProfile.turmas;
       turmaId = turma.id;
-    } else if (isAdmin && queryTurmaId) {
-      turmaId = queryTurmaId;
     }
 
     if (!turmaId) {
+      if (isAdmin) {
+        throw new AppError(
+          'TURMA_REQUIRED',
+          400,
+          'Informe o turmaId nos parâmetros para cadastrar eventos como administrador.'
+        );
+      }
       throw new AppError(
         'USER_WITHOUT_CLASS',
         400,

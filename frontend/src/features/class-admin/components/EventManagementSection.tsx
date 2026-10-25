@@ -4,7 +4,11 @@ import { EventForm } from './EventForm';
 import { EventList } from './EventList';
 import { EventDTO } from '@shared/types';
 
-export function EventManagementSection() {
+interface EventManagementSectionProps {
+  turmaId?: string;
+}
+
+export function EventManagementSection({ turmaId }: EventManagementSectionProps = {}) {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [eventToEdit, setEventToEdit] = useState<EventDTO | null>(null);
 
@@ -44,8 +48,9 @@ export function EventManagementSection() {
           isOpen={isFormOpen}
           onClose={() => setIsFormOpen(false)}
           eventToEdit={eventToEdit}
+          turmaId={turmaId}
         />
-        <EventList onEdit={handleEdit} />
+        <EventList onEdit={handleEdit} turmaId={turmaId} />
       </div>
     </section>
   );

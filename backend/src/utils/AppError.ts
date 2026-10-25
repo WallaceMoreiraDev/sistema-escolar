@@ -16,7 +16,9 @@ export type ErrorCode =
   | "USER_WITHOUT_CLASS"
   | "TURMA_REQUIRED"
   | "LAST_LEADER_CANNOT_LEAVE"
-  | "USER_ALREADY_WITHOUT_CLASS";
+  | "USER_ALREADY_WITHOUT_CLASS"
+  | "CLASS_NOT_FOUND";
+
 
 export class AppError extends Error {
   public readonly code: ErrorCode;

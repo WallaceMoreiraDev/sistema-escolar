@@ -8,13 +8,14 @@ import { ApiError } from '@/utils/apiError';
 
 interface EventListProps {
   onEdit: (event: EventDTO) => void;
+  turmaId?: string;
 }
 
-export function EventList({ onEdit }: EventListProps) {
+export function EventList({ onEdit, turmaId }: EventListProps) {
   const [page, setPage] = useState(1);
   const limit = 5;
 
-  const { data: response, isLoading, isError, error } = useClassEvents();
+  const { data: response, isLoading, isError, error } = useClassEvents(undefined, undefined, turmaId);
   const deleteMutation = useDeleteEvent();
   const [eventToDelete, setEventToDelete] = useState<EventDTO | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);

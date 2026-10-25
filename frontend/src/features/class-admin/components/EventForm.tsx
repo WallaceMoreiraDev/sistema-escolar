@@ -41,9 +41,10 @@ interface EventFormProps {
   isOpen: boolean;
   onClose: () => void;
   eventToEdit?: EventDTO | null;
+  turmaId?: string;
 }
 
-export function EventForm({ isOpen, onClose, eventToEdit }: EventFormProps) {
+export function EventForm({ isOpen, onClose, eventToEdit, turmaId }: EventFormProps) {
   const createEventMutation = useCreateEvent();
   const updateEventMutation = useUpdateEvent();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -129,7 +130,7 @@ export function EventForm({ isOpen, onClose, eventToEdit }: EventFormProps) {
       );
     } else {
       createEventMutation.mutate(
-        { payload },
+        { payload, turmaId },
         {
           onSuccess: () => {
             onClose();

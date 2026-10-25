@@ -1,5 +1,5 @@
 import { AdminClassRepository } from '../repositories/adminClassRepository';
-import { RawAdminPedidoTurma } from '../dtos/adminClassDto';
+import { RawAdminPedidoTurma, RawActiveClass } from '../dtos/adminClassDto';
 import {
   ApproveClassRequestPayload,
   ApproveClassRequestResponse,
@@ -153,4 +153,78 @@ export class AdminClassService {
       );
     }
   }
+
+  /**
+   * Lista turmas ativas com metadados de paginação direta no banco.
+   */
+  async listActiveClasses(
+    page: number,
+    limit: number = 5
+  ): Promise<{ classes: RawActiveClass[]; pagination: PaginationMeta }> {
+    const safePage = page > 0 ? page : 1;
+    const safeLimit = limit > 0 && limit <= 50 ? limit : 5;
+
+    const { classes, total } = await this.repo.listActiveClasses(safePage, safeLimit);
+    const totalPages = total > 0 ? Math.ceil(total / safeLimit) : 1;
+
+    return {
+      classes,
+      pagination: {
+        page: safePage,
+        limit: safeLimit,
+        total,
+        totalPages,
+      },
+    };
+  }
+
+  /**
+   * Exclui uma turma ativa através da procedure RPC 'excluir_turma'.
+   * Trata erros lançados pela procedure (P0002 / CLASS_NOT_FOUND, 42501 / FORBIDDEN).
+   */
+  async deleteClass(classId: string): Promise<void> {
+    try {
+      await this.repo.deleteClass(classId);
+    } catch (error: unknown) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+
+      const dbErr = error as { code?: string; message?: string };
+      const message = dbErr?.message || '';
+      const code = dbErr?.code || '';
+
+      if (code === 'P0002' || message.includes('CLASS_NOT_FOUND')) {
+        throw new AppError('CLASS_NOT_FOUND', 404, 'Turma não encontrada.');
+      }
+
+      if (code === '42501' || message.includes('FORBIDDEN')) {
+        throw new AppError(
+          'AUTH_FORBIDDEN',
+          403,
+          'Apenas administradores gerais podem excluir turmas.'
+        );
+      }
+
+      throw new AppError(
+        'INTERNAL_SERVER_ERROR',
+        500,
+        'Erro ao processar a exclusão da turma no banco de dados.'
+      );
+    }
+  }
+
+  /**
+   * Busca dados cadastrais e contagem de membros de uma turma ativa pelo ID.
+   */
+  async getClassById(classId: string): Promise<RawActiveClass> {
+    const turma = await this.repo.getClassById(classId);
+
+    if (!turma) {
+      throw new AppError('CLASS_NOT_FOUND', 404, 'Turma não encontrada.');
+    }
+
+    return turma;
+  }
 }
+

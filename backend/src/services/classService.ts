@@ -170,27 +170,41 @@ export class ClassService {
   }
 
   /**
-   * Lista membros da turma do usuário autenticado com paginação fixa de 5 itens.
-   * Regra de negócio: Usuário precisa pertencer a uma turma (turma_id IS NOT NULL).
+   * Lista membros da turma do usuário autenticado (ou de turma informada para administradores) com paginação fixa de 5 itens.
+   * Regra de negócio: Usuário precisa pertencer a uma turma (turma_id IS NOT NULL),
+   * exceto se for ADMIN fornecendo targetTurmaId (God Mode).
    */
   async listMembers(
     userId: string,
-    page: number
+    page: number,
+    targetTurmaId?: string
   ): Promise<{ members: RawClassMember[]; pagination: PaginationMeta }> {
     const userProfile = await this.userRepo.getUserProfile(userId);
-    if (!userProfile?.turmas) {
+    if (!userProfile) {
+      throw new AppError('AUTH_UNAUTHORIZED', 401, 'Usuário não autenticado.');
+    }
+
+    let turmaId: string | undefined;
+
+    if (userProfile.role === 'ADMIN' && targetTurmaId) {
+      turmaId = targetTurmaId;
+    } else if (userProfile.turmas) {
+      const turma = Array.isArray(userProfile.turmas)
+        ? userProfile.turmas[0]
+        : userProfile.turmas;
+      turmaId = turma?.id;
+    }
+
+    if (!turmaId) {
       throw new AppError(
         'BAD_REQUEST',
         400,
-        'Você não está vinculado a nenhuma turma.'
+        userProfile.role === 'ADMIN'
+          ? 'Identificador da turma é obrigatório para administradores.'
+          : 'Você não está vinculado a nenhuma turma.'
       );
     }
 
-    const turma = Array.isArray(userProfile.turmas)
-      ? userProfile.turmas[0]
-      : userProfile.turmas;
-
-    const turmaId = turma.id;
     const limit = 5;
     const safePage = page > 0 ? page : 1;
 

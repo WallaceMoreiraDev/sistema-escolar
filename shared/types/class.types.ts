@@ -93,3 +93,23 @@ export interface ClassMemberDTO {
 export interface ClassMemberActionResponse {
   message: string;
 }
+
+/**
+ * DTO para turma ativa gerenciada pelo Administrador Geral (Admin).
+ */
+export interface ActiveClassDTO {
+  id: string;
+  nomeOficial: string;
+  codigoConvite: string;
+  ano: AnoTurma;
+  curso: string;
+  turno: TurnoTurma;
+  localSala: string | null;
+  dataCriacao: string; // ISO 8601 UTC
+  activeMembers: number;
+  // Campos opcionais de conveniência/compatibilidade
+  name?: string;
+  shift?: TurnoTurma;
+  createdAt?: string;
+}
+
