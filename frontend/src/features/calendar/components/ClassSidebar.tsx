@@ -27,6 +27,7 @@ export function ClassSidebar() {
   const membersList = membersResponse?.data || [];
   const membersTotalPages = membersResponse?.meta?.pagination?.totalPages || 1;
   const totalMembersCount = membersResponse?.meta?.pagination?.total || membersList.length;
+  const isSoleMember = totalMembersCount === 1;
 
   const handleLeaveClass = () => {
     setLeaveError(null);
@@ -203,7 +204,20 @@ export function ClassSidebar() {
                   <span>{leaveError}</span>
                 </div>
               )}
-              <p className="text-sm font-bold text-rose-700 dark:text-rose-300 text-center">Tem certeza que deseja sair da turma?</p>
+
+              {isSoleMember && (
+                <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300 font-medium flex items-start gap-2 text-left leading-relaxed">
+                  <AlertCircle className="w-4 h-4 shrink-0 text-amber-600 dark:text-amber-400 mt-0.5" />
+                  <span>
+                    Atenção: Você é o único membro restante nesta turma. Ao sair, a turma será <strong>permanentemente encerrada e excluída</strong>, e todos os seus eventos apagados.
+                  </span>
+                </div>
+              )}
+
+              <p className="text-sm font-bold text-rose-700 dark:text-rose-300 text-center">
+                {isSoleMember ? 'Deseja sair e encerrar a turma?' : 'Tem certeza que deseja sair da turma?'}
+              </p>
+
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => {
@@ -225,6 +239,8 @@ export function ClassSidebar() {
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       Saindo...
                     </>
+                  ) : isSoleMember ? (
+                    'Sair e Encerrar Turma'
                   ) : (
                     'Sim, Sair'
                   )}
