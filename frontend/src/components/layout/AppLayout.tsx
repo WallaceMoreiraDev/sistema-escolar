@@ -1,6 +1,8 @@
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useState, useEffect } from 'react';
+import { LogOut } from 'lucide-react';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { ConfirmModal } from '../ui/ConfirmModal';
 
 // === CONSTANTES DOS LINKS PARA REUTILIZAR ===
 const NAV_LINKS = [
@@ -18,7 +20,8 @@ const ADMIN_LINKS = [
 export function Sidebar() {
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   
   const userName = user?.nome || 'Aluno';
   const userInitials = userName.substring(0, 2).toUpperCase();
@@ -67,18 +70,41 @@ export function Sidebar() {
       </nav>
 
       <div className="p-6">
-        <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/50 bg-white/50 backdrop-blur-sm cursor-pointer hover:bg-white/80 transition-colors">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-orange-500 p-[2px]">
+        <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/50 bg-white/50 backdrop-blur-sm">
+          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-orange-500 p-[2px] shrink-0">
             <div className="w-full h-full bg-white rounded-full flex items-center justify-center text-sm font-bold text-primary">
               {userInitials}
             </div>
           </div>
-          <div className="flex-1 overflow-hidden">
+          <div className="flex-1 min-w-0 overflow-hidden">
             <p className="text-sm font-semibold text-slate-900 truncate">{userName}</p>
             <p className="text-xs text-slate-500 truncate">{user?.turma?.nomeOficial || 'Sem Turma'}</p>
           </div>
+          <button
+            type="button"
+            onClick={() => setShowLogoutModal(true)}
+            className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-colors shrink-0"
+            title="Encerrar Sessão"
+            aria-label="Encerrar Sessão"
+          >
+            <LogOut className="w-5 h-5" />
+          </button>
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={showLogoutModal}
+        title="Encerrar Sessão"
+        message="Tem certeza que deseja sair da sua conta?"
+        confirmText="Sim, Sair"
+        cancelText="Cancelar"
+        isDestructive={true}
+        onConfirm={async () => {
+          setShowLogoutModal(false);
+          await signOut();
+        }}
+        onCancel={() => setShowLogoutModal(false)}
+      />
     </aside>
   )
 }
@@ -87,8 +113,9 @@ export function Sidebar() {
 export function MobileNav() {
   const location = useLocation();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const isActive = (path: string) => location.pathname === path;
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   
   const userName = user?.nome || 'Aluno';
   const userInitials = userName.substring(0, 2).toUpperCase();
@@ -202,18 +229,41 @@ export function MobileNav() {
         </nav>
 
         <div className="p-6 border-t border-slate-200/50 dark:border-slate-800/50">
-          <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/50 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm cursor-pointer">
+          <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/50 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm">
             <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-orange-500 p-[2px] shrink-0">
               <div className="w-full h-full bg-white dark:bg-slate-900 rounded-full flex items-center justify-center text-sm font-bold text-primary">
                 {userInitials}
               </div>
             </div>
-            <div className="flex-1 overflow-hidden">
+            <div className="flex-1 min-w-0 overflow-hidden">
               <p className="text-sm font-semibold text-slate-900 dark:text-white truncate">{userName}</p>
               <p className="text-xs text-slate-500 truncate">{user?.turma?.nomeOficial || 'Sem Turma'}</p>
             </div>
+            <button
+              type="button"
+              onClick={() => setShowLogoutModal(true)}
+              className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-xl transition-colors shrink-0"
+              title="Encerrar Sessão"
+              aria-label="Encerrar Sessão"
+            >
+              <LogOut className="w-5 h-5" />
+            </button>
           </div>
         </div>
+
+        <ConfirmModal
+          isOpen={showLogoutModal}
+          title="Encerrar Sessão"
+          message="Tem certeza que deseja sair da sua conta?"
+          confirmText="Sim, Sair"
+          cancelText="Cancelar"
+          isDestructive={true}
+          onConfirm={async () => {
+            setShowLogoutModal(false);
+            await signOut();
+          }}
+          onCancel={() => setShowLogoutModal(false)}
+        />
       </div>
     </>
   );
