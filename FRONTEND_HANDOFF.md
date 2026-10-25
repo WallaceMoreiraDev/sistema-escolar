@@ -2,7 +2,114 @@
 
 > Este documento serve como ponte de comunicação oficial entre o time de Backend (IA/Dev) e o time de Frontend (IA/Dev). Todas as ações que o Frontend precisar tomar devido a alterações de API, banco ou regras de negócio devem ser registradas aqui em formato estrito de checklist.
 
+## 🟢 Concluído: Gestão e Exclusão de Turmas Ativas no Admin (/api/admin/turmas) e Modo God
+
+**Data/Contexto:** Endpoints da API REST para listagem paginada e exclusão de turmas ativas pelo Administrador Geral (`/api/admin/turmas`), além de suporte a inspeção de membros via `turmaId` na listagem de membros (`/api/turmas/membros`) para o Modo God.
+
+### 1. Endpoints Disponíveis:
+
+1. **Listar Turmas Ativas:** `GET /api/admin/turmas`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Permissão: Restrito a Administradores Gerais (`ADMIN`).
+   - Query Params:
+     - `page`: número inteiro `>= 1` (default: `1`).
+     - `limit`: número inteiro entre `1` e `50` (default: `5`).
+   - Retorno de Sucesso: `HTTP 200 OK`
+     ```typescript
+     {
+       success: true,
+       data: ActiveClassDTO[], // Array de turmas ativas ordenadas por dataCriacao DESC
+       meta: {
+         pagination: {
+           page: number,
+           limit: number,
+           total: number,
+           totalPages: number
+         }
+       }
+     }
+     ```
+   - Cada item (`ActiveClassDTO`) possui:
+     - `id: string` (UUID)
+     - `nomeOficial: string`
+     - `codigoConvite: string`
+     - `ano: "1º" | "2º" | "3º"`
+     - `curso: string`
+     - `turno: "Manhã" | "Tarde" | "Noite" | "Integral"`
+     - `localSala: string | null`
+     - `dataCriacao: string` (ISO 8601 UTC)
+     - `activeMembers: number` (contagem de membros matriculados na sala)
+     - *(Campos de conveniência/compatibilidade: `name?: string; shift?: TurnoTurma; createdAt?: string;`)*
+
+2. **Detalhes da Turma Ativa:** `GET /api/admin/turmas/:id`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Permissão: Restrito a Administradores Gerais (`ADMIN`).
+   - Parâmetro `:id`: UUID válido da turma.
+   - Retorno de Sucesso: `HTTP 200 OK`
+     ```typescript
+     {
+       success: true,
+       data: ActiveClassDTO
+     }
+     ```
+   - Erros da API:
+     - `404 NOT_FOUND` com `code: "CLASS_NOT_FOUND"`: Turma não encontrada.
+
+3. **Excluir/Destruir Turma Ativa:** `DELETE /api/admin/turmas/:id`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Permissão: Restrito a Administradores Gerais (`ADMIN`).
+   - Parâmetro `:id`: UUID válido da turma.
+   - Comportamento no Banco: Aciona a procedure `excluir_turma` com a trigger `handle_turma_delete` disparando `BEFORE DELETE`. Todos os membros matriculados na sala são desvinculados (`turma_id = NULL`, `data_entrada_turma = NULL`) e membros com papel `LIDER` são automaticamente rebaixados para `ALUNO` (preservando `ADMIN`).
+   - Retorno de Sucesso: `HTTP 200 OK`
+     ```typescript
+     {
+       success: true,
+       data: {
+         message: "Turma destruída com sucesso."
+       }
+     }
+     ```
+   - Erros da API:
+     - `404 NOT_FOUND` com `code: "CLASS_NOT_FOUND"`: Turma inexistente.
+     - `403 FORBIDDEN` com `code: "AUTH_FORBIDDEN"`: Usuário não é administrador geral.
+
+4. **Modo God na Listagem de Membros:** `GET /api/turmas/membros?turmaId=<uuid>&page=<n>`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Permissão: Para alunos e líderes, a listagem continua retornando os membros de sua própria turma vinculada. Para Administradores Gerais (`ADMIN`), a rota agora aceita o parâmetro opcional `turmaId` na query string, permitindo inspecionar qualquer turma sem precisar estar matriculado nela.
+   - Retorno de Sucesso: `HTTP 200 OK` com `{ success: true, data: ClassMemberDTO[], meta: { pagination } }`.
+
+---
+
+### Ações Exigidas para o Frontend:
+
+- [x] **Adoção dos Contratos e Schemas (@shared):**
+  - [x] Importar `ActiveClassDTO`, `ApiResponse` de `@shared/types`:
+    ```typescript
+    import { ApiResponse, ActiveClassDTO } from '@shared/types';
+    ```
+  - [x] Importar `adminActiveClassesPaginationQuerySchema`, `classIdParamSchema` de `@shared/schemas/classSchema`:
+    ```typescript
+    import { adminActiveClassesPaginationQuerySchema, classIdParamSchema } from '@shared/schemas/classSchema';
+    ```
+
+- [x] **Integração do Hook `useActiveClasses.ts` (`frontend/src/features/system-admin/hooks/useActiveClasses.ts`):**
+  - [x] Substituir o mock em memória por chamadas reais via TanStack Query:
+    - [x] `useActiveClasses(page: number)`: Consumir `GET /api/admin/turmas?page=${page}&limit=5` retornando as turmas ativas e metadados de paginação.
+    - [x] `useDeleteClass()`: Consumir `DELETE /api/admin/turmas/${id}`. Ao obter sucesso, invalidar as queries `['admin-active-classes']` para re-renderizar a listagem e disparar feedback amigável ao usuário.
+
+- [x] **Conexão da Tela de Turmas Ativas (`ActiveClassesPage.tsx`):**
+  - [x] Conectar a tabela/grid de turmas ativas ao hook `useActiveClasses`, exibindo nome oficial, código de convite, contagem de membros ativos (`activeMembers`), ano, curso, turno e sala.
+  - [x] Integrar modal customizado de confirmação de exclusão (evitando `window.confirm` conforme `GEMINI.md`) com acionamento de `useDeleteClass()`.
+  - [x] Incluir paginação padronizada em 5 itens por página utilizando os metadados de `meta.pagination`.
+
+- [x] **Navegação e Modo God na Gestão da Turma:**
+  - [x] Na ação de visualizar detalhes da turma a partir de `ActiveClassesPage.tsx`, navegar para a tela do painel da turma (`/app/painel-turma?turmaId=<id>`).
+  - [x] Na tela do painel da turma (`ClassAdminPage.tsx` e seus blocos), ler `turmaId`, exibir banner de inspeção para Admin com retorno a `/app/admin-turmas` e passar `turmaId` para `useClassMembers`, `useClassEvents`, `useUsefulLinks` e `InviteSection`.
+
+---
+
 ## 🟢 Concluído: Meta de Contribuição e Financiamento Coletivo (/api/financiamento)
+
 **Data/Contexto:** Endpoints da API REST para transparência e gestão da meta global de contribuição/arrecadação mensal da plataforma (`/api/financiamento`).
 
 ### 1. Endpoints Disponíveis:
