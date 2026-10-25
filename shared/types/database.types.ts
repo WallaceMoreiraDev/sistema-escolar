@@ -284,6 +284,7 @@ export type Database = {
         Args: { p_codigo_convite: string }
         Returns: Json
       }
+      excluir_turma: { Args: { p_turma_id: string }; Returns: undefined }
       expulsar_membro_turma: {
         Args: { p_membro_id: string }
         Returns: undefined
