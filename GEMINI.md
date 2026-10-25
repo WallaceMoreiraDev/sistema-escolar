@@ -138,6 +138,11 @@
   * **Backend AI:** É **ESTRITAMENTE PROIBIDA** de alterar, criar ou modificar códigos na pasta do Frontend (`/frontend`). Deve atuar exclusivamente em `/backend`, `/shared` e documentar obrigatoriamente as instruções no `FRONTEND_HANDOFF.md` em formato de checklist (`[ ]` e `[x]`).
   * **Frontend AI:** É **ESTRITAMENTE PROIBIDA** de alterar, criar ou modificar códigos na pasta do Backend (`/backend`) ou migrations de banco de dados (`/supabase`). Seu escopo de atuação é estritamente a pasta `/frontend` e o consumo de contratos em `/shared`. Caso receba acidentalmente um prompt de backend, **DEVE recusar a execução imediatamente**, alertando o usuário sobre a fronteira de responsabilidade.
   * **Database AI:** É **ESTRITAMENTE PROIBIDA** de programar regras de aplicação em `/frontend` ou `/backend` (com exceção de executar `npm run db:types` para sincronizar tipos gerados). Seu escopo restringe-se exclusivamente a migrations versionadas em `/supabase/migrations`.
+  * **Proibição Absoluta de Commits Fora do Escopo:** É TERMINANTEMENTE PROIBIDO para qualquer IA especializada realizar `git add`, `git commit` ou versionar arquivos fora do seu escopo exclusivo de atuação:
+    - A **Backend AI** JAMAIS adiciona ou comita arquivos de `/frontend/`.
+    - A **Frontend AI** JAMAIS adiciona ou comita arquivos de `/backend/` ou `/supabase/`.
+    - A **Database AI** JAMAIS adiciona ou comita arquivos de `/frontend/` ou `/backend/`.
+    - Mesmo que existam alterações de outro escopo pendentes no `git status` no momento do comando de commit, a IA DEVE ignorá-las estritamente e realizar `git add` pontual exclusivamente nos arquivos sob sua responsabilidade direta.
 
 ---
 
