@@ -17,7 +17,9 @@ export type ErrorCode =
   | "TURMA_REQUIRED"
   | "LAST_LEADER_CANNOT_LEAVE"
   | "USER_ALREADY_WITHOUT_CLASS"
-  | "CLASS_NOT_FOUND";
+  | "CLASS_NOT_FOUND"
+  | "ATTACHMENT_LIMIT_EXCEEDED"
+  | "ATTACHMENT_NOT_FOUND";
 
 
 export class AppError extends Error {

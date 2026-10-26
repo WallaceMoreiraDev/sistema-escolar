@@ -3,6 +3,29 @@ import { Database } from './database.types';
 export type EventoCategoria = Database['public']['Enums']['evento_categoria'];
 
 /**
+ * Link de apoio associado a um evento ou atividade da turma.
+ */
+export interface EventLinkDTO {
+  titulo: string;
+  url: string;
+}
+
+/**
+ * Anexo físico armazenado no Supabase Storage e associado a um evento.
+ */
+export interface EventAttachmentDTO {
+  id: string;
+  eventoId: string;
+  turmaId: string;
+  nomeArquivo: string;
+  storagePath: string;
+  tamanhoBytes: number;
+  mimeType: string;
+  downloadUrl?: string;
+  createdAt: string; // ISO 8601 UTC
+}
+
+/**
  * DTO canônico de Evento da Turma mapeado para camelCase (GEMINI.md Seções 2 e 4).
  * SSOT compartilhado entre Backend e Frontend.
  */
@@ -14,6 +37,8 @@ export interface EventDTO {
   dataHoraLimite: string; // ISO 8601 UTC
   descricao: string | null;
   anexoUrl: string | null;
+  links: EventLinkDTO[];
+  anexos: EventAttachmentDTO[];
   criadoPor: string | null;
   createdAt: string | null; // ISO 8601 UTC
 }
@@ -27,6 +52,7 @@ export interface CreateEventPayload {
   dataHoraLimite: string;
   descricao?: string | null;
   anexoUrl?: string | null;
+  links?: EventLinkDTO[];
 }
 
 /**
@@ -38,4 +64,6 @@ export interface UpdateEventPayload {
   dataHoraLimite?: string;
   descricao?: string | null;
   anexoUrl?: string | null;
+  links?: EventLinkDTO[];
 }
+

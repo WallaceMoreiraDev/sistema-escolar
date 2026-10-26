@@ -12,6 +12,7 @@ import {
   updateEventSchema,
   eventIdParamSchema,
   listEventsQuerySchema,
+  attachmentParamSchema,
 } from '@shared/schemas/eventSchema';
 
 const eventRoutes = new Hono<{ Variables: Variables }>();
@@ -49,6 +50,29 @@ eventRoutes.delete(
   requireRole(['LIDER', 'ADMIN']),
   validateParam(eventIdParamSchema),
   EventController.delete
+);
+
+// POST /api/turmas/eventos/:id/anexos - Upload de anexo físico (apenas Líder ou Admin)
+eventRoutes.post(
+  '/:id/anexos',
+  requireRole(['LIDER', 'ADMIN']),
+  validateParam(eventIdParamSchema),
+  EventController.uploadAttachment
+);
+
+// DELETE /api/turmas/eventos/:id/anexos/:anexoId - Exclusão de anexo individual (apenas Líder ou Admin)
+eventRoutes.delete(
+  '/:id/anexos/:anexoId',
+  requireRole(['LIDER', 'ADMIN']),
+  validateParam(attachmentParamSchema),
+  EventController.deleteAttachment
+);
+
+// GET /api/turmas/eventos/:id/anexos/:anexoId/download - Download / visualização segura de anexo
+eventRoutes.get(
+  '/:id/anexos/:anexoId/download',
+  validateParam(attachmentParamSchema),
+  EventController.getAttachmentDownloadUrl
 );
 
 export { eventRoutes };

@@ -7,6 +7,24 @@ export const eventoCategoriaEnum = z.enum(['Prova', 'Trabalho', 'Tarefa', 'Aviso
 export type EventoCategoriaSchema = z.infer<typeof eventoCategoriaEnum>;
 
 /**
+ * Schema de validação para links externos de apoio da atividade.
+ */
+export const eventLinkSchema = z.object({
+  titulo: z
+    .string({ required_error: 'O título do link é obrigatório.' })
+    .trim()
+    .min(1, 'O título do link deve ter no mínimo 1 caractere.')
+    .max(100, 'O título do link deve ter no máximo 100 caracteres.'),
+  url: z
+    .string({ required_error: 'A URL do link é obrigatória.' })
+    .trim()
+    .url('A URL do link deve ser válida.')
+    .max(500, 'A URL do link deve ter no máximo 500 caracteres.'),
+});
+
+export type EventLinkInput = z.infer<typeof eventLinkSchema>;
+
+/**
  * Schema de validação para criação de eventos da turma (POST /api/turmas/eventos).
  */
 export const createEventSchema = z.object({
@@ -34,6 +52,11 @@ export const createEventSchema = z.object({
     .max(500, 'A URL do anexo deve ter no máximo 500 caracteres.')
     .nullable()
     .optional(),
+  links: z
+    .array(eventLinkSchema)
+    .max(2, 'No máximo 2 links permitidos.')
+    .optional()
+    .default([]),
 });
 
 export type CreateEventInput = z.infer<typeof createEventSchema>;
@@ -53,6 +76,16 @@ export const eventIdParamSchema = z.object({
 });
 
 export type EventIdParam = z.infer<typeof eventIdParamSchema>;
+
+/**
+ * Schema de validação para rotas de anexos compostas por :id (evento) e :anexoId.
+ */
+export const attachmentParamSchema = z.object({
+  id: z.string().uuid('ID do evento deve ser um UUID válido.'),
+  anexoId: z.string().uuid('ID do anexo deve ser um UUID válido.'),
+});
+
+export type AttachmentParam = z.infer<typeof attachmentParamSchema>;
 
 /**
  * Schema de validação de query params para listagem de eventos por período (GET /api/turmas/eventos).

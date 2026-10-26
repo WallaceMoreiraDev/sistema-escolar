@@ -63,4 +63,11 @@ adminRoutes.delete(
   AdminClassController.deleteClass
 );
 
+// POST /api/admin/manutencao/expurgar-anexos - Auto-expurgo de anexos de atividades expiradas há mais de 7 dias
+adminRoutes.post(
+  '/manutencao/expurgar-anexos',
+  AdminClassController.expurgateAttachments
+);
+
 export { adminRoutes };
+

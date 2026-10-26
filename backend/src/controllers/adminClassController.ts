@@ -1,6 +1,9 @@
 import { Context } from 'hono';
 import { AdminClassRepository } from '../repositories/adminClassRepository';
 import { AdminClassService } from '../services/adminClassService';
+import { EventRepository } from '../repositories/eventRepository';
+import { UserRepository } from '../repositories/userRepository';
+import { EventService } from '../services/eventService';
 import {
   AdminClassDTOConverter,
   ActiveClassDTOConverter,
@@ -160,5 +163,30 @@ export class AdminClassController {
 
     return c.json(response, 200);
   }
+
+  /**
+   * POST /api/admin/manutencao/expurgar-anexos
+   * Executa a rotina de auto-expurgo de anexos físicos de atividades que expiraram há mais de 7 dias.
+   */
+  static async expurgateAttachments(c: Context) {
+    const supabase = c.get('supabase');
+
+    const eventRepo = new EventRepository(supabase);
+    const userRepo = new UserRepository(supabase);
+    const service = new EventService(eventRepo, userRepo);
+
+    const result = await service.expurgateOldAttachments();
+
+    const response: ApiResponse<{ message: string; expurgatedCount: number }> = {
+      success: true,
+      data: {
+        message: `Expurgo de anexos antigos executado com sucesso. ${result.expurgatedCount} arquivo(s) removido(s).`,
+        expurgatedCount: result.expurgatedCount,
+      },
+    };
+
+    return c.json(response, 200);
+  }
 }
+
 
