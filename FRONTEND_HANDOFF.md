@@ -86,27 +86,27 @@
 
 ### Ações Exigidas para o Frontend:
 
-- [ ] **Adoção dos Contratos e Schemas (@shared):**
-  - [ ] Importar `EventLinkDTO`, `EventAttachmentDTO`, `EventDTO` de `@shared/types`:
+- [x] **Adoção dos Contratos e Schemas (@shared):**
+  - [x] Importar `EventLinkDTO`, `EventAttachmentDTO`, `EventDTO` de `@shared/types`:
     ```typescript
     import { EventDTO, EventLinkDTO, EventAttachmentDTO } from '@shared/types';
     ```
-  - [ ] Importar `eventLinkSchema`, `attachmentParamSchema` de `@shared/schemas/eventSchema`:
+  - [x] Importar `eventLinkSchema`, `attachmentParamSchema` de `@shared/schemas/eventSchema`:
     ```typescript
     import { eventLinkSchema, attachmentParamSchema } from '@shared/schemas/eventSchema';
     ```
 
-- [ ] **Integração no Formulário de Eventos / Atividades (`EventForm.tsx`):**
-  - [ ] Adicionar suporte a inclusão/remoção dinâmica de até 2 links externos com campos de título e URL.
-  - [ ] Substituir o upload legado ou integrar o novo fluxo de anexos físicos via multipart (`POST /api/turmas/eventos/:id/anexos`).
-  - [ ] Exibir barra ou indicador visual de cota de armazenamento consumida pelo evento (ex: "X MB de 5 MB utilizados").
-  - [ ] Tratar erro `ATTACHMENT_LIMIT_EXCEEDED` alertando o usuário de forma amigável quando a cota cumulativa for atingida.
+- [x] **Integração no Formulário de Eventos / Atividades (`EventForm.tsx`):**
+  - [x] Adicionar suporte a inclusão/remoção dinâmica de até 2 links externos com campos de título e URL.
+  - [x] Substituir o upload legado ou integrar o novo fluxo de anexos físicos via multipart (`POST /api/turmas/eventos/:id/anexos`).
+  - [x] Exibir barra ou indicador visual de cota de armazenamento consumida pelo evento (ex: "X MB de 5 MB utilizados").
+  - [x] Tratar erro `ATTACHMENT_LIMIT_EXCEEDED` alertando o usuário de forma amigável quando a cota cumulativa for atingida.
 
-- [ ] **Visualização de Atividades e Ações de Anexos (`EventList.tsx`, `EventDetailsModal`):**
-  - [ ] Renderizar links externos com botão/ícone para abrir em nova aba (`target="_blank" rel="noopener noreferrer"`).
-  - [ ] Listar anexos com nome do arquivo, tamanho formatado (KB/MB) e botões de ação:
-    - [ ] Ação de download/visualização: Consumir `GET /api/turmas/eventos/:id/anexos/:anexoId/download` e abrir o `downloadUrl`.
-    - [ ] Ação de exclusão (visível apenas para Líder e Admin): Consumir `DELETE /api/turmas/eventos/:id/anexos/:anexoId` com modal customizado de confirmação.
+- [x] **Visualização de Atividades e Ações de Anexos (`EventList.tsx`, `EventDetailsModal`):**
+  - [x] Renderizar links externos com botão/ícone para abrir em nova aba (`target="_blank" rel="noopener noreferrer"`).
+  - [x] Listar anexos com nome do arquivo, tamanho formatado (KB/MB) e botões de ação:
+    - [x] Ação de download/visualização: Consumir `GET /api/turmas/eventos/:id/anexos/:anexoId/download` e abrir o `downloadUrl`.
+    - [x] Ação de exclusão (visível apenas para Líder e Admin): Consumir `DELETE /api/turmas/eventos/:id/anexos/:anexoId` com modal customizado de confirmação.
 
 ---
 
