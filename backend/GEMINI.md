@@ -122,3 +122,18 @@
 - **Contratos e DTOs Compartilhados:**
   - `ActiveClassDTO`: `id`, `nomeOficial`, `codigoConvite`, `ano`, `curso`, `turno`, `localSala`, `dataCriacao`, `activeMembers` (com aliases de conveniência `name`, `shift`, `createdAt`).
 
+---
+
+## 11. Diretrizes de Anexos Físicos e Links de Atividades (`/api/turmas/eventos`)
+- **Links Externos de Apoio:**
+  - Cada evento suporta até 2 links externos (`links` JSONB), validados via `eventLinkSchema` (`titulo`: 1-100 caracteres; `url`: até 500 caracteres).
+- **Anexos Físicos no Supabase Storage (`eventos-anexos`):**
+  - **Bucket Privado e Estrutura:** Os arquivos são salvos no bucket privado `eventos-anexos` sob o caminho padronizado `<turma_id>/<evento_id>/<uuid>-<nome_sanitizado>`.
+  - **MIME Types Permitidos:** `application/pdf`, `image/jpeg`, `image/png`, `image/webp`. Rejeita qualquer outro formato com `400 VALIDATION_ERROR`.
+  - **Cota Cumulativa e Individual Estrita:** O tamanho individual máximo é 5 MB (`5.242.880 bytes`). A soma do tamanho de todos os anexos já vinculados à atividade + novo arquivo não pode exceder 5 MB (`ATTACHMENT_LIMIT_EXCEEDED`, 400).
+  - **Segurança e Downloads:** O acesso aos arquivos do storage ocorre exclusivamente via URLs assinadas temporárias com validade de 1 hora (`createSignedUrl(storagePath, 3600)`), restrito a membros da mesma turma ou Administradores Gerais.
+  - **Limpeza em Cascata:** Ao excluir um evento (`DELETE /api/turmas/eventos/:id`), o backend remove todos os arquivos físicos do storage antes de remover o registro relacional do banco.
+- **Auto-Expurgo de 7 Dias:**
+  - Anexos de atividades com data limite ultrapassada há mais de 7 dias são expurgados via procedure `public.expurgar_anexos_antigos_eventos()` e remoção física em lote no bucket. Endpoint administrativo disponível em `POST /api/admin/manutencao/expurgar-anexos`.
+
+
