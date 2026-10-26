@@ -68,6 +68,7 @@ export type Database = {
           data_hora_limite: string
           descricao: string | null
           id: string
+          links: Json
           materia: string
           turma_id: string
         }
@@ -79,6 +80,7 @@ export type Database = {
           data_hora_limite: string
           descricao?: string | null
           id?: string
+          links?: Json
           materia: string
           turma_id: string
         }
@@ -90,6 +92,7 @@ export type Database = {
           data_hora_limite?: string
           descricao?: string | null
           id?: string
+          links?: Json
           materia?: string
           turma_id?: string
         }
@@ -107,6 +110,57 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "turmas"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      eventos_anexos: {
+        Row: {
+          created_at: string
+          criado_por: string | null
+          evento_id: string
+          id: string
+          mime_type: string
+          nome_arquivo: string
+          storage_path: string
+          tamanho_bytes: number
+          turma_id: string
+        }
+        Insert: {
+          created_at?: string
+          criado_por?: string | null
+          evento_id: string
+          id?: string
+          mime_type: string
+          nome_arquivo: string
+          storage_path: string
+          tamanho_bytes: number
+          turma_id: string
+        }
+        Update: {
+          created_at?: string
+          criado_por?: string | null
+          evento_id?: string
+          id?: string
+          mime_type?: string
+          nome_arquivo?: string
+          storage_path?: string
+          tamanho_bytes?: number
+          turma_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eventos_anexos_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fk_eventos_anexos_evento_turma"
+            columns: ["evento_id", "turma_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id", "turma_id"]
           },
         ]
       }
@@ -288,6 +342,12 @@ export type Database = {
       expulsar_membro_turma: {
         Args: { p_membro_id: string }
         Returns: undefined
+      }
+      expurgar_anexos_antigos_eventos: {
+        Args: never
+        Returns: {
+          storage_path: string
+        }[]
       }
       get_my_turma_id: { Args: never; Returns: string }
       is_admin: { Args: never; Returns: boolean }
