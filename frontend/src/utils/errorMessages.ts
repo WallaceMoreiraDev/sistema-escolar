@@ -28,6 +28,10 @@ export const errorMessages: Record<string, string> = {
   LAST_LEADER_CANNOT_LEAVE: 'Você é o único líder da turma. Promova outro membro a líder antes de sair da turma.',
   USER_ALREADY_WITHOUT_CLASS: 'Você já não pertence a nenhuma turma.',
 
+  // Anexos e Armazenamento
+  ATTACHMENT_LIMIT_EXCEEDED: 'O limite total de 5 MB de anexos para esta atividade foi atingido.',
+  ATTACHMENT_NOT_FOUND: 'O anexo solicitado não foi encontrado ou já foi expurgado.',
+
   // Validação e Genéricos
   VALIDATION_ERROR: 'Por favor, revise os dados informados.',
   INTERNAL_SERVER_ERROR: 'Ocorreu um erro interno no servidor. Tente novamente em instantes.',

@@ -23,6 +23,8 @@ export const MOCK_CLASS_EVENTS: ClassEvent[] = Array.from({ length: 20 }).map((_
     dataHoraLimite: date.toISOString(),
     descricao: `Descrição detalhada do evento ${i + 1}. Estudar capítulos e preparar material.`,
     anexoUrl: null,
+    links: [],
+    anexos: [],
     criadoPor: null,
     createdAt: new Date().toISOString(),
   };

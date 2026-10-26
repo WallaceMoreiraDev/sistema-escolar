@@ -138,3 +138,53 @@ export function useDeleteEvent() {
     },
   });
 }
+
+/**
+ * Hook de mutação para upload de anexo físico de atividade no Supabase Storage.
+ * Rota: POST /api/turmas/eventos/:id/anexos
+ */
+export function useUploadAttachment() {
+  const queryClient = useQueryClient();
+  const { session } = useAuth();
+  const token = session?.access_token;
+
+  return useMutation({
+    mutationFn: async ({ eventId, file }: { eventId: string; file: File }) => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      return eventApi.uploadAttachment(token, eventId, file);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['class-events'] });
+    },
+  });
+}
+
+/**
+ * Hook de mutação para exclusão de anexo físico de atividade.
+ * Rota: DELETE /api/turmas/eventos/:id/anexos/:anexoId
+ */
+export function useDeleteAttachment() {
+  const queryClient = useQueryClient();
+  const { session } = useAuth();
+  const token = session?.access_token;
+
+  return useMutation({
+    mutationFn: async ({
+      eventId,
+      anexoId,
+    }: {
+      eventId: string;
+      anexoId: string;
+    }) => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      return eventApi.deleteAttachment(token, eventId, anexoId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['class-events'] });
+    },
+  });
+}

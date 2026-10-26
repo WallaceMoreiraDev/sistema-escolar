@@ -2,11 +2,13 @@ import {
   ApiResponse,
   ApiErrorResponse,
   EventDTO,
+  EventAttachmentDTO,
   CreateEventPayload,
   UpdateEventPayload,
 } from '@shared/types';
 import {
   eventIdParamSchema,
+  attachmentParamSchema,
   listEventsQuerySchema,
 } from '@shared/schemas/eventSchema';
 import { ApiError } from '@/utils/apiError';
@@ -149,5 +151,101 @@ export const eventApi = {
     }
 
     return (await res.json()) as ApiResponse<{ message: string }>;
+  },
+
+  /**
+   * Realiza o upload de anexo físico para o evento via multipart/form-data.
+   * Rota: POST /api/turmas/eventos/:id/anexos
+   */
+  async uploadAttachment(
+    token: string,
+    eventId: string,
+    file: File
+  ): Promise<ApiResponse<EventAttachmentDTO>> {
+    eventIdParamSchema.parse({ id: eventId });
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const res = await fetch(`${API_URL}/api/turmas/eventos/${eventId}/anexos`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      body: formData,
+    });
+
+    if (!res.ok) {
+      const errorData = (await res.json().catch(() => null)) as ApiErrorResponse | null;
+      throw new ApiError(
+        errorData?.code || 'UNKNOWN_ERROR',
+        res.status,
+        errorData?.details,
+        errorData?.message
+      );
+    }
+
+    return (await res.json()) as ApiResponse<EventAttachmentDTO>;
+  },
+
+  /**
+   * Exclui um anexo específico de um evento.
+   * Rota: DELETE /api/turmas/eventos/:id/anexos/:anexoId
+   */
+  async deleteAttachment(
+    token: string,
+    eventId: string,
+    anexoId: string
+  ): Promise<ApiResponse<{ message: string }>> {
+    attachmentParamSchema.parse({ id: eventId, anexoId });
+
+    const res = await fetch(`${API_URL}/api/turmas/eventos/${eventId}/anexos/${anexoId}`, {
+      method: 'DELETE',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errorData = (await res.json().catch(() => null)) as ApiErrorResponse | null;
+      throw new ApiError(
+        errorData?.code || 'UNKNOWN_ERROR',
+        res.status,
+        errorData?.details,
+        errorData?.message
+      );
+    }
+
+    return (await res.json()) as ApiResponse<{ message: string }>;
+  },
+
+  /**
+   * Obtém a URL assinada temporária para download/visualização segura do anexo.
+   * Rota: GET /api/turmas/eventos/:id/anexos/:anexoId/download
+   */
+  async getAttachmentDownloadUrl(
+    token: string,
+    eventId: string,
+    anexoId: string
+  ): Promise<ApiResponse<{ downloadUrl: string }>> {
+    attachmentParamSchema.parse({ id: eventId, anexoId });
+
+    const res = await fetch(`${API_URL}/api/turmas/eventos/${eventId}/anexos/${anexoId}/download`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errorData = (await res.json().catch(() => null)) as ApiErrorResponse | null;
+      throw new ApiError(
+        errorData?.code || 'UNKNOWN_ERROR',
+        res.status,
+        errorData?.details,
+        errorData?.message
+      );
+    }
+
+    return (await res.json()) as ApiResponse<{ downloadUrl: string }>;
   },
 };
