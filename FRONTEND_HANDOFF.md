@@ -2,7 +2,116 @@
 
 > Este documento serve como ponte de comunicação oficial entre o time de Backend (IA/Dev) e o time de Frontend (IA/Dev). Todas as ações que o Frontend precisar tomar devido a alterações de API, banco ou regras de negócio devem ser registradas aqui em formato estrito de checklist.
 
+## 🟢 Concluído: Anexos no Supabase Storage, Links Externos de Atividades e Auto-Expurgo (/api/turmas/eventos)
+
+**Data/Contexto:** Endpoints da API REST para suporte a até 2 links externos em atividades (`links`), upload e download de múltiplos anexos físicos no Supabase Storage (`/api/turmas/eventos/:id/anexos`) com cota cumulativa de 5 MB, e rotina de auto-expurgo de 7 dias (`POST /api/admin/manutencao/expurgar-anexos`).
+
+### 1. Endpoints Disponíveis:
+
+1. **Listar e Criar Eventos com Links e Anexos:** `GET /api/turmas/eventos` e `POST /api/turmas/eventos`
+   - O `EventDTO` agora retorna automaticamente os campos:
+     - `links: EventLinkDTO[]`: Array de até 2 links externos (`{ titulo: string; url: string }`).
+     - `anexos: EventAttachmentDTO[]`: Array de anexos físicos vinculados à atividade.
+   - Cada item (`EventAttachmentDTO`) possui:
+     - `id: string` (UUID)
+     - `eventoId: string` (UUID)
+     - `turmaId: string` (UUID)
+     - `nomeArquivo: string`
+     - `storagePath: string`
+     - `tamanhoBytes: number`
+     - `mimeType: string`
+     - `createdAt: string` (ISO 8601 UTC)
+   - Na criação (`POST`) e atualização (`PUT`), envie `links: [{ titulo: "...", url: "..." }]` (máx. 2).
+
+2. **Upload de Anexo Físico:** `POST /api/turmas/eventos/:id/anexos`
+   - Content-Type: `multipart/form-data`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Permissão: Apenas `LIDER` da turma ou Administrador Geral (`ADMIN`).
+   - Parâmetro `:id`: UUID da atividade/evento.
+   - Body: Form-data com o arquivo no campo `file` (ou `anexo`).
+   - Validações:
+     - MIME Types permitidos: `application/pdf`, `image/jpeg`, `image/png`, `image/webp`.
+     - Tamanho máximo por arquivo: 5 MB (`5.242.880 bytes`).
+     - Cota cumulativa por atividade: A soma dos bytes de todos os anexos já existentes + novo arquivo não pode exceder 5 MB. Caso ultrapasse, retorna `400 BAD_REQUEST` com `code: "ATTACHMENT_LIMIT_EXCEEDED"`.
+   - Retorno de Sucesso: `HTTP 201 CREATED`
+     ```typescript
+     {
+       success: true,
+       data: EventAttachmentDTO
+     }
+     ```
+
+3. **Excluir Anexo Individual:** `DELETE /api/turmas/eventos/:id/anexos/:anexoId`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Permissão: Apenas `LIDER` da turma ou Administrador Geral (`ADMIN`).
+   - Parâmetros: `:id` (UUID do evento) e `:anexoId` (UUID do anexo).
+   - Retorno de Sucesso: `HTTP 200 OK`
+     ```typescript
+     {
+       success: true,
+       data: {
+         message: "Anexo excluído com sucesso."
+       }
+     }
+     ```
+
+4. **Obter URL Segura para Download / Visualização:** `GET /api/turmas/eventos/:id/anexos/:anexoId/download`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Permissão: Qualquer membro matriculado na turma (`ALUNO`, `LIDER`) ou Administrador Geral (`ADMIN`).
+   - Retorno de Sucesso: `HTTP 200 OK`
+     ```typescript
+     {
+       success: true,
+       data: {
+         downloadUrl: string // URL assinada temporária (validade de 1 hora)
+       }
+     }
+     ```
+
+5. **Manutenção - Auto-Expurgo de Anexos Expirados:** `POST /api/admin/manutencao/expurgar-anexos`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Permissão: Restrito a Administrador Geral (`ADMIN`).
+   - Retorno de Sucesso: `HTTP 200 OK`
+     ```typescript
+     {
+       success: true,
+       data: {
+         message: string,
+         expurgatedCount: number
+       }
+     }
+     ```
+
+---
+
+### Ações Exigidas para o Frontend:
+
+- [ ] **Adoção dos Contratos e Schemas (@shared):**
+  - [ ] Importar `EventLinkDTO`, `EventAttachmentDTO`, `EventDTO` de `@shared/types`:
+    ```typescript
+    import { EventDTO, EventLinkDTO, EventAttachmentDTO } from '@shared/types';
+    ```
+  - [ ] Importar `eventLinkSchema`, `attachmentParamSchema` de `@shared/schemas/eventSchema`:
+    ```typescript
+    import { eventLinkSchema, attachmentParamSchema } from '@shared/schemas/eventSchema';
+    ```
+
+- [ ] **Integração no Formulário de Eventos / Atividades (`EventForm.tsx`):**
+  - [ ] Adicionar suporte a inclusão/remoção dinâmica de até 2 links externos com campos de título e URL.
+  - [ ] Substituir o upload legado ou integrar o novo fluxo de anexos físicos via multipart (`POST /api/turmas/eventos/:id/anexos`).
+  - [ ] Exibir barra ou indicador visual de cota de armazenamento consumida pelo evento (ex: "X MB de 5 MB utilizados").
+  - [ ] Tratar erro `ATTACHMENT_LIMIT_EXCEEDED` alertando o usuário de forma amigável quando a cota cumulativa for atingida.
+
+- [ ] **Visualização de Atividades e Ações de Anexos (`EventList.tsx`, `EventDetailsModal`):**
+  - [ ] Renderizar links externos com botão/ícone para abrir em nova aba (`target="_blank" rel="noopener noreferrer"`).
+  - [ ] Listar anexos com nome do arquivo, tamanho formatado (KB/MB) e botões de ação:
+    - [ ] Ação de download/visualização: Consumir `GET /api/turmas/eventos/:id/anexos/:anexoId/download` e abrir o `downloadUrl`.
+    - [ ] Ação de exclusão (visível apenas para Líder e Admin): Consumir `DELETE /api/turmas/eventos/:id/anexos/:anexoId` com modal customizado de confirmação.
+
+---
+
 ## 🟢 Concluído: Gestão e Exclusão de Turmas Ativas no Admin (/api/admin/turmas) e Modo God
+
 
 **Data/Contexto:** Endpoints da API REST para listagem paginada e exclusão de turmas ativas pelo Administrador Geral (`/api/admin/turmas`), além de suporte a inspeção de membros via `turmaId` na listagem de membros (`/api/turmas/membros`) para o Modo God.
 
