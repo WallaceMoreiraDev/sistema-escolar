@@ -1,4 +1,5 @@
 import { createPortal } from 'react-dom';
+import { Loader2 } from 'lucide-react';
 
 interface ConfirmModalProps {
   isOpen: boolean;
@@ -9,6 +10,7 @@ interface ConfirmModalProps {
   onConfirm: () => void;
   onCancel: () => void;
   isDestructive?: boolean;
+  isLoading?: boolean;
 }
 
 export function ConfirmModal({ 
@@ -19,12 +21,13 @@ export function ConfirmModal({
   cancelText = 'Cancelar', 
   onConfirm, 
   onCancel,
-  isDestructive = false
+  isDestructive = false,
+  isLoading = false,
 }: ConfirmModalProps) {
   if (!isOpen) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={onCancel}>
+    <div className="fixed inset-0 z-[100000] flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm animate-in fade-in duration-200" onClick={isLoading ? undefined : onCancel}>
       <div 
         className="glass-panel w-full max-w-sm rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-white/20 dark:border-slate-700/30 p-6 flex flex-col text-center"
         onClick={e => e.stopPropagation()}
@@ -41,19 +44,22 @@ export function ConfirmModal({
         <div className="flex gap-3 mt-auto">
           <button 
             onClick={onCancel}
-            className="flex-1 px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            disabled={isLoading}
+            className="flex-1 px-4 py-3 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 font-bold rounded-xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors disabled:opacity-50"
           >
             {cancelText}
           </button>
           <button 
             onClick={onConfirm}
-            className={`flex-1 px-4 py-3 text-white font-bold rounded-xl transition-colors ${
+            disabled={isLoading}
+            className={`flex-1 px-4 py-3 text-white font-bold rounded-xl transition-colors flex items-center justify-center gap-2 ${
               isDestructive 
                 ? 'bg-rose-500 hover:bg-rose-600' 
                 : 'bg-primary hover:bg-primary/90'
-            }`}
+            } disabled:opacity-50`}
           >
-            {confirmText}
+            {isLoading && <Loader2 className="w-5 h-5 animate-spin" />}
+            <span>{confirmText}</span>
           </button>
         </div>
       </div>
