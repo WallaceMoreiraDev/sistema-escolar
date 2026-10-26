@@ -23,6 +23,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { eventApi } from '../api/eventApi';
 import { AttachmentImagePreview } from './AttachmentImagePreview';
 import { formatFileSize, isImageAttachment } from '../utils/attachmentUtils';
+import { triggerFileDownload } from '../utils/downloadHelper';
 
 interface EventListProps {
   onEdit: (event: EventDTO) => void;
@@ -75,7 +76,11 @@ export function EventList({ onEdit, turmaId }: EventListProps) {
     }
   };
 
-  const handleDownloadAttachment = async (eventId: string, anexoId: string) => {
+  const handleDownloadAttachment = async (
+    eventId: string,
+    anexoId: string,
+    anexoNome?: string
+  ) => {
     if (!session?.access_token) return;
     setActionError(null);
     setDownloadingId(anexoId);
@@ -86,7 +91,7 @@ export function EventList({ onEdit, turmaId }: EventListProps) {
         anexoId
       );
       if (res.data?.downloadUrl) {
-        window.open(res.data.downloadUrl, '_blank', 'noopener,noreferrer');
+        triggerFileDownload(res.data.downloadUrl, anexoNome);
       }
     } catch {
       setActionError('Não foi possível obter o link de download do anexo.');
@@ -252,7 +257,7 @@ export function EventList({ onEdit, turmaId }: EventListProps) {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            handleDownloadAttachment(event.id, anexo.id);
+                            handleDownloadAttachment(event.id, anexo.id, anexo.nomeArquivo);
                           }}
                           disabled={isDownloading}
                           className="p-1.5 text-primary hover:bg-primary/10 rounded-lg transition-colors"

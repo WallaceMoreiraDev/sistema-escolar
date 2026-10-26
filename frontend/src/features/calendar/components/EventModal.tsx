@@ -17,6 +17,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { eventApi } from '../../class-admin/api/eventApi';
 import { AttachmentImagePreview } from '../../class-admin/components/AttachmentImagePreview';
 import { formatFileSize, isImageAttachment } from '../../class-admin/utils/attachmentUtils';
+import { triggerFileDownload } from '../../class-admin/utils/downloadHelper';
 
 export function EventModal() {
   const navigate = useNavigate();
@@ -37,7 +38,7 @@ export function EventModal() {
   };
 
   // Download de anexo (para PDFs e arquivos genéricos)
-  const handleDownload = async (anexoId: string) => {
+  const handleDownload = async (anexoId: string, anexoNome?: string) => {
     if (!session?.access_token || !rawEvent) return;
     setActionError(null);
     setDownloadingId(anexoId);
@@ -48,7 +49,7 @@ export function EventModal() {
         anexoId
       );
       if (res.data?.downloadUrl) {
-        window.open(res.data.downloadUrl, '_blank', 'noopener,noreferrer');
+        triggerFileDownload(res.data.downloadUrl, anexoNome);
       }
     } catch {
       setActionError('Não foi possível obter o link de download do anexo.');
@@ -301,7 +302,7 @@ export function EventModal() {
 
                             <button
                               type="button"
-                              onClick={() => handleDownload(anexo.id)}
+                              onClick={() => handleDownload(anexo.id, anexo.nomeArquivo)}
                               disabled={isDownloading}
                               className="px-3 py-1.5 text-xs font-bold bg-primary/10 hover:bg-primary/20 text-primary rounded-lg flex items-center gap-1.5 transition-colors disabled:opacity-50 shrink-0 ml-3"
                               title="Baixar ou visualizar documento"
