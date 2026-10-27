@@ -84,7 +84,10 @@ export const router = createBrowserRouter([
         ]
       }
     ]
-  }
-], {
-  basename: '/sistema-escolar/'
-})
+  },
+  {
+    path: '*',
+    element: <Navigate to="/" replace />,
+  },
+])
+
