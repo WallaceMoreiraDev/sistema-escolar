@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Navigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
@@ -7,6 +7,17 @@ import { PWAInstallPrompt } from '@/components/ui/PWAInstallPrompt';
 export function AuthPage() {
   const { session, user, isError } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Destrava o botão caso a página seja restaurada do BFCache (Safari iOS / navegadores móveis)
+  useEffect(() => {
+    setIsLoading(false);
+    const handlePageShow = () => {
+      setIsLoading(false);
+    };
+
+    window.addEventListener('pageshow', handlePageShow);
+    return () => window.removeEventListener('pageshow', handlePageShow);
+  }, []);
 
   // Só redireciona se a autenticação estiver 100% resolvida e o perfil carregado
   if (session && user && !isError) {
@@ -19,6 +30,10 @@ export function AuthPage() {
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/`,
+        queryParams: {
+          prompt: 'select_account',
+          access_type: 'offline',
+        },
       },
     });
 
