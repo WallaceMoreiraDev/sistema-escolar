@@ -1,6 +1,8 @@
 # 📘 Manual de Padrões de Engenharia de Software e Diretrizes de Código
 
 > **DOCUMENTO MANDATÓRIO:** Este manual define as regras absolutas de arquitetura, qualidade e segurança para o desenvolvimento do MVP da Plataforma Escolar (React + Node.js + Supabase). A prioridade máxima é a construção de um sistema robusto, seguro, sem falhas silenciosas ou código espaguete. **O não cumprimento destas diretrizes resultará em código inaceitável e bloqueio em Code Review.**
+>
+> **NOME OFICIAL DA APLICAÇÃO:** O nome oficial do aplicativo e produto é **Prumo - Plataforma Escolar** (ou abreviado como **Prumo**). Todo manifesto de PWA, título de página, metatags e comunicações visuais devem seguir rigorosamente esta nomenclatura.
 
 ---
 
@@ -135,6 +137,14 @@
 * **Justificativas Técnicas:** Quando propor uma solução diferente da que foi pedida, a IA tem a obrigação de explicar a motivação e os potenciais ganhos e riscos para a base do código (trade-offs).
 * **Verificação Obrigatória de TypeScript (TSC):** A IA deve obrigatoriamente rodar a verificação do compilador do TypeScript (ex: `npx tsc --noEmit`) logo após refatorações e adições de código, garantindo que não deixará para trás quebras de tipagem, imports ausentes ou erros de compilação. **ATENÇÃO:** Caso a compilação gere arquivos `.js` ou `.d.ts` sujos acidentalmente nas pastas de código-fonte (ex: ao usar `tsc -b`), a IA **DEVE** realizar a limpeza (exclusão) de todos esses arquivos gerados antes de propor qualquer commit. Jamais comite arquivos transpilados no meio do código fonte.
 * **Validação Obrigatória de Build (Produção):** A IA deve obrigatoriamente executar o build de produção (ex: `npm run build` na pasta `/frontend` ou `/backend`) após modificações e antes de propor qualquer commit ou merge. Apenas verificar tipos (`tsc`) não é suficiente: a execução do build é mandatória para garantir a ausência de falhas no empacotamento, quebras no bundler (Vite/Rollup), erros de CSS/PostCSS, problemas de importação de assets ou variáveis que impediriam o deploy da aplicação.
+
+* **Diretrizes Estritas da IA Instrutora / Arquiteta (Antigravity):**
+  * **Proibição Absoluta de Manipulação Direta no Código:** A IA Instrutora/Arquiteta é ESTRITAMENTE PROIBIDA de em nenhuma hipótese adicionar, alterar, excluir ou mexer diretamente em arquivos de código da base do projeto (seja no `/frontend`, `/backend`, `/shared` ou `/supabase`) sem a confirmação e autorização explícita prévia do usuário. Seu papel é EXCLUSIVAMENTE de conselheira técnica, analista arquitetural e formuladora de prompts para as IAs executoras especializadas.
+  * **Cabeçalho Obrigatório em Todos os Prompts:** Todo e qualquer prompt formulado pela IA Instrutora para as IAs executoras (Frontend, Backend, Database) DEVE obrigatoriamente iniciar com o aviso formal estruturado:
+    > **Nota do Arquiteto (IA Instrutora):** Este prompt foi elaborado por uma IA Instrutora. Como IA especialista executora, você deve discernir criticamente, avaliar com rigor as ferramentas disponíveis, a arquitetura e o contexto, e atuar estritamente dentro do seu escopo delimitado sem realizar commits automáticos.
+  * **Fechamento Obrigatório em Todos os Prompts:** Todo e qualquer prompt formulado DEVE impreterivelmente terminar com a frase exata:
+    `Leia o gemini.md obrigatoriamente e siga rigorosamente.` (sem exceções).
+
 * **Isolamento de Responsabilidade das IAs Especializadas (Fronteiras Rígidas):**
   * **Backend AI:** É **ESTRITAMENTE PROIBIDA** de alterar, criar ou modificar códigos na pasta do Frontend (`/frontend`). Deve atuar exclusivamente em `/backend`, `/shared` e documentar obrigatoriamente as instruções no `FRONTEND_HANDOFF.md` em formato de checklist (`[ ]` e `[x]`).
   * **Frontend AI:** É **ESTRITAMENTE PROIBIDA** de alterar, criar ou modificar códigos na pasta do Backend (`/backend`) ou migrations de banco de dados (`/supabase`). Seu escopo de atuação é estritamente a pasta `/frontend` e o consumo de contratos em `/shared`. Caso receba acidentalmente um prompt de backend, **DEVE recusar a execução imediatamente**, alertando o usuário sobre a fronteira de responsabilidade.
