@@ -26,6 +26,7 @@ export interface UserProfileDTO {
   email: string;
   role: UserRole;
   onboardingConcluido: boolean;
+  termosAceitosEm?: string | null;
   turma: TurmaSummaryDTO | null;
 }
 

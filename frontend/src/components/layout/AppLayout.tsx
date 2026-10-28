@@ -39,9 +39,11 @@ export function Sidebar() {
   return (
     <aside className="w-64 hidden md:flex flex-col h-screen fixed left-0 top-0 border-r border-slate-200/50 bg-white/40 backdrop-blur-3xl dark:bg-black/20 z-10">
       <div className="p-6 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-primary/30">
-          P
-        </div>
+        <img 
+          src="/pwa-192x192.png" 
+          alt="Prumo" 
+          className="w-8 h-8 rounded-xl object-contain shadow-sm bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-700/50 p-0.5" 
+        />
         <span className="font-bold tracking-tight text-lg">Prumo</span>
       </div>
 
@@ -89,6 +91,14 @@ export function Sidebar() {
           >
             <LogOut className="w-5 h-5" />
           </button>
+        </div>
+        <div className="mt-3 text-center">
+          <Link 
+            to="/privacidade" 
+            className="text-[11px] font-medium text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors flex items-center justify-center gap-1 py-1"
+          >
+            Privacidade & LGPD
+          </Link>
         </div>
       </div>
 
@@ -187,9 +197,11 @@ export function MobileNav() {
       <div className={`fixed top-0 right-0 h-full w-[280px] bg-white/95 dark:bg-slate-900/95 backdrop-blur-3xl border-l border-slate-200/50 dark:border-slate-800/50 z-[70] transform transition-transform duration-300 md:hidden flex flex-col shadow-2xl ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="p-6 border-b border-slate-200/50 dark:border-slate-800/50 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-primary to-indigo-600 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-primary/30">
-              P
-            </div>
+            <img 
+              src="/pwa-192x192.png" 
+              alt="Prumo" 
+              className="w-8 h-8 rounded-xl object-contain shadow-sm bg-white dark:bg-slate-900 border border-slate-200/50 dark:border-slate-700/50 p-0.5" 
+            />
             <span className="font-bold tracking-tight text-lg dark:text-white">Prumo</span>
           </div>
           <button onClick={() => setIsDrawerOpen(false)} className="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white bg-slate-100 dark:bg-slate-800 rounded-full transition-colors active:scale-95">
@@ -248,6 +260,14 @@ export function MobileNav() {
             >
               <LogOut className="w-5 h-5" />
             </button>
+          </div>
+          <div className="mt-3 text-center">
+            <Link 
+              to="/privacidade" 
+              className="text-[11px] font-medium text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors flex items-center justify-center gap-1 py-1"
+            >
+              Privacidade & LGPD
+            </Link>
           </div>
         </div>
 

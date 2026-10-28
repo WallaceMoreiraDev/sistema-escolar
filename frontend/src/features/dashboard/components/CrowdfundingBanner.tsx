@@ -5,7 +5,7 @@ import { useFunding } from '../../system-admin/hooks/useFunding';
 export function CrowdfundingBanner() {
   const [isPixOpen, setIsPixOpen] = useState(false);
   const { data: funding, isLoading } = useFunding();
-  const goal = 50.00;
+  const goal = 40.00;
 
   if (isLoading) {
     return (
@@ -46,7 +46,9 @@ export function CrowdfundingBanner() {
               Meta do Mês
             </div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">Apoie o Projeto Prumo!</h2>
-            <p className="text-slate-500 dark:text-slate-300 text-sm max-w-md">O servidor custa R$ 50/mês. Ajude a manter nossa plataforma rápida, segura e sem anúncios.</p>
+            <p className="text-slate-500 dark:text-slate-300 text-sm max-w-md">
+              Meta para registro e renovação do nosso domínio oficial (.com.br). Ajude a manter nossa plataforma independente, rápida e sem anúncios.
+            </p>
             
             <div className="mt-6 flex items-center gap-4">
               <div className="flex-1 h-3 bg-slate-200 dark:bg-slate-800 rounded-full overflow-hidden shadow-inner">
@@ -57,7 +59,9 @@ export function CrowdfundingBanner() {
               </div>
               <span className="text-sm font-bold text-slate-700 dark:text-slate-300">{percentage}%</span>
             </div>
-            <p className="text-xs text-slate-400 mt-2 font-medium">R$ {formattedFunding} arrecadados de R$ 50,00</p>
+            <p className="text-xs text-slate-400 mt-2 font-medium">
+              R$ {formattedFunding} arrecadados de R$ 40,00
+            </p>
           </div>
           
           <button 

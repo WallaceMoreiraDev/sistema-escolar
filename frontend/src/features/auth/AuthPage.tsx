@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Navigate } from 'react-router-dom';
+import { Navigate, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { PWAInstallPrompt } from '@/components/ui/PWAInstallPrompt';
@@ -46,7 +46,12 @@ export function AuthPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4">
       <div className="glass w-full max-w-md p-8 rounded-2xl flex flex-col items-center gap-6 animate-in fade-in zoom-in duration-500">
-        <div className="text-center">
+        <div className="text-center flex flex-col items-center">
+          <img 
+            src="/pwa-192x192.png" 
+            alt="Prumo" 
+            className="w-16 h-16 rounded-2xl shadow-md mb-2 object-contain bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60 p-1" 
+          />
           <h1 className="text-3xl font-bold text-primary mb-2">Prumo</h1>
           <p className="text-muted-foreground">Faça login para acessar a plataforma escolar.</p>
         </div>
@@ -71,6 +76,12 @@ export function AuthPage() {
         {/* Instalação do Aplicativo PWA */}
         <div className="w-full pt-2 border-t border-slate-200/60 dark:border-slate-700/60">
           <PWAInstallPrompt />
+          <p className="text-center text-xs text-slate-400 dark:text-slate-500 mt-4 leading-relaxed">
+            Ao continuar, você concorda com as nossas diretrizes de{' '}
+            <Link to="/privacidade" className="underline hover:text-primary transition-colors font-medium">
+              Privacidade e LGPD
+            </Link>.
+          </p>
         </div>
       </div>
     </div>

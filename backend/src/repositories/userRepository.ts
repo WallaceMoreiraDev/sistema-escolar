@@ -13,7 +13,7 @@ export class UserRepository {
   async getUserProfile(userId: string): Promise<RawUserWithTurma | null> {
     const { data, error } = await this.supabase
       .from('usuarios')
-      .select('id, nome, email, role, onboarding_concluido, turmas (id, nome_oficial, codigo_convite, ano, curso, turno, local_sala)')
+      .select('id, nome, email, role, onboarding_concluido, termos_aceitos_em, turmas (id, nome_oficial, codigo_convite, ano, curso, turno, local_sala)')
       .eq('id', userId)
       .single();
 
@@ -33,14 +33,18 @@ export class UserRepository {
   }
 
   /**
-   * Atualiza o nome oficial do usuário e marca onboarding_concluido como true.
+   * Atualiza o nome oficial do usuário, marca onboarding_concluido como true e grava o consentimento dos termos LGPD.
    */
   async updateUserName(userId: string, nome: string): Promise<RawUserWithTurma> {
     const { data, error } = await this.supabase
       .from('usuarios')
-      .update({ nome, onboarding_concluido: true })
+      .update({ 
+        nome, 
+        onboarding_concluido: true,
+        termos_aceitos_em: new Date().toISOString()
+      })
       .eq('id', userId)
-      .select('id, nome, email, role, onboarding_concluido, turmas (id, nome_oficial, codigo_convite, ano, curso, turno, local_sala)')
+      .select('id, nome, email, role, onboarding_concluido, termos_aceitos_em, turmas (id, nome_oficial, codigo_convite, ano, curso, turno, local_sala)')
       .single();
 
     if (error || !data) {
