@@ -23,7 +23,16 @@
      - `createdAt: string` (ISO 8601 UTC)
    - Na criação (`POST`) e atualização (`PUT`), envie `links: [{ titulo: "...", url: "..." }]` (máx. 2).
 
-2. **Upload de Anexo Físico:** `POST /api/turmas/eventos/:id/anexos`
+2. **Consultar Evento Individual por ID:** `GET /api/turmas/eventos/:id`
+   - Header: `Authorization: Bearer <session.access_token>`.
+   - Permissão: Membro da mesma turma (`ALUNO`, `LIDER`) ou Administrador Geral (`ADMIN`).
+   - Parâmetro `:id`: UUID válido da atividade/evento.
+   - Retorno de Sucesso: `HTTP 200 OK` com `ApiResponse<EventDTO>`.
+   - Erros da API:
+     - `404 NOT_FOUND` com `code: "NOT_FOUND"`: Evento não encontrado.
+     - `403 FORBIDDEN` com `code: "FORBIDDEN"`: Usuário não pertence à turma do evento.
+
+3. **Upload de Anexo Físico:** `POST /api/turmas/eventos/:id/anexos`
    - Content-Type: `multipart/form-data`
    - Header: `Authorization: Bearer <session.access_token>`.
    - Permissão: Apenas `LIDER` da turma ou Administrador Geral (`ADMIN`).
