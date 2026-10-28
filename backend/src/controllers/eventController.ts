@@ -46,6 +46,30 @@ export class EventController {
   }
 
   /**
+   * GET /api/turmas/eventos/:id
+   * Consulta os dados completos de um evento individual por ID.
+   */
+  static async getById(c: Context) {
+    const supabase = c.get('supabase');
+    const user = c.get('user');
+    const { id } = c.get('validParams') as EventIdParam;
+
+    const eventRepo = new EventRepository(supabase);
+    const userRepo = new UserRepository(supabase);
+    const service = new EventService(eventRepo, userRepo);
+
+    const rawEvent = await service.getEventById(user.id, id);
+    const dto = EventDTOConverter.toDTO(rawEvent);
+
+    const response: ApiResponse<EventDTO> = {
+      success: true,
+      data: dto,
+    };
+
+    return c.json(response, 200);
+  }
+
+  /**
    * POST /api/turmas/eventos
    * Cria um novo evento para a turma do líder/admin autenticado.
    */

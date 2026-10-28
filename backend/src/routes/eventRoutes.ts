@@ -35,6 +35,13 @@ eventRoutes.post(
   EventController.create
 );
 
+// GET /api/turmas/eventos/:id - Consulta dados completos de um evento individual
+eventRoutes.get(
+  '/:id',
+  validateParam(eventIdParamSchema),
+  EventController.getById
+);
+
 // PUT /api/turmas/eventos/:id - Atualiza evento existente (apenas Líder ou Admin)
 eventRoutes.put(
   '/:id',

@@ -3,6 +3,7 @@ import { StatusCode } from 'hono/utils/http-status';
 export type ErrorCode = 
   | "AUTH_UNAUTHORIZED"
   | "AUTH_FORBIDDEN"
+  | "FORBIDDEN"
   | "NOT_FOUND"
   | "VALIDATION_ERROR"
   | "INTERNAL_SERVER_ERROR"

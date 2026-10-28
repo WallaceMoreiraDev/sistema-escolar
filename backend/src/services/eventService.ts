@@ -59,6 +59,41 @@ export class EventService {
   }
 
   /**
+   * Consulta os dados completos de um evento individual por ID (incluindo links e anexos).
+   * Alunos e líderes visualizam eventos de sua própria turma.
+   * Administradores podem consultar eventos de qualquer turma.
+   */
+  async getEventById(userId: string, eventId: string): Promise<RawEventWithAttachments> {
+    const event = await this.eventRepo.findById(eventId);
+    if (!event) {
+      throw new AppError('NOT_FOUND', 404, 'Evento não encontrado.');
+    }
+
+    const userProfile = await this.userRepo.getUserProfile(userId);
+    if (!userProfile) {
+      throw new AppError('AUTH_UNAUTHORIZED', 401, 'Usuário não autenticado.');
+    }
+
+    const isAdmin = userProfile.role === 'ADMIN';
+
+    if (!isAdmin) {
+      const userTurma = Array.isArray(userProfile.turmas)
+        ? userProfile.turmas[0]
+        : userProfile.turmas;
+
+      if (!userTurma || userTurma.id !== event.turma_id) {
+        throw new AppError(
+          'FORBIDDEN',
+          403,
+          'Acesso negado a este evento.'
+        );
+      }
+    }
+
+    return event;
+  }
+
+  /**
    * Cria um novo evento associado à turma do líder (ou administrada pelo admin).
    */
   async createEvent(
