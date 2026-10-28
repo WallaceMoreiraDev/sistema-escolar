@@ -16,6 +16,7 @@ export type RawUserWithTurma = {
   email: string;
   role: string | null;
   onboarding_concluido: boolean;
+  termos_aceitos_em?: string | null;
   turmas: RawTurmaJoin | RawTurmaJoin[] | null;
 };
 
@@ -34,6 +35,7 @@ export class UserDTO {
       email: raw.email,
       role: (raw.role as UserRole) || 'ALUNO',
       onboardingConcluido: raw.onboarding_concluido,
+      termosAceitosEm: raw.termos_aceitos_em ?? null,
       turma: turmaRaw
         ? {
             id: turmaRaw.id,

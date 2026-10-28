@@ -1,5 +1,6 @@
 import { createBrowserRouter, Navigate } from 'react-router-dom'
 import { AuthPage } from '@/features/auth/AuthPage'
+import { PrivacyPolicyPage } from '@/features/privacy/PrivacyPolicyPage'
 import { OnboardingPage } from '@/features/onboarding/OnboardingPage'
 import { DashboardPage } from '@/features/dashboard/DashboardPage'
 import { MuralPage } from '@/features/mural/MuralPage'
@@ -21,6 +22,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <AuthPage />,
+  },
+  {
+    path: '/privacidade',
+    element: <PrivacyPolicyPage />,
   },
   {
     element: <ProtectedRoute />,

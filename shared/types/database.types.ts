@@ -12,6 +12,31 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.17"
   }
+  graphql_public: {
+    Tables: {
+      [_ in never]: never
+    }
+    Views: {
+      [_ in never]: never
+    }
+    Functions: {
+      graphql: {
+        Args: {
+          extensions?: Json
+          operationName?: string
+          query?: string
+          variables?: Json
+        }
+        Returns: Json
+      }
+    }
+    Enums: {
+      [_ in never]: never
+    }
+    CompositeTypes: {
+      [_ in never]: never
+    }
+  }
   public: {
     Tables: {
       avisos_gerais: {
@@ -291,6 +316,7 @@ export type Database = {
           nome: string
           onboarding_concluido: boolean
           role: Database["public"]["Enums"]["user_role"] | null
+          termos_aceitos_em: string | null
           turma_id: string | null
         }
         Insert: {
@@ -300,6 +326,7 @@ export type Database = {
           nome: string
           onboarding_concluido?: boolean
           role?: Database["public"]["Enums"]["user_role"] | null
+          termos_aceitos_em?: string | null
           turma_id?: string | null
         }
         Update: {
@@ -309,6 +336,7 @@ export type Database = {
           nome?: string
           onboarding_concluido?: boolean
           role?: Database["public"]["Enums"]["user_role"] | null
+          termos_aceitos_em?: string | null
           turma_id?: string | null
         }
         Relationships: [
@@ -498,6 +526,9 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
+  graphql_public: {
+    Enums: {},
+  },
   public: {
     Enums: {
       ano_type: ["1º", "2º", "3º"],

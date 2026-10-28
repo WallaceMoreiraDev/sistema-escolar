@@ -2,6 +2,25 @@
 
 > Este documento serve como ponte de comunicação oficial entre o time de Backend (IA/Dev) e o time de Frontend (IA/Dev). Todas as ações que o Frontend precisar tomar devido a alterações de API, banco ou regras de negócio devem ser registradas aqui em formato estrito de checklist.
 
+## 🟢 Concluído: Consentimento LGPD no Onboarding (`termos_aceitos_em`) e Exposição no DTO (/api/me)
+
+**Data/Contexto:** Persistência do timestamp UTC em `termos_aceitos_em` na conclusão do Onboarding (`PUT /api/me/profile`), garantindo valor pericial probatório no servidor, e exposição do campo `termosAceitosEm?: string | null` no `UserProfileDTO` (`GET /api/me`).
+
+### Contrato e Disponibilidade:
+- `UserProfileDTO` (`@shared/types`):
+  - `termosAceitosEm?: string | null` (ISO 8601 UTC ou `null` caso ainda não aceito/onboarding pendente).
+- `PUT /api/me/profile`:
+  - O backend grava automaticamente `termos_aceitos_em = new Date().toISOString()` ao receber a conclusão do onboarding junto com `onboarding_concluido = true`.
+  - Retorna `ApiResponse<UserProfileDTO>` já com `termosAceitosEm` preenchido.
+- `GET /api/me`:
+  - Retorna `ApiResponse<UserProfileDTO>` contendo `termosAceitosEm`.
+
+### Checklist para o Frontend:
+- [x] Contrato tipado em `@shared/types/user.types.ts`.
+- [ ] (Opcional/Informativo) Exibir data/hora de aceite dos termos caso necessário na tela de perfil ou configurações.
+
+---
+
 ## 🟢 Concluído: Anexos no Supabase Storage, Links Externos de Atividades e Auto-Expurgo (/api/turmas/eventos)
 
 **Data/Contexto:** Endpoints da API REST para suporte a até 2 links externos em atividades (`links`), upload e download de múltiplos anexos físicos no Supabase Storage (`/api/turmas/eventos/:id/anexos`) com cota cumulativa de 5 MB, e rotina de auto-expurgo de 7 dias (`POST /api/admin/manutencao/expurgar-anexos`).

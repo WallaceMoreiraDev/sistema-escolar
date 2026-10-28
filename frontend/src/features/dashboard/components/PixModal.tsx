@@ -1,4 +1,5 @@
-import { createPortal } from 'react-dom'
+import { createPortal } from 'react-dom';
+import { Lightbulb } from 'lucide-react';
 
 interface PixModalProps {
   isOpen: boolean;
@@ -42,7 +43,18 @@ export function PixModal({ isOpen, onClose }: PixModalProps) {
             <div className="bg-slate-50 dark:bg-slate-800/50 p-4 sm:p-5 rounded-2xl border border-slate-100 dark:border-slate-800 text-center">
               <span className="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Destino do Valor</span>
               <p className="text-sm text-slate-600 dark:text-slate-300 font-medium">
-                100% destinado ao pagamento mensal dos servidores e do banco de dados da plataforma Prumo.
+                100% destinado ao registro e renovação anual do domínio oficial da plataforma Prumo (prumoescolar.com.br).
+              </p>
+            </div>
+
+            {/* Dica de Identificação */}
+            <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 rounded-2xl p-4 text-left">
+              <div className="flex items-center gap-2 text-amber-800 dark:text-amber-300 font-bold text-xs uppercase tracking-wider mb-1">
+                <Lightbulb className="w-4 h-4 text-amber-600 dark:text-amber-400 shrink-0" />
+                <span>Dica de Identificação</span>
+              </div>
+              <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed font-medium">
+                Para sabermos que o seu PIX é uma contribuição do Prumo, <strong>adicione R$ 0,11 (onze centavos)</strong> ao final do valor transferido. Por exemplo: transfira <strong>R$ 2,11</strong>, <strong>R$ 5,11</strong> ou <strong>R$ 10,11</strong>.
               </p>
             </div>
 
