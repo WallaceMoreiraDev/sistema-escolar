@@ -18,7 +18,7 @@ export function useClassEvents(
 ) {
   const { session, user } = useAuth();
   const token = session?.access_token;
-  const hasClassAccess = !!user?.turma || user?.role === 'ADMIN';
+  const hasClassAccess = !!user?.turma || (user?.role === 'ADMIN' && !!turmaId);
 
   // Se o período não for informado, calcula default de 35 dias a partir de hoje
   const now = new Date();
@@ -57,7 +57,29 @@ export function useClassEvents(
       });
     },
     enabled: !!token && hasClassAccess,
+    retry: false,
     staleTime: 1000 * 60 * 2, // 2 minutos de cache
+  });
+}
+
+/**
+ * Hook para consultar um evento individual pelo ID.
+ * Rota: GET /api/turmas/eventos/:id
+ */
+export function useClassEvent(id?: string) {
+  const { session, user } = useAuth();
+  const token = session?.access_token;
+  const hasClassAccess = !!user?.turma || user?.role === 'ADMIN';
+
+  return useQuery({
+    queryKey: ['class-event', id],
+    queryFn: async () => {
+      if (!token || !id) throw new Error('Parâmetros inválidos');
+      const res = await eventApi.getEventById(token, id);
+      return res.data;
+    },
+    enabled: !!token && !!id && hasClassAccess,
+    staleTime: 1000 * 60 * 2,
   });
 }
 

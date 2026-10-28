@@ -11,7 +11,7 @@ import { ApiError } from '@/utils/apiError';
 export function useUsefulLinks(turmaId?: string) {
   const { session, user } = useAuth();
   const token = session?.access_token;
-  const hasAccess = !!user?.turma || user?.role === 'ADMIN';
+  const hasAccess = !!user?.turma || (user?.role === 'ADMIN' && !!turmaId);
 
   return useQuery({
     queryKey: ['useful-links', turmaId],
@@ -23,6 +23,7 @@ export function useUsefulLinks(turmaId?: string) {
       return response.data;
     },
     enabled: !!token && hasAccess,
+    retry: false,
     staleTime: 1000 * 60 * 2, // 2 minutos de cache
   });
 }

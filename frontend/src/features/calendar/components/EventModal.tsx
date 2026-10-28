@@ -12,7 +12,7 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react';
-import { useClassEvents } from '../../class-admin/hooks/useClassEvents';
+import { useClassEvent } from '../../class-admin/hooks/useClassEvents';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { eventApi } from '../../class-admin/api/eventApi';
 import { AttachmentImagePreview } from '../../class-admin/components/AttachmentImagePreview';
@@ -24,14 +24,11 @@ export function EventModal() {
   const { id } = useParams();
   const { session } = useAuth();
 
-  const { data: response } = useClassEvents();
-  const events = response?.data || [];
+  const { data: rawEvent, isLoading, isError } = useClassEvent(id);
 
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
   const [now] = useState(() => Date.now());
-
-  const rawEvent = events.find((e) => e.id === id);
 
   const onClose = () => {
     navigate('/app/minha-turma');
@@ -119,7 +116,44 @@ export function EventModal() {
         className="glass-panel w-full max-w-lg rounded-[2rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 border border-white/20 dark:border-slate-700/30 max-h-[90vh] flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
-        {event && rawEvent ? (
+        {isLoading ? (
+          /* SKELETON LOADER REFINADO */
+          <div className="flex flex-col animate-pulse">
+            {/* Cabeçalho Skeleton */}
+            <div className="p-6 border-b border-slate-200/50 dark:border-slate-800/50 bg-slate-100/70 dark:bg-slate-800/50 shrink-0">
+              <div className="flex justify-between items-start mb-4">
+                <div className="h-6 w-20 bg-slate-200 dark:bg-slate-700 rounded-xl" />
+                <button
+                  type="button"
+                  onClick={onClose}
+                  className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all bg-white/40 dark:bg-slate-800/40 rounded-full cursor-pointer"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="h-8 bg-slate-200 dark:bg-slate-700 rounded-xl w-3/4 mb-3" />
+              <div className="h-6 bg-slate-200 dark:bg-slate-700 rounded-lg w-1/3" />
+            </div>
+
+            {/* Corpo Skeleton */}
+            <div className="p-6 bg-slate-50/50 dark:bg-slate-900/50 space-y-6">
+              <div>
+                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-40 mb-2.5" />
+                <div className="h-10 bg-slate-200 dark:bg-slate-800 rounded-xl w-48" />
+              </div>
+
+              <div>
+                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-36 mb-2.5" />
+                <div className="h-24 bg-slate-200 dark:bg-slate-800 rounded-2xl" />
+              </div>
+
+              <div>
+                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-44 mb-2.5" />
+                <div className="h-14 bg-slate-200 dark:bg-slate-800 rounded-xl" />
+              </div>
+            </div>
+          </div>
+        ) : event && rawEvent && !isError ? (
           <>
             {/* Cabeçalho do Modal */}
             <div

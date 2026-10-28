@@ -11,7 +11,7 @@ export function useClassMembers(page: number = 1, turmaId?: string) {
   const { session, user } = useAuth();
   const token = session?.access_token;
   const hasClass = !!user?.turma;
-  const isGodModeOrAdmin = !!turmaId || user?.role === 'ADMIN';
+  const isGodModeOrAdmin = user?.role === 'ADMIN' && !!turmaId;
 
   return useQuery({
     queryKey: ['class-members', page, turmaId],
@@ -22,6 +22,7 @@ export function useClassMembers(page: number = 1, turmaId?: string) {
       return classMemberApi.listMembers(token, page, turmaId);
     },
     enabled: !!token && (hasClass || isGodModeOrAdmin),
+    retry: false,
     staleTime: 1000 * 30, // 30 segundos de cache
   });
 }
@@ -109,10 +110,11 @@ export function useLeaveClass() {
       return classMemberApi.leaveClass(token);
     },
     onSuccess: () => {
+      queryClient.removeQueries({ queryKey: ['class-events'] });
+      queryClient.removeQueries({ queryKey: ['class-event'] });
+      queryClient.removeQueries({ queryKey: ['class-members'] });
+      queryClient.removeQueries({ queryKey: ['useful-links'] });
       queryClient.invalidateQueries({ queryKey: ['me'] });
-      queryClient.invalidateQueries({ queryKey: ['class-members'] });
-      queryClient.invalidateQueries({ queryKey: ['useful-links'] });
-      queryClient.invalidateQueries({ queryKey: ['class-events'] });
     },
   });
 }

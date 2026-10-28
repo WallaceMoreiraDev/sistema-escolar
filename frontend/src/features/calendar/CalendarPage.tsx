@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { GraduationCap, MapPin, Clock } from 'lucide-react';
+import { GraduationCap, MapPin, Clock, KeyRound, PlusCircle } from 'lucide-react';
 import { ClassSidebar } from './components/ClassSidebar';
 import { useClassEvents } from '../class-admin/hooks/useClassEvents';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
+import { JoinClassModal } from '@/features/dashboard/components/JoinClassModal';
+import { CreateClassModal } from '@/features/dashboard/components/CreateClassModal';
 
 const FILTERS = ['TUDO', 'PROVAS', 'TRABALHOS', 'TAREFAS', 'AVISOS'];
 const MONTH_NAMES = [
@@ -37,6 +39,9 @@ export function CalendarPage() {
   const navigate = useNavigate();
   const { user, isLoading: isAuthLoading } = useAuth();
   const turma = user?.turma;
+
+  const [isJoinOpen, setIsJoinOpen] = useState(false);
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const [viewMode, setViewMode] = useState<'SUMMARY' | 'MONTH_GRID'>('SUMMARY');
   const [activeFilter, setActiveFilter] = useState('TUDO');
@@ -244,7 +249,42 @@ export function CalendarPage() {
               </div>
             </div>
           ) : (
-            <p className="mt-3 text-sm text-slate-500">Nenhuma turma vinculada.</p>
+            <div className="mt-4 space-y-4">
+              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                Nenhuma turma vinculada.
+              </p>
+              <div className="glass-panel p-6 sm:p-8 rounded-3xl border border-primary/20 dark:border-primary/10 bg-gradient-to-br from-primary/5 via-transparent to-transparent flex flex-col sm:flex-row sm:items-center justify-between gap-6 shadow-sm">
+                <div className="space-y-1.5 max-w-xl">
+                  <h3 className="text-lg font-bold text-slate-900 dark:text-white flex items-center gap-2">
+                    <GraduationCap className="w-5 h-5 text-primary" />
+                    Participe de uma Turma
+                  </h3>
+                  <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+                    Você ainda não faz parte de nenhuma turma. Vincule-se com o código fornecido pelo seu líder ou solicite a criação de uma nova sala.
+                  </p>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => setIsJoinOpen(true)}
+                    className="px-5 py-2.5 bg-primary hover:bg-primary/90 text-white text-xs font-bold rounded-xl shadow-sm hover:shadow transition-all flex items-center justify-center gap-2 active:scale-95 cursor-pointer"
+                  >
+                    <KeyRound className="w-4 h-4" />
+                    <span>Entrar em uma Turma</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setIsCreateOpen(true)}
+                    className="px-5 py-2.5 bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 text-slate-700 dark:text-slate-200 text-xs font-bold rounded-xl border border-slate-200 dark:border-slate-700 transition-all flex items-center justify-center gap-2 active:scale-95 shadow-sm cursor-pointer"
+                  >
+                    <PlusCircle className="w-4 h-4 text-primary" />
+                    <span>Solicitar Criação de Turma</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           )}
         </header>
 
@@ -278,7 +318,7 @@ export function CalendarPage() {
 
             {/* VISÃO DESKTOP: Grid 5 Colunas */}
             <div className="hidden md:grid grid-cols-5 gap-6">
-              {isLoading ? (
+              {isLoading && turma ? (
                 Array.from({ length: 5 }).map((_, i) => (
                   <div
                     key={`sk-desk-${i}`}
@@ -356,7 +396,7 @@ export function CalendarPage() {
 
             {/* VISÃO MOBILE: Linha do Tempo Focada */}
             <div className="flex flex-col md:hidden gap-6">
-              {isLoading ? (
+              {isLoading && turma ? (
                 Array.from({ length: 3 }).map((_, i) => (
                   <div
                     key={`sk-mob-${i}`}
@@ -776,6 +816,16 @@ export function CalendarPage() {
 
       {/* MODAL DE DETALHES DO EVENTO */}
       <Outlet />
+
+      {/* MODAIS DE ENTRAR E CRIAR TURMA */}
+      <JoinClassModal
+        isOpen={isJoinOpen}
+        onClose={() => setIsJoinOpen(false)}
+      />
+      <CreateClassModal
+        isOpen={isCreateOpen}
+        onClose={() => setIsCreateOpen(false)}
+      />
     </>
   );
 }

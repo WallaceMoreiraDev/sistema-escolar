@@ -56,6 +56,32 @@ export const eventApi = {
   },
 
   /**
+   * Consulta um evento individual pelo ID.
+   * Rota: GET /api/turmas/eventos/:id
+   */
+  async getEventById(token: string, id: string): Promise<ApiResponse<EventDTO>> {
+    eventIdParamSchema.parse({ id });
+
+    const res = await fetch(`${API_URL}/api/turmas/eventos/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errorData = (await res.json().catch(() => null)) as ApiErrorResponse | null;
+      throw new ApiError(
+        errorData?.code || 'UNKNOWN_ERROR',
+        res.status,
+        errorData?.details,
+        errorData?.message
+      );
+    }
+
+    return (await res.json()) as ApiResponse<EventDTO>;
+  },
+
+  /**
    * Cria um novo evento para a turma (apenas Líder ou Administrador).
    * Rota: POST /api/turmas/eventos
    */
