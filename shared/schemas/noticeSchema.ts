@@ -21,10 +21,12 @@ export const avisoBadgeEnum = z.enum(
 export const createNoticeSchema = z.object({
   titulo: z
     .string()
+    .trim()
     .min(5, 'O título deve ter no mínimo 5 caracteres.')
     .max(255, 'O título deve ter no máximo 255 caracteres.'),
   mensagem: z
     .string()
+    .trim()
     .min(10, 'A mensagem deve ter no mínimo 10 caracteres.')
     .max(5000, 'A mensagem deve ter no máximo 5000 caracteres.'),
   remetente: avisoRemetenteEnum,
@@ -59,10 +61,12 @@ export const noticeSchema = z.object({
   }),
   title: z
     .string()
+    .trim()
     .min(5, 'O título deve ter no mínimo 5 caracteres')
     .max(100, 'O título deve ter no máximo 100 caracteres'),
   message: z
     .string()
+    .trim()
     .min(10, 'A mensagem deve ter no mínimo 10 caracteres')
     .max(1000, 'A mensagem deve ter no máximo 1000 caracteres'),
 });
