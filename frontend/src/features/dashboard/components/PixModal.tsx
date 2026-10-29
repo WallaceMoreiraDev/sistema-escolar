@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom';
-import { Lightbulb } from 'lucide-react';
+import { Lightbulb, X } from 'lucide-react';
 
 interface PixModalProps {
   isOpen: boolean;
@@ -25,8 +25,9 @@ export function PixModal({ isOpen, onClose }: PixModalProps) {
           <button 
             onClick={onClose}
             className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors z-10"
+            aria-label="Fechar modal"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
           
           <div className="w-14 h-14 bg-emerald-100 dark:bg-emerald-900/30 rounded-full flex items-center justify-center mx-auto mb-4 text-emerald-600 dark:text-emerald-400">
