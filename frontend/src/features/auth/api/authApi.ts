@@ -1,4 +1,5 @@
-import { ApiResponse, UserProfileDTO } from '@shared/types';
+import { ApiErrorResponse, ApiResponse, UserProfileDTO } from '@shared/types';
+import { ApiError } from '@/utils/apiError';
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 
@@ -11,7 +12,13 @@ export const authApi = {
     });
 
     if (!res.ok) {
-      throw new Error('Falha ao obter dados do usuário');
+      const errorData = (await res.json().catch(() => null)) as ApiErrorResponse | null;
+      throw new ApiError(
+        errorData?.code || 'FETCH_ME_ERROR',
+        res.status,
+        errorData?.details,
+        errorData?.message
+      );
     }
 
     const data: ApiResponse<UserProfileDTO> = await res.json();
@@ -29,7 +36,13 @@ export const authApi = {
     });
 
     if (!res.ok) {
-      throw new Error('Falha ao atualizar perfil');
+      const errorData = (await res.json().catch(() => null)) as ApiErrorResponse | null;
+      throw new ApiError(
+        errorData?.code || 'UPDATE_PROFILE_ERROR',
+        res.status,
+        errorData?.details,
+        errorData?.message
+      );
     }
 
     const data: ApiResponse<UserProfileDTO> = await res.json();
