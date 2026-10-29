@@ -31,6 +31,11 @@ export const authMiddleware: MiddlewareHandler<{ Variables: Variables }> = async
   // Instantiating the Supabase client PER REQUEST using the user's JWT
   // This ensures RLS (Row Level Security) is properly enforced by the database
   const supabase = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
     global: {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -39,8 +44,8 @@ export const authMiddleware: MiddlewareHandler<{ Variables: Variables }> = async
     },
   });
 
-  // Verify if the token is valid by getting the user profile
-  const { data: { user }, error } = await supabase.auth.getUser();
+  // Verify if the token is valid by getting the user profile passing token directly (no locks)
+  const { data: { user }, error } = await supabase.auth.getUser(token);
 
   if (error || !user) {
     throw new AppError("AUTH_UNAUTHORIZED", 401, "Invalid token or user not found");

@@ -286,8 +286,11 @@ export class EventService {
       );
     }
 
-    // Validação de cota cumulativa por evento (CRÍTICO)
-    const currentTotalBytes = await this.eventRepo.getEventAttachmentsTotalBytes(eventId);
+    // Validação de cota cumulativa por evento diretamente em memória (otimização de query redundante)
+    const currentTotalBytes = (event.eventos_anexos || []).reduce(
+      (acc, curr) => acc + (curr.tamanho_bytes || 0),
+      0
+    );
     if (currentTotalBytes + file.size > EventService.MAX_EVENT_ATTACHMENT_BYTES) {
       throw new AppError(
         'ATTACHMENT_LIMIT_EXCEEDED',
@@ -342,7 +345,8 @@ export class EventService {
       throw new AppError('NOT_FOUND', 404, 'Evento não encontrado.');
     }
 
-    const attachment = await this.eventRepo.findAttachmentById(anexoId);
+    // Localiza o anexo diretamente nos anexos já carregados com o evento
+    const attachment = (event.eventos_anexos || []).find((a) => a.id === anexoId);
     if (!attachment || attachment.evento_id !== eventId) {
       throw new AppError('ATTACHMENT_NOT_FOUND', 404, 'Anexo não encontrado.');
     }
@@ -386,7 +390,8 @@ export class EventService {
       throw new AppError('NOT_FOUND', 404, 'Evento não encontrado.');
     }
 
-    const attachment = await this.eventRepo.findAttachmentById(anexoId);
+    // Localiza o anexo diretamente nos anexos já carregados com o evento
+    const attachment = (event.eventos_anexos || []).find((a) => a.id === anexoId);
     if (!attachment || attachment.evento_id !== eventId) {
       throw new AppError('ATTACHMENT_NOT_FOUND', 404, 'Anexo não encontrado.');
     }
@@ -431,4 +436,3 @@ export class EventService {
     };
   }
 }
-

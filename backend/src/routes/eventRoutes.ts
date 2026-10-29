@@ -14,6 +14,7 @@ import {
   listEventsQuerySchema,
   attachmentParamSchema,
 } from '@shared/schemas/eventSchema';
+import { classIdQuerySchema } from '@shared/schemas/linkSchema';
 
 const eventRoutes = new Hono<{ Variables: Variables }>();
 
@@ -31,6 +32,7 @@ eventRoutes.get(
 eventRoutes.post(
   '/',
   requireRole(['LIDER', 'ADMIN']),
+  validateQuery(classIdQuerySchema),
   validateBody(createEventSchema),
   EventController.create
 );
