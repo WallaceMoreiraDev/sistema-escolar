@@ -4,7 +4,7 @@ import { UserRepository } from '../repositories/userRepository';
 import { LinkService } from '../services/linkService';
 import { LinkDTOConverter } from '../dtos/linkDto';
 import { ApiResponse, LinkDTO, CreateLinkPayload } from '@shared/types';
-import { LinkIdParam } from '@shared/schemas/linkSchema';
+import { LinkIdParam, ClassIdQuery } from '@shared/schemas/linkSchema';
 
 export class LinkController {
   /**
@@ -14,7 +14,7 @@ export class LinkController {
   static async list(c: Context) {
     const supabase = c.get('supabase');
     const user = c.get('user');
-    const query = c.req.query() as { turmaId?: string };
+    const query = (c.get('validQuery') ?? c.req.query()) as ClassIdQuery;
 
     const linkRepo = new LinkRepository(supabase);
     const userRepo = new UserRepository(supabase);
@@ -39,7 +39,7 @@ export class LinkController {
     const supabase = c.get('supabase');
     const user = c.get('user');
     const body = c.get('validBody') as CreateLinkPayload;
-    const query = c.req.query() as { turmaId?: string };
+    const query = (c.get('validQuery') ?? c.req.query()) as ClassIdQuery;
 
     const linkRepo = new LinkRepository(supabase);
     const userRepo = new UserRepository(supabase);

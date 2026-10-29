@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Download } from 'lucide-react';
+import { sanitizeSafeUrl } from '@/utils/urlSecurity';
 
 interface ImageLightboxModalProps {
   isOpen: boolean;
@@ -58,7 +59,7 @@ export function ImageLightboxModal({
         <div className="flex items-center gap-2 shrink-0">
           {imageUrl && (
             <a
-              href={imageUrl}
+              href={sanitizeSafeUrl(imageUrl)}
               download={fileName || 'imagem'}
               target="_blank"
               rel="noopener noreferrer"

@@ -10,6 +10,7 @@ import {
 import { useCreateClassRequest } from '../../class-requests/hooks/useClassRequests';
 import { ApiError } from '@/utils/apiError';
 import { getErrorMessage } from '@/utils/errorMessages';
+import { X } from 'lucide-react';
 
 interface CreateClassModalProps {
   isOpen: boolean;
@@ -89,7 +90,7 @@ export function CreateClassModal({ isOpen, onClose, onSuccess }: CreateClassModa
             className="absolute top-4 right-4 sm:top-6 sm:right-6 w-8 h-8 flex items-center justify-center rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 transition-colors z-10"
             aria-label="Fechar modal"
           >
-            ✕
+            <X className="w-4 h-4" />
           </button>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">

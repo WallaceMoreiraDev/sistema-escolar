@@ -58,13 +58,25 @@ export const validateBody = <T>(
       let raw: unknown;
       try {
         raw = await c.req.json();
-      } catch (jsonErr) {
+      } catch {
         // Se a requisição não tiver corpo, trata como objeto vazio para o schema avaliar
         const text = await c.req.text().catch(() => '');
         if (!text || text.trim() === '') {
           raw = {};
         } else {
-          throw jsonErr;
+          return c.json(
+            {
+              success: false as const,
+              code: "VALIDATION_ERROR",
+              details: [
+                {
+                  path: "body",
+                  message: "Payload JSON malformado ou inválido.",
+                },
+              ],
+            },
+            400
+          );
         }
       }
       const parsed = schema.parse(raw);

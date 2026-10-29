@@ -8,6 +8,7 @@ import { ConfirmModal } from '../../../components/ui/ConfirmModal';
 import { UsefulLink } from '../types';
 import { getErrorMessage } from '@/utils/errorMessages';
 import { ApiError } from '@/utils/apiError';
+import { sanitizeSafeUrl } from '@/utils/urlSecurity';
 
 interface UsefulLinksSectionProps {
   turmaId?: string;
@@ -221,9 +222,9 @@ export function UsefulLinksSection({ turmaId }: UsefulLinksSectionProps = {}) {
                           </td>
                           <td className="px-6 py-4">
                             <a
-                              href={link.urlLink}
+                              href={sanitizeSafeUrl(link.urlLink)}
                               target="_blank"
-                              rel="noreferrer"
+                              rel="noopener noreferrer"
                               className="text-primary hover:underline max-w-[200px] xl:max-w-[300px] truncate flex items-center gap-1.5"
                             >
                               <span className="truncate">{link.urlLink}</span>

@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { cors } from "hono/cors";
+import { secureHeaders } from "hono/secure-headers";
 import { errorHandler } from "./middlewares/errorMiddleware";
 import { Variables } from "./middlewares/authMiddleware";
 import { EnvConfig } from "./env";
@@ -22,6 +23,7 @@ const app = new Hono<AppBindings>();
 
 // Setup Global Middlewares
 app.use("*", logger());
+app.use("*", secureHeaders());
 app.use("*", cors());
 
 // Setup Global Error Handler

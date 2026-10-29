@@ -2,6 +2,30 @@
 
 > Este documento serve como ponte de comunicação oficial entre o time de Backend (IA/Dev) e o time de Frontend (IA/Dev). Todas as ações que o Frontend precisar tomar devido a alterações de API, banco ou regras de negócio devem ser registradas aqui em formato estrito de checklist.
 
+## 🟢 Concluído: Hardening Pré-Lançamento (Segurança, Validação e Performance)
+
+**Data/Contexto:** Implementação do pacote de proteções derivado da auditoria pré-lançamento do MVP, incluindo mitigação de Stored XSS em URLs, validação estrita de query params (`turmaId`), proteção contra OOM e spoofing de anexos, e eliminação de queries redundantes.
+
+### Contratos e Validações Atualizadas:
+1. **Validação Estrita de URLs (Mitigação de XSS):**
+   - Os schemas `@shared/schemas/linkSchema` (`createLinkSchema.urlLink`, `linkSchema.url`) e `@shared/schemas/eventSchema` (`eventLinkSchema.url`, `createEventSchema.anexoUrl`) agora exigem explicitamente protocolo `http://` ou `https://`. Esquemas perigosos como `javascript:` ou `data:` são rejeitados com `400 VALIDATION_ERROR`.
+2. **Mural de Avisos:**
+   - Schemas de avisos (`createNoticeSchema`, `updateNoticeSchema`) agora aplicam `.trim()` no título e na mensagem, impedindo o envio de strings em branco ou compostas apenas por espaços.
+3. **Query Parameter `turmaId`:**
+   - As rotas `GET /api/turmas/links`, `POST /api/turmas/links` e `POST /api/turmas/eventos` agora contam com o validador `classIdQuerySchema`. Caso um administrador envie `?turmaId=...`, o valor deve obrigatoriamente ser um UUID válido (evitando erro 500 no banco).
+4. **Upload de Anexos (`POST /api/turmas/eventos/:id/anexos`):**
+   - O payload multipart é pré-validado via cabeçalho `Content-Length` (teto de 5 MB + margem multipart).
+   - A extensão do arquivo deve ser estritamente compatível com o MIME Type declarado (`.pdf` para PDF, `.jpg`/`.jpeg` para JPEG, `.png` para PNG, `.webp` para WEBP).
+5. **Tratamento de Payload JSON:**
+   - Requisições com JSON sintaticamente malformado agora retornam `HTTP 400 VALIDATION_ERROR` com mensagem explicativa em vez de estourar erro 500.
+
+### Checklist para o Frontend:
+- [x] Contratos compartilhados em `@shared/schemas` sincronizados e compatíveis (0 erros no typecheck).
+- [x] Garantir que inputs de URL em formulários continuem enviando URLs com protocolo `https://` ou `http://`.
+- [x] Assegurar que ao fazer upload de anexo, a extensão do arquivo coincida com seu tipo MIME (`.pdf`, `.png`, `.jpg`, `.webp`).
+
+---
+
 ## 🟢 Concluído: Consentimento LGPD no Onboarding (`termos_aceitos_em`) e Exposição no DTO (/api/me)
 
 **Data/Contexto:** Persistência do timestamp UTC em `termos_aceitos_em` na conclusão do Onboarding (`PUT /api/me/profile`), garantindo valor pericial probatório no servidor, e exposição do campo `termosAceitosEm?: string | null` no `UserProfileDTO` (`GET /api/me`).

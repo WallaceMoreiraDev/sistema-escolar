@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { safeHttpUrlSchema } from './linkSchema';
 
 export const eventoCategoriaEnum = z.enum(['Prova', 'Trabalho', 'Tarefa', 'Aviso'], {
   errorMap: () => ({ message: 'Categoria inválida. Opções válidas: Prova, Trabalho, Tarefa, Aviso.' }),
@@ -15,11 +16,7 @@ export const eventLinkSchema = z.object({
     .trim()
     .min(1, 'O título do link deve ter no mínimo 1 caractere.')
     .max(100, 'O título do link deve ter no máximo 100 caracteres.'),
-  url: z
-    .string({ required_error: 'A URL do link é obrigatória.' })
-    .trim()
-    .url('A URL do link deve ser válida.')
-    .max(500, 'A URL do link deve ter no máximo 500 caracteres.'),
+  url: safeHttpUrlSchema('A URL do link'),
 });
 
 export type EventLinkInput = z.infer<typeof eventLinkSchema>;
@@ -45,11 +42,7 @@ export const createEventSchema = z.object({
     .max(1000, 'A descrição deve ter no máximo 1000 caracteres.')
     .nullable()
     .optional(),
-  anexoUrl: z
-    .string()
-    .trim()
-    .url('A URL do anexo deve ser válida.')
-    .max(500, 'A URL do anexo deve ter no máximo 500 caracteres.')
+  anexoUrl: safeHttpUrlSchema('A URL do anexo')
     .nullable()
     .optional(),
   links: z

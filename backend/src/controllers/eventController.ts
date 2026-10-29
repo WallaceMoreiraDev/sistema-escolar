@@ -18,6 +18,7 @@ import {
   EventIdParam,
   AttachmentParam,
 } from '@shared/schemas/eventSchema';
+import { ClassIdQuery } from '@shared/schemas/linkSchema';
 import { AppError } from '../utils/AppError';
 
 export class EventController {
@@ -77,7 +78,7 @@ export class EventController {
     const supabase = c.get('supabase');
     const user = c.get('user');
     const body = c.get('validBody') as CreateEventPayload;
-    const query = c.req.query() as { turmaId?: string };
+    const query = (c.get('validQuery') ?? c.req.query()) as ClassIdQuery;
 
     const eventRepo = new EventRepository(supabase);
     const userRepo = new UserRepository(supabase);
@@ -153,6 +154,12 @@ export class EventController {
     const user = c.get('user');
     const { id } = c.get('validParams') as EventIdParam;
 
+    // 1. Checagem prévia do cabeçalho Content-Length antes de ler o corpo na RAM (Prevenção contra OOM)
+    const contentLength = Number(c.req.header('content-length'));
+    if (contentLength && contentLength > 5 * 1024 * 1024 + 20480) { // 5 MB + margem multipart
+      throw new AppError('VALIDATION_ERROR', 400, 'O payload excede o limite máximo permitido de 5 MB.');
+    }
+
     const formData = await c.req.formData();
     const file = formData.get('file') || formData.get('anexo');
 
@@ -162,6 +169,18 @@ export class EventController {
         400,
         'Nenhum arquivo válido enviado. Utilize o campo "file" em multipart/form-data.'
       );
+    }
+
+    // 2. Validação da extensão do arquivo contra o MIME type permitido (Prevenção contra Spoofing)
+    const allowedExtensions: Record<string, string[]> = {
+      'application/pdf': ['.pdf'],
+      'image/jpeg': ['.jpg', '.jpeg'],
+      'image/png': ['.png'],
+      'image/webp': ['.webp'],
+    };
+    const ext = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
+    if (!allowedExtensions[file.type] || !allowedExtensions[file.type].includes(ext)) {
+      throw new AppError('VALIDATION_ERROR', 400, 'Extensão de arquivo incompatível com o tipo de conteúdo.');
     }
 
     const eventRepo = new EventRepository(supabase);
@@ -236,4 +255,3 @@ export class EventController {
     return c.json(response, 200);
   }
 }
-
