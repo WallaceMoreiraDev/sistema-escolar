@@ -275,6 +275,24 @@ export type Database = {
           },
         ]
       }
+      storage_deletion_queue: {
+        Row: {
+          created_at: string
+          id: string
+          storage_path: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          storage_path: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          storage_path?: string
+        }
+        Relationships: []
+      }
       turmas: {
         Row: {
           ano: Database["public"]["Enums"]["ano_type"]
