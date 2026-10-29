@@ -3,7 +3,6 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { createPortal } from 'react-dom';
-import imageCompression from 'browser-image-compression';
 import {
   X,
   AlertCircle,
@@ -191,16 +190,20 @@ export function EventForm({ isOpen, onClose, eventToEdit, turmaId }: EventFormPr
       for (let i = 0; i < files.length; i++) {
         const originalFile = files[i];
 
-        // Validação estrita de tipos MIME permitidos
-        const isAllowedType =
-          originalFile.type === 'application/pdf' ||
-          originalFile.type === 'image/jpeg' ||
-          originalFile.type === 'image/png' ||
-          originalFile.type === 'image/webp';
+        // Validação estrita de tipos MIME e extensão correspondente (prevenção contra spoofing)
+        const allowedExtensions: Record<string, string[]> = {
+          'application/pdf': ['.pdf'],
+          'image/jpeg': ['.jpg', '.jpeg'],
+          'image/png': ['.png'],
+          'image/webp': ['.webp'],
+        };
 
-        if (!isAllowedType) {
+        const extIndex = originalFile.name.lastIndexOf('.');
+        const ext = extIndex !== -1 ? originalFile.name.substring(extIndex).toLowerCase() : '';
+
+        if (!allowedExtensions[originalFile.type] || !allowedExtensions[originalFile.type].includes(ext)) {
           setErrorMessage(
-            `O arquivo "${originalFile.name}" não é permitido. Tipos aceitos: PDF, JPEG, PNG e WEBP.`
+            `O arquivo "${originalFile.name}" possui formato ou extensão não permitidos. Tipos aceitos: PDF (.pdf), JPEG (.jpg, .jpeg), PNG (.png) e WEBP (.webp).`
           );
           continue;
         }
@@ -210,6 +213,7 @@ export function EventForm({ isOpen, onClose, eventToEdit, turmaId }: EventFormPr
         // Otimização client-side de imagens
         if (originalFile.type.startsWith('image/')) {
           try {
+            const imageCompression = (await import('browser-image-compression')).default;
             const options = {
               maxSizeMB: 1,
               maxWidthOrHeight: 1920,
