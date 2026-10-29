@@ -1,4 +1,5 @@
 import { useUsefulLinks } from '../../class-admin/hooks/useUsefulLinks';
+import { sanitizeSafeUrl } from '@/utils/urlSecurity';
 
 export function FixedLinks() {
   const { data: links, isLoading, isError } = useUsefulLinks();
@@ -27,7 +28,7 @@ export function FixedLinks() {
         <div className="glass-panel p-2 rounded-2xl flex flex-col">
           {links.slice(0, 3).map((link, index, array) => (
             <div key={link.id}>
-              <a href={link.urlLink} target="_blank" rel="noreferrer" className="flex items-center gap-4 p-4 rounded-xl hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-all group">
+              <a href={sanitizeSafeUrl(link.urlLink)} target="_blank" rel="noopener noreferrer" className="flex items-center gap-4 p-4 rounded-xl hover:bg-slate-50/80 dark:hover:bg-slate-800/50 transition-all group">
                 <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white shrink-0 shadow-lg shadow-purple-500/20 group-hover:scale-110 transition-transform">
                   <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" /></svg>
                 </div>

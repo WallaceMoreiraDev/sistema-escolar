@@ -18,6 +18,7 @@ import { eventApi } from '../../class-admin/api/eventApi';
 import { AttachmentImagePreview } from '../../class-admin/components/AttachmentImagePreview';
 import { formatFileSize, isImageAttachment } from '../../class-admin/utils/attachmentUtils';
 import { triggerFileDownload } from '../../class-admin/utils/downloadHelper';
+import { sanitizeSafeUrl } from '@/utils/urlSecurity';
 
 export function EventModal() {
   const navigate = useNavigate();
@@ -226,7 +227,7 @@ export function EventModal() {
                       event.links.map((link, idx) => (
                         <a
                           key={`event-link-${idx}`}
-                          href={link.url}
+                          href={sanitizeSafeUrl(link.url)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer group bg-white dark:bg-slate-800 shadow-sm"
@@ -254,7 +255,7 @@ export function EventModal() {
                     {event.anexoUrl &&
                       (!event.links || !event.links.some((l) => l.url === event.anexoUrl)) && (
                         <a
-                          href={event.anexoUrl}
+                          href={sanitizeSafeUrl(event.anexoUrl)}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="flex items-center justify-between p-3.5 rounded-xl border border-slate-200 dark:border-slate-700 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer group bg-white dark:bg-slate-800 shadow-sm"

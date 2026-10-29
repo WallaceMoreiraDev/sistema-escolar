@@ -7,6 +7,7 @@ import { useUsefulLinks } from '../../class-admin/hooks/useUsefulLinks';
 import { useClassMembers, useLeaveClass } from '../../class-admin/hooks/useClassMembers';
 import { ApiError } from '@/utils/apiError';
 import { getErrorMessage } from '@/utils/errorMessages';
+import { sanitizeSafeUrl } from '@/utils/urlSecurity';
 
 export function ClassSidebar() {
   const navigate = useNavigate();
@@ -75,9 +76,9 @@ export function ClassSidebar() {
             paginatedLinks.map((link) => (
               <a 
                 key={link.id} 
-                href={link.urlLink}
+                href={sanitizeSafeUrl(link.urlLink)}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 className="px-4 py-3 bg-white/50 dark:bg-slate-900/50 hover:bg-white dark:hover:bg-slate-800 rounded-xl text-sm font-bold text-slate-700 dark:text-slate-300 transition-colors flex items-center justify-between group shadow-sm border border-transparent hover:border-slate-200 dark:hover:border-slate-700"
               >
                 <span className="line-clamp-1">{link.titulo}</span>

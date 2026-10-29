@@ -24,6 +24,7 @@ import { eventApi } from '../api/eventApi';
 import { AttachmentImagePreview } from './AttachmentImagePreview';
 import { formatFileSize, isImageAttachment } from '../utils/attachmentUtils';
 import { triggerFileDownload } from '../utils/downloadHelper';
+import { sanitizeSafeUrl } from '@/utils/urlSecurity';
 
 interface EventListProps {
   onEdit: (event: EventDTO) => void;
@@ -166,7 +167,7 @@ export function EventList({ onEdit, turmaId }: EventListProps) {
                 event.links.map((link, idx) => (
                   <a
                     key={`event-link-${event.id}-${idx}`}
-                    href={link.url}
+                    href={sanitizeSafeUrl(link.url)}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}
@@ -179,7 +180,7 @@ export function EventList({ onEdit, turmaId }: EventListProps) {
               {event.anexoUrl &&
                 (!event.links || !event.links.some((l) => l.url === event.anexoUrl)) && (
                   <a
-                    href={event.anexoUrl}
+                    href={sanitizeSafeUrl(event.anexoUrl)}
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={(e) => e.stopPropagation()}

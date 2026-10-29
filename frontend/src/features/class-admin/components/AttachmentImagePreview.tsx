@@ -13,6 +13,7 @@ import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { eventApi } from '../api/eventApi';
 import { formatFileSize } from '../utils/attachmentUtils';
 import { ImageLightboxModal } from '@/components/ui/ImageLightboxModal';
+import { sanitizeSafeUrl } from '@/utils/urlSecurity';
 
 interface AttachmentImagePreviewProps {
   eventId: string;
@@ -110,7 +111,7 @@ export function AttachmentImagePreview({
               <span>Não foi possível carregar a prévia da imagem.</span>
               {downloadUrl && (
                 <a
-                  href={downloadUrl}
+                  href={sanitizeSafeUrl(downloadUrl)}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-2 text-primary font-bold hover:underline flex items-center gap-1"
