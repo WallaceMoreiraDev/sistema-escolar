@@ -32,6 +32,10 @@ export const errorMessages: Record<string, string> = {
   ATTACHMENT_LIMIT_EXCEEDED: 'O limite total de 5 MB de anexos para esta atividade foi atingido.',
   ATTACHMENT_NOT_FOUND: 'O anexo solicitado não foi encontrado ou já foi expurgado.',
 
+  // Moderação e Convivência Escolar
+  CONTENT_POLICY_VIOLATION:
+    'O conteúdo inserido viola as políticas de convivência escolar. Por favor, revise o texto ou os links informados.',
+
   // Validação e Genéricos
   VALIDATION_ERROR: 'Por favor, revise os dados informados.',
   INTERNAL_SERVER_ERROR: 'Ocorreu um erro interno no servidor. Tente novamente em instantes.',
@@ -43,5 +47,8 @@ export const errorMessages: Record<string, string> = {
  */
 export function getErrorMessage(code?: string, fallback = errorMessages.UNKNOWN_ERROR): string {
   if (!code) return fallback;
+  if (code === 'CONTENT_POLICY_VIOLATION' && fallback && fallback !== errorMessages.UNKNOWN_ERROR) {
+    return fallback;
+  }
   return errorMessages[code] || fallback;
 }

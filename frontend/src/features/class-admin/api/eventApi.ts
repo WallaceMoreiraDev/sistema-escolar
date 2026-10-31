@@ -10,6 +10,7 @@ import {
   eventIdParamSchema,
   attachmentParamSchema,
   listEventsQuerySchema,
+  listAdminEventsQuerySchema,
 } from '@shared/schemas/eventSchema';
 import { ApiError } from '@/utils/apiError';
 
@@ -20,6 +21,40 @@ export const eventApi = {
    * Lista cronologicamente os eventos de turma no período solicitado (teto de 45 dias).
    * Rota: GET /api/turmas/eventos?startDate=${start}&endDate=${end}
    */
+  /**
+   * Lista todas as atividades da turma com paginação do banco de dados (histórico completo).
+   * Rota: GET /api/turmas/eventos/gestao?page=${page}&limit=${limit}
+   */
+  async listAdminEvents(
+    token: string,
+    params: { page?: number; limit?: number; turmaId?: string }
+  ): Promise<ApiResponse<EventDTO[]>> {
+    listAdminEventsQuerySchema.parse(params);
+
+    const searchParams = new URLSearchParams();
+    if (params.page !== undefined) searchParams.append('page', String(params.page));
+    if (params.limit !== undefined) searchParams.append('limit', String(params.limit));
+    if (params.turmaId) searchParams.append('turmaId', params.turmaId);
+
+    const res = await fetch(`${API_URL}/api/turmas/eventos/gestao?${searchParams.toString()}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errorData = (await res.json().catch(() => null)) as ApiErrorResponse | null;
+      throw new ApiError(
+        errorData?.code || 'UNKNOWN_ERROR',
+        res.status,
+        errorData?.details,
+        errorData?.message
+      );
+    }
+
+    return (await res.json()) as ApiResponse<EventDTO[]>;
+  },
+
   async listEvents(
     token: string,
     query: { startDate: string; endDate: string; turmaId?: string }

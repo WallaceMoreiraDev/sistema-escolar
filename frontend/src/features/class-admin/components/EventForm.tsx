@@ -5,7 +5,7 @@ import { z } from 'zod';
 import { createPortal } from 'react-dom';
 import {
   X,
-  AlertCircle,
+  AlertTriangle,
   Paperclip,
   ExternalLink,
   Plus,
@@ -332,7 +332,11 @@ export function EventForm({ isOpen, onClose, eventToEdit, turmaId }: EventFormPr
       handleClose();
     } catch (err) {
       if (err instanceof ApiError) {
-        setErrorMessage(getErrorMessage(err.code, err.message));
+        setErrorMessage(
+          err.code === 'CONTENT_POLICY_VIOLATION' && err.message
+            ? err.message
+            : getErrorMessage(err.code, err.message)
+        );
       } else {
         setErrorMessage(
           isEditing
@@ -368,9 +372,9 @@ export function EventForm({ isOpen, onClose, eventToEdit, turmaId }: EventFormPr
             </h3>
 
             {errorMessage && (
-              <div className="mb-5 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 text-sm flex items-center gap-2.5">
-                <AlertCircle className="w-5 h-5 shrink-0" />
-                <span>{errorMessage}</span>
+              <div className="mb-5 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 text-sm flex items-start gap-2.5 animate-in fade-in">
+                <AlertTriangle className="w-5 h-5 text-red-600 dark:text-red-400 shrink-0 mt-0.5" />
+                <span className="font-medium leading-relaxed">{errorMessage}</span>
               </div>
             )}
 

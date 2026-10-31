@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Link2, Plus, Trash2, ExternalLink, ChevronLeft, ChevronRight, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Link2, Plus, Trash2, ExternalLink, ChevronLeft, ChevronRight, AlertTriangle, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { createLinkSchema, type CreateLinkInput } from '@shared/schemas/linkSchema';
 import { useUsefulLinks, useCreateLink, useDeleteLink } from '../hooks/useUsefulLinks';
 import { ConfirmModal } from '../../../components/ui/ConfirmModal';
@@ -50,7 +50,11 @@ export function UsefulLinksSection({ turmaId }: UsefulLinksSectionProps = {}) {
         },
         onError: (err) => {
           if (err instanceof ApiError) {
-            setErrorMessage(getErrorMessage(err.code, err.message));
+            setErrorMessage(
+              err.code === 'CONTENT_POLICY_VIOLATION' && err.message
+                ? err.message
+                : getErrorMessage(err.code, err.message)
+            );
           } else {
             setErrorMessage('Ocorreu um erro ao adicionar o link.');
           }
@@ -103,9 +107,9 @@ export function UsefulLinksSection({ turmaId }: UsefulLinksSectionProps = {}) {
       )}
 
       {errorMessage && (
-        <div className="mb-6 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 text-sm flex items-center gap-2.5 animate-in fade-in">
-          <AlertCircle className="w-5 h-5 shrink-0" />
-          <span>{errorMessage}</span>
+        <div className="mb-6 p-3.5 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 text-sm flex items-start gap-2.5 animate-in fade-in">
+          <AlertTriangle className="w-5 h-5 shrink-0 text-red-600 dark:text-red-400 mt-0.5" />
+          <span className="font-medium leading-relaxed">{errorMessage}</span>
         </div>
       )}
 

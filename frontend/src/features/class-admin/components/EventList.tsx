@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Pencil,
   Trash2,
@@ -14,7 +14,7 @@ import {
   Download,
   Loader2,
 } from 'lucide-react';
-import { useClassEvents, useDeleteEvent, useDeleteAttachment } from '../hooks/useClassEvents';
+import { useAdminClassEvents, useDeleteEvent, useDeleteAttachment } from '../hooks/useClassEvents';
 import { EventDTO, EventAttachmentDTO } from '@shared/types';
 import { ConfirmModal } from '../../../components/ui/ConfirmModal';
 import { getErrorMessage } from '@/utils/errorMessages';
@@ -36,7 +36,7 @@ export function EventList({ onEdit, turmaId }: EventListProps) {
   const limit = 5;
 
   const { session } = useAuth();
-  const { data: response, isLoading, isError, error } = useClassEvents(undefined, undefined, turmaId);
+  const { data: response, isLoading, isError, error } = useAdminClassEvents(page, limit, turmaId);
   const deleteMutation = useDeleteEvent();
   const deleteAttachmentMutation = useDeleteAttachment();
 
@@ -129,10 +129,15 @@ export function EventList({ onEdit, turmaId }: EventListProps) {
     setExpandedEventId((curr) => (curr === eventId ? null : eventId));
   };
 
-  const allEvents = response?.data || [];
-  const total = allEvents.length;
-  const totalPages = Math.ceil(total / limit) || 1;
-  const paginatedEvents = allEvents.slice((page - 1) * limit, page * limit);
+  const events = response?.data || [];
+  const total = response?.meta?.pagination?.total || 0;
+  const totalPages = response?.meta?.pagination?.totalPages || 1;
+
+  useEffect(() => {
+    if (page > totalPages && totalPages > 0) {
+      setPage(totalPages);
+    }
+  }, [page, totalPages]);
 
   // Renderizador compartilhado dos detalhes da atividade (SSOT para Desktop e Mobile)
   const renderEventDetails = (event: EventDTO) => {
@@ -384,14 +389,14 @@ export function EventList({ onEdit, turmaId }: EventListProps) {
                     </td>
                   </tr>
                 ))
-              ) : paginatedEvents.length === 0 ? (
+              ) : events.length === 0 ? (
                 <tr>
                   <td colSpan={5} className="px-6 py-8 text-center text-slate-500">
-                    Nenhuma atividade cadastrada para o período.
+                    Nenhuma atividade cadastrada na turma ainda.
                   </td>
                 </tr>
               ) : (
-                paginatedEvents.map((event) => {
+                events.map((event) => {
                   const isProva = event.categoria === 'Prova';
                   const isTrab = event.categoria === 'Trabalho';
                   const isAviso = event.categoria === 'Aviso';
@@ -550,13 +555,13 @@ export function EventList({ onEdit, turmaId }: EventListProps) {
                 </div>
               ))}
             </div>
-          ) : paginatedEvents.length === 0 ? (
+          ) : events.length === 0 ? (
             <div className="p-8 text-center text-slate-500 text-sm">
-              Nenhuma atividade cadastrada para o período.
+              Nenhuma atividade cadastrada na turma ainda.
             </div>
           ) : (
             <div className="divide-y divide-slate-100 dark:divide-slate-800/60">
-              {paginatedEvents.map((event) => {
+              {events.map((event) => {
                 const isProva = event.categoria === 'Prova';
                 const isTrab = event.categoria === 'Trabalho';
                 const isAviso = event.categoria === 'Aviso';
@@ -689,26 +694,31 @@ export function EventList({ onEdit, turmaId }: EventListProps) {
         </div>
 
         {/* Paginação padronizada em 5 itens */}
-        {totalPages > 1 && (
-          <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-900/30">
+        {total > 0 && (
+          <div className="p-4 border-t border-slate-200 dark:border-slate-800 flex flex-col sm:flex-row gap-3 sm:gap-0 justify-between items-center bg-slate-50/50 dark:bg-slate-900/30">
             <button
+              type="button"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5"
+              disabled={page <= 1}
+              className="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm disabled:shadow-none"
             >
               <ChevronLeft className="w-4 h-4" />
               Anterior
             </button>
 
-            <span className="text-sm font-bold text-slate-500">
+            <span className="text-xs sm:text-sm font-bold text-slate-500 text-center">
               Página <span className="text-slate-900 dark:text-white">{page}</span> de{' '}
-              {totalPages}
+              <span className="text-slate-900 dark:text-white">{totalPages}</span>{' '}
+              <span className="text-slate-400 font-medium">
+                (Total: {total} {total === 1 ? 'atividade' : 'atividades'})
+              </span>
             </span>
 
             <button
+              type="button"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5"
+              disabled={page >= totalPages}
+              className="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 shadow-sm disabled:shadow-none"
             >
               Próxima
               <ChevronRight className="w-4 h-4" />

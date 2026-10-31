@@ -11,6 +11,33 @@ import { ApiError } from '@/utils/apiError';
  * Hook para buscar eventos da turma por período (máximo de 45 dias).
  * Rota: GET /api/turmas/eventos?startDate=${start}&endDate=${end}
  */
+
+/**
+ * Hook para buscar todas as atividades da turma com paginação do banco de dados (histórico completo).
+ * Rota: GET /api/turmas/eventos/gestao?page=${page}&limit=${limit}
+ */
+export function useAdminClassEvents(
+  page = 1,
+  limit = 5,
+  turmaId?: string
+) {
+  const { session, user } = useAuth();
+  const token = session?.access_token;
+  const hasClassAccess = !!user?.turma || user?.role === 'ADMIN';
+
+  return useQuery({
+    queryKey: ['admin-class-events', { page, limit, turmaId }],
+    queryFn: async () => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      return eventApi.listAdminEvents(token, { page, limit, turmaId });
+    },
+    enabled: !!token && hasClassAccess,
+    staleTime: 1000 * 60 * 2, // 2 minutos de cache
+  });
+}
+
 export function useClassEvents(
   startDate?: string,
   endDate?: string,
@@ -107,6 +134,7 @@ export function useCreateEvent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['class-events'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-class-events'] });
     },
   });
 }
@@ -135,6 +163,7 @@ export function useUpdateEvent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['class-events'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-class-events'] });
     },
   });
 }
@@ -157,6 +186,7 @@ export function useDeleteEvent() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['class-events'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-class-events'] });
     },
   });
 }
@@ -179,6 +209,7 @@ export function useUploadAttachment() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['class-events'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-class-events'] });
     },
   });
 }
@@ -207,6 +238,7 @@ export function useDeleteAttachment() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['class-events'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-class-events'] });
     },
   });
 }
