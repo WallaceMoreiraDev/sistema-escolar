@@ -14,6 +14,7 @@ import {
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { ConfirmModal } from '../ui/ConfirmModal';
 import { WelcomeModal } from '@/features/dashboard/components/WelcomeModal';
+import { ProfileModal } from './ProfileModal';
 
 // === CONSTANTES DOS LINKS PARA REUTILIZAR ===
 const NAV_LINKS = [
@@ -27,16 +28,25 @@ const ADMIN_LINKS = [
   { path: '/app/painel-admin', label: 'Admin Geral', icon: <ShieldCheck className="w-5 h-5" /> },
 ];
 
-interface NavProps {
+interface SidebarProps {
   onOpenWelcome: () => void;
+  onOpenProfile: () => void;
+  onLogout: () => void;
+}
+
+interface MobileNavProps {
+  onOpenWelcome: () => void;
+  onOpenProfile: () => void;
+  onLogout: () => void;
+  isDrawerOpen: boolean;
+  setIsDrawerOpen: (open: boolean) => void;
 }
 
 // === SIDEBAR DESKTOP ===
-export function Sidebar({ onOpenWelcome }: NavProps) {
+export function Sidebar({ onOpenWelcome, onOpenProfile, onLogout }: SidebarProps) {
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
-  const { user, signOut } = useAuth();
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const { user } = useAuth();
   
   const userName = user?.nome || 'Aluno';
   const userInitials = userName.substring(0, 2).toUpperCase();
@@ -87,19 +97,26 @@ export function Sidebar({ onOpenWelcome }: NavProps) {
       </nav>
 
       <div className="p-6">
-        <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/50 bg-white/50 backdrop-blur-sm">
-          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-orange-500 p-[2px] shrink-0">
+        <div 
+          onClick={onOpenProfile}
+          className="flex items-center gap-3 p-3 rounded-2xl border border-slate-200/50 bg-white/50 hover:bg-white hover:border-slate-300 hover:shadow-sm backdrop-blur-sm transition-all cursor-pointer group"
+          title="Clique para ver perfil completo"
+        >
+          <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-orange-500 p-[2px] shrink-0 group-hover:scale-105 transition-transform">
             <div className="w-full h-full bg-white rounded-full flex items-center justify-center text-sm font-bold text-primary">
               {userInitials}
             </div>
           </div>
           <div className="flex-1 min-w-0 overflow-hidden">
-            <p className="text-sm font-semibold text-slate-900 truncate">{userName}</p>
+            <p className="text-sm font-semibold text-slate-900 truncate group-hover:text-primary transition-colors">{userName}</p>
             <p className="text-xs text-slate-500 truncate">{user?.turma?.nomeOficial || 'Sem Turma'}</p>
           </div>
           <button
             type="button"
-            onClick={() => setShowLogoutModal(true)}
+            onClick={(e) => {
+              e.stopPropagation();
+              onLogout();
+            }}
             className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors shrink-0"
             title="Encerrar Sessão"
             aria-label="Encerrar Sessão"
@@ -124,31 +141,21 @@ export function Sidebar({ onOpenWelcome }: NavProps) {
           </Link>
         </div>
       </div>
-
-      <ConfirmModal
-        isOpen={showLogoutModal}
-        title="Encerrar Sessão"
-        message="Tem certeza que deseja sair da sua conta?"
-        confirmText="Sim, Sair"
-        cancelText="Cancelar"
-        isDestructive={true}
-        onConfirm={async () => {
-          setShowLogoutModal(false);
-          await signOut();
-        }}
-        onCancel={() => setShowLogoutModal(false)}
-      />
     </aside>
   );
 }
 
 // === NAVEGAÇÃO MOBILE (BOTTOM BAR + DRAWER) ===
-export function MobileNav({ onOpenWelcome }: NavProps) {
+export function MobileNav({ 
+  onOpenWelcome, 
+  onOpenProfile, 
+  onLogout, 
+  isDrawerOpen, 
+  setIsDrawerOpen 
+}: MobileNavProps) {
   const location = useLocation();
-  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [showLogoutModal, setShowLogoutModal] = useState(false);
   const isActive = (path: string) => location.pathname === path;
-  const { user, signOut } = useAuth();
+  const { user } = useAuth();
   
   const userName = user?.nome || 'Aluno';
   const userInitials = userName.substring(0, 2).toUpperCase();
@@ -166,7 +173,7 @@ export function MobileNav({ onOpenWelcome }: NavProps) {
   // Fecha o drawer automaticamente ao mudar de rota
   useEffect(() => {
     setIsDrawerOpen(false);
-  }, [location.pathname]);
+  }, [location.pathname, setIsDrawerOpen]);
 
   // Bloqueia o scroll do body quando o drawer estiver aberto
   useEffect(() => {
@@ -222,7 +229,7 @@ export function MobileNav({ onOpenWelcome }: NavProps) {
       )}
 
       {/* 3. Drawer Lateral (Todas as Opções) */}
-      <div className={`fixed top-0 right-0 h-full w-[280px] bg-white/95 backdrop-blur-3xl border-l border-slate-200/50 z-[70] transform transition-transform duration-300 md:hidden flex flex-col shadow-2xl ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed top-0 right-0 h-full w-[290px] sm:w-[320px] bg-white/95 backdrop-blur-3xl border-l border-slate-200/50 z-[70] transform transition-transform duration-300 md:hidden flex flex-col shadow-2xl ${isDrawerOpen ? 'translate-x-0' : 'translate-x-full'}`}>
         <div className="p-6 border-b border-slate-200/50 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <img 
@@ -273,20 +280,32 @@ export function MobileNav({ onOpenWelcome }: NavProps) {
           )}
         </nav>
 
-        <div className="p-6 border-t border-slate-200/50">
-          <div className="flex items-center gap-3 p-3 rounded-xl border border-slate-200/50 bg-white/50 backdrop-blur-sm">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-orange-500 p-[2px] shrink-0">
+        {/* Informações do Aluno no Rodapé do Drawer */}
+        <div className="p-5 border-t border-slate-200/50 bg-slate-50/50">
+          <div 
+            onClick={() => {
+              setIsDrawerOpen(false);
+              onOpenProfile();
+            }}
+            className="flex items-center gap-3 p-3.5 rounded-2xl border border-slate-200/60 bg-white shadow-sm hover:border-slate-300 transition-all cursor-pointer group"
+            title="Clique para ver o perfil completo"
+          >
+            <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-primary to-orange-500 p-[2px] shrink-0 group-hover:scale-105 transition-transform">
               <div className="w-full h-full bg-white rounded-full flex items-center justify-center text-sm font-bold text-primary">
                 {userInitials}
               </div>
             </div>
             <div className="flex-1 min-w-0 overflow-hidden">
-              <p className="text-sm font-semibold text-slate-900 truncate">{userName}</p>
-              <p className="text-xs text-slate-500 truncate">{user?.turma?.nomeOficial || 'Sem Turma'}</p>
+              <p className="text-sm font-bold text-slate-900 truncate group-hover:text-primary transition-colors">{userName}</p>
+              <p className="text-xs font-medium text-slate-500 truncate">{user?.turma?.nomeOficial || 'Sem Turma'}</p>
             </div>
             <button
               type="button"
-              onClick={() => setShowLogoutModal(true)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsDrawerOpen(false);
+                onLogout();
+              }}
               className="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-colors shrink-0"
               title="Encerrar Sessão"
               aria-label="Encerrar Sessão"
@@ -314,48 +333,39 @@ export function MobileNav({ onOpenWelcome }: NavProps) {
             </Link>
           </div>
         </div>
-
-        <ConfirmModal
-          isOpen={showLogoutModal}
-          title="Encerrar Sessão"
-          message="Tem certeza que deseja sair da sua conta?"
-          confirmText="Sim, Sair"
-          cancelText="Cancelar"
-          isDestructive={true}
-          onConfirm={async () => {
-            setShowLogoutModal(false);
-            await signOut();
-          }}
-          onCancel={() => setShowLogoutModal(false)}
-        />
       </div>
     </>
   );
 }
 
-// Helper para formatar o nome do estudante (ex: "Wallace M.")
-function getStudentShortName(fullName?: string) {
-  if (!fullName) return 'Aluno';
-  const parts = fullName.trim().split(/\s+/);
-  if (parts.length === 1) return parts[0];
-  return `${parts[0]} ${parts[1][0]}.`;
-}
-
 // === LAYOUT PRINCIPAL ===
 export function AppLayout() {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const [isWelcomeModalOpen, setIsWelcomeModalOpen] = useState(false);
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
-  const studentShortName = getStudentShortName(user?.nome);
-  const turmaName = user?.turma?.nomeOficial || 'Sem Turma';
+  const firstName = user?.nome?.trim().split(/\s+/)[0] || 'Aluno';
+  const userInitials = (user?.nome || 'Aluno').substring(0, 2).toUpperCase();
 
   return (
     <div className="min-h-screen bg-slate-50/30 flex flex-col md:flex-row overflow-x-hidden pb-20 md:pb-0">
-      <Sidebar onOpenWelcome={() => setIsWelcomeModalOpen(true)} />
-      <MobileNav onOpenWelcome={() => setIsWelcomeModalOpen(true)} />
+      <Sidebar 
+        onOpenWelcome={() => setIsWelcomeModalOpen(true)} 
+        onOpenProfile={() => setIsProfileModalOpen(true)}
+        onLogout={() => setIsLogoutModalOpen(true)}
+      />
+      <MobileNav 
+        onOpenWelcome={() => setIsWelcomeModalOpen(true)} 
+        onOpenProfile={() => setIsProfileModalOpen(true)}
+        onLogout={() => setIsLogoutModalOpen(true)}
+        isDrawerOpen={isDrawerOpen} 
+        setIsDrawerOpen={setIsDrawerOpen} 
+      />
 
       <div className="flex-1 md:ml-64 relative min-w-0 flex flex-col">
-        {/* Cabeçalho Compacto Mobile (Identificação do Usuário) */}
+        {/* Cabeçalho Compacto Mobile (Identificação Leve do Aluno) */}
         <header className="md:hidden sticky top-0 z-30 flex items-center justify-between px-4 py-3 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 shadow-sm">
           <div className="flex items-center gap-2.5">
             <img 
@@ -366,9 +376,20 @@ export function AppLayout() {
             <span className="font-extrabold tracking-tight text-base text-slate-900">Prumo</span>
           </div>
 
-          <div className="flex items-center gap-1.5 px-3 py-1 bg-slate-100/90 border border-slate-200/80 rounded-full text-xs font-semibold text-slate-700 shadow-sm max-w-[220px]">
-            <span className="truncate">{studentShortName} • {turmaName}</span>
-          </div>
+          <button
+            type="button"
+            onClick={() => setIsProfileModalOpen(true)}
+            className="flex items-center gap-2 px-3 py-1 bg-slate-100/90 hover:bg-slate-200/70 border border-slate-200/80 rounded-full text-xs font-bold text-slate-700 shadow-sm transition-all active:scale-95"
+            title="Ver meu perfil completo"
+            aria-label="Ver meu perfil completo"
+          >
+            <div className="w-5 h-5 rounded-full bg-gradient-to-tr from-primary to-orange-500 p-[1.5px] shrink-0">
+              <div className="w-full h-full bg-white rounded-full flex items-center justify-center text-[10px] font-bold text-primary">
+                {userInitials}
+              </div>
+            </div>
+            <span>{firstName}</span>
+          </button>
         </header>
 
         <main className="flex-1 relative min-w-0 flex flex-col">
@@ -387,6 +408,26 @@ export function AppLayout() {
       <WelcomeModal
         isOpen={isWelcomeModalOpen}
         onClose={() => setIsWelcomeModalOpen(false)}
+      />
+
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        onLogout={() => setIsLogoutModalOpen(true)}
+      />
+
+      <ConfirmModal
+        isOpen={isLogoutModalOpen}
+        title="Encerrar Sessão"
+        message="Tem certeza que deseja sair da sua conta?"
+        confirmText="Sim, Sair"
+        cancelText="Cancelar"
+        isDestructive={true}
+        onConfirm={async () => {
+          setIsLogoutModalOpen(false);
+          await signOut();
+        }}
+        onCancel={() => setIsLogoutModalOpen(false)}
       />
     </div>
   );
