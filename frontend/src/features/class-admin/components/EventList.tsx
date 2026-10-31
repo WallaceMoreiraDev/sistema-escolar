@@ -216,7 +216,7 @@ export function EventList({ onEdit, turmaId }: EventListProps) {
                         key={anexo.id}
                         eventId={event.id}
                         anexo={anexo}
-                        canDelete={true}
+                        canDelete={false}
                         onDelete={() =>
                           setAttachmentToDelete({
                             eventId: event.id,
@@ -270,20 +270,7 @@ export function EventList({ onEdit, turmaId }: EventListProps) {
                             <Download className="w-4 h-4" />
                           )}
                         </button>
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setAttachmentToDelete({
-                              eventId: event.id,
-                              attachment: anexo,
-                            });
-                          }}
-                          className="p-1.5 text-slate-400 hover:text-rose-500 hover:bg-rose-50 dark:hover:bg-rose-950/30 rounded-lg transition-colors"
-                          title="Excluir anexo"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        
                       </div>
                     </div>
                   );
