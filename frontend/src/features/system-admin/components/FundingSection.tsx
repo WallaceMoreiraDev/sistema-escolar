@@ -74,13 +74,13 @@ export function FundingSection() {
       </div>
 
       <p className="text-sm text-slate-500 mb-6 -mt-2">
-        Atualização em tempo real da meta do servidor da plataforma.
+        Atualização em tempo real da meta do domínio oficial da plataforma.
       </p>
 
       <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-4 items-start md:items-end">
         <div className="flex-1 w-full space-y-2">
           <label className="text-sm font-bold text-slate-700 dark:text-slate-300">
-            Valor Arrecadado no Mês (R$)
+            Valor Arrecadado para o Domínio (R$)
           </label>
           <div className="relative">
             <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-slate-400">R$</span>

@@ -43,7 +43,7 @@ export function CrowdfundingBanner() {
                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-primary"></span>
               </span>
-              Meta do Mês
+              Meta do Domínio
             </div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white mb-1">Apoie o Projeto Prumo!</h2>
             <p className="text-slate-500 dark:text-slate-300 text-sm max-w-md">
