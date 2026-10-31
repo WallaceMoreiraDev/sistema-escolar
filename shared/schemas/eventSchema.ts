@@ -125,6 +125,18 @@ export const listEventsQuerySchema = z
 
 export type ListEventsQuery = z.infer<typeof listEventsQuerySchema>;
 
+/**
+ * Schema de validação de query params para listagem paginada de gestão de eventos (GET /api/turmas/eventos/gestao).
+ * Permite que líderes e administradores visualizem todo o histórico de atividades da turma.
+ */
+export const listAdminEventsQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(20).default(5),
+  turmaId: z.string().uuid('ID da turma deve ser um UUID válido.').optional(),
+});
+
+export type ListAdminEventsQuery = z.infer<typeof listAdminEventsQuerySchema>;
+
 // ============================================================================
 // Schemas Legados de Formulário (Preservados para compatibilidade do Frontend)
 // ============================================================================
