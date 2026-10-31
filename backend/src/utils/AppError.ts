@@ -20,7 +20,8 @@ export type ErrorCode =
   | "USER_ALREADY_WITHOUT_CLASS"
   | "CLASS_NOT_FOUND"
   | "ATTACHMENT_LIMIT_EXCEEDED"
-  | "ATTACHMENT_NOT_FOUND";
+  | "ATTACHMENT_NOT_FOUND"
+  | "CONTENT_POLICY_VIOLATION";
 
 
 export class AppError extends Error {

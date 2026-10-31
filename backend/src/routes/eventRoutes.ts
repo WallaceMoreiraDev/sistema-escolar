@@ -12,6 +12,7 @@ import {
   updateEventSchema,
   eventIdParamSchema,
   listEventsQuerySchema,
+  listAdminEventsQuerySchema,
   attachmentParamSchema,
 } from '@shared/schemas/eventSchema';
 import { classIdQuerySchema } from '@shared/schemas/linkSchema';
@@ -35,6 +36,14 @@ eventRoutes.post(
   validateQuery(classIdQuerySchema),
   validateBody(createEventSchema),
   EventController.create
+);
+
+// GET /api/turmas/eventos/gestao - Histórico completo paginado para Líder e Admin
+eventRoutes.get(
+  '/gestao',
+  requireRole(['LIDER', 'ADMIN']),
+  validateQuery(listAdminEventsQuerySchema),
+  EventController.listAdmin
 );
 
 // GET /api/turmas/eventos/:id - Consulta dados completos de um evento individual

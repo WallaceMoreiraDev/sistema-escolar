@@ -1,8 +1,9 @@
 import { EventRepository } from '../repositories/eventRepository';
 import { UserRepository } from '../repositories/userRepository';
+import { ModerationService } from './moderationService';
 import { RawEventWithAttachments, RawEventAttachment } from '../dtos/eventDto';
 import { CreateEventPayload, UpdateEventPayload } from '@shared/types/event.types';
-import { ListEventsQuery } from '@shared/schemas/eventSchema';
+import { ListEventsQuery, ListAdminEventsQuery } from '@shared/schemas/eventSchema';
 import { AppError } from '../utils/AppError';
 
 export class EventService {
@@ -16,7 +17,8 @@ export class EventService {
 
   constructor(
     private readonly eventRepo: EventRepository,
-    private readonly userRepo: UserRepository
+    private readonly userRepo: UserRepository,
+    private readonly moderationService: ModerationService = new ModerationService()
   ) {}
 
   /**
@@ -94,6 +96,92 @@ export class EventService {
   }
 
   /**
+   * Extrai e consolida todos os textos de uma atividade para análise de moderação de conteúdo.
+   */
+  private extractTextForModeration(payload: CreateEventPayload | UpdateEventPayload): string {
+    const parts: string[] = [];
+    if (payload.materia) parts.push(payload.materia);
+    if (payload.descricao) parts.push(payload.descricao);
+    if (payload.anexoUrl) parts.push(payload.anexoUrl);
+    if (payload.links && Array.isArray(payload.links)) {
+      payload.links.forEach((l) => {
+        if (l.titulo) parts.push(l.titulo);
+        if (l.url) parts.push(l.url);
+      });
+    }
+    return parts.join(' ').trim();
+  }
+
+  /**
+   * Lista todas as atividades da turma com paginação no banco para líderes e administradores.
+   * Permite que líderes visualizem e gerenciem tarefas passadas/antigas sem restrição de 45 dias.
+   */
+  async listAdminEvents(
+    userId: string,
+    query: ListAdminEventsQuery
+  ): Promise<{
+    events: RawEventWithAttachments[];
+    total: number;
+    page: number;
+    limit: number;
+    totalPages: number;
+  }> {
+    const userProfile = await this.userRepo.getUserProfile(userId);
+    if (!userProfile) {
+      throw new AppError('AUTH_UNAUTHORIZED', 401, 'Usuário não autenticado.');
+    }
+
+    const isAdmin = userProfile.role === 'ADMIN';
+    const isLider = userProfile.role === 'LIDER';
+
+    if (!isAdmin && !isLider) {
+      throw new AppError(
+        'AUTH_FORBIDDEN',
+        403,
+        'Apenas líderes da turma ou administradores podem acessar a gestão de atividades.'
+      );
+    }
+
+    let turmaId: string | undefined;
+
+    if (isAdmin && query.turmaId) {
+      turmaId = query.turmaId;
+    } else if (userProfile.turmas) {
+      const turma = Array.isArray(userProfile.turmas) ? userProfile.turmas[0] : userProfile.turmas;
+      turmaId = turma.id;
+    }
+
+    if (!turmaId) {
+      if (isAdmin) {
+        throw new AppError(
+          'TURMA_REQUIRED',
+          400,
+          'Informe o turmaId nos parâmetros para consultar a gestão de eventos como administrador.'
+        );
+      }
+      throw new AppError(
+        'USER_WITHOUT_CLASS',
+        400,
+        'Você não está vinculado a nenhuma turma para consultar a gestão de eventos.'
+      );
+    }
+
+    const page = query.page ?? 1;
+    const limit = query.limit ?? 5;
+
+    const { events, total } = await this.eventRepo.listAllPaginated(turmaId, page, limit);
+    const totalPages = Math.ceil(total / limit) || 1;
+
+    return {
+      events,
+      total,
+      page,
+      limit,
+      totalPages,
+    };
+  }
+
+  /**
    * Cria um novo evento associado à turma do líder (ou administrada pelo admin).
    */
   async createEvent(
@@ -105,6 +193,10 @@ export class EventService {
     if (!userProfile) {
       throw new AppError('AUTH_UNAUTHORIZED', 401, 'Usuário não autenticado.');
     }
+
+    // Moderação de Conteúdo em Duas Camadas (Filtro Local + Gemini 1.5 Flash)
+    const textToModerate = this.extractTextForModeration(payload);
+    await this.moderationService.validate(textToModerate);
 
     const isAdmin = userProfile.role === 'ADMIN';
     let turmaId: string | undefined;
@@ -176,6 +268,12 @@ export class EventService {
           'Você não tem permissão para alterar eventos de outra turma.'
         );
       }
+    }
+
+    // Moderação de Conteúdo em Duas Camadas (Filtro Local + Gemini 1.5 Flash)
+    const textToModerate = this.extractTextForModeration(payload);
+    if (textToModerate) {
+      await this.moderationService.validate(textToModerate);
     }
 
     return this.eventRepo.update(eventId, {

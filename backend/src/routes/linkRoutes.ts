@@ -30,6 +30,15 @@ linkRoutes.post(
   LinkController.create
 );
 
+// PUT /api/turmas/links/:id - Atualiza link útil (apenas Líder ou Admin)
+linkRoutes.put(
+  '/:id',
+  requireRole(['LIDER', 'ADMIN']),
+  validateParam(linkIdParamSchema),
+  validateBody(createLinkSchema),
+  LinkController.update
+);
+
 // DELETE /api/turmas/links/:id - Exclui link útil (apenas Líder ou Admin)
 linkRoutes.delete(
   '/:id',

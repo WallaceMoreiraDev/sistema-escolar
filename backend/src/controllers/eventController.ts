@@ -2,6 +2,8 @@ import { Context } from 'hono';
 import { EventRepository } from '../repositories/eventRepository';
 import { UserRepository } from '../repositories/userRepository';
 import { EventService } from '../services/eventService';
+import { ModerationService } from '../services/moderationService';
+import { validateEnv } from '../env';
 import {
   EventDTOConverter,
   EventAttachmentDTOConverter,
@@ -15,6 +17,7 @@ import {
 } from '@shared/types';
 import {
   ListEventsQuery,
+  ListAdminEventsQuery,
   EventIdParam,
   AttachmentParam,
 } from '@shared/schemas/eventSchema';
@@ -41,6 +44,38 @@ export class EventController {
     const response: ApiResponse<EventDTO[]> = {
       success: true,
       data: dtos,
+    };
+
+    return c.json(response, 200);
+  }
+
+  /**
+   * GET /api/turmas/eventos/gestao
+   * Lista paginada de todos os eventos da turma para gestão de líderes e administradores.
+   */
+  static async listAdmin(c: Context) {
+    const supabase = c.get('supabase');
+    const user = c.get('user');
+    const query = c.get('validQuery') as ListAdminEventsQuery;
+
+    const eventRepo = new EventRepository(supabase);
+    const userRepo = new UserRepository(supabase);
+    const service = new EventService(eventRepo, userRepo);
+
+    const result = await service.listAdminEvents(user.id, query);
+    const dtos = EventDTOConverter.toDTOList(result.events);
+
+    const response: ApiResponse<EventDTO[]> = {
+      success: true,
+      data: dtos,
+      meta: {
+        pagination: {
+          page: result.page,
+          limit: result.limit,
+          total: result.total,
+          totalPages: result.totalPages,
+        },
+      },
     };
 
     return c.json(response, 200);
@@ -80,9 +115,11 @@ export class EventController {
     const body = c.get('validBody') as CreateEventPayload;
     const query = (c.get('validQuery') ?? c.req.query()) as ClassIdQuery;
 
+    const env = validateEnv(c.env);
+    const moderation = new ModerationService(env.GEMINI_API_KEY);
     const eventRepo = new EventRepository(supabase);
     const userRepo = new UserRepository(supabase);
-    const service = new EventService(eventRepo, userRepo);
+    const service = new EventService(eventRepo, userRepo, moderation);
 
     const rawEvent = await service.createEvent(user.id, body, query.turmaId);
     const dto = EventDTOConverter.toDTO(rawEvent);
@@ -105,9 +142,11 @@ export class EventController {
     const { id } = c.get('validParams') as EventIdParam;
     const body = c.get('validBody') as UpdateEventPayload;
 
+    const env = validateEnv(c.env);
+    const moderation = new ModerationService(env.GEMINI_API_KEY);
     const eventRepo = new EventRepository(supabase);
     const userRepo = new UserRepository(supabase);
-    const service = new EventService(eventRepo, userRepo);
+    const service = new EventService(eventRepo, userRepo, moderation);
 
     const updatedRaw = await service.updateEvent(user.id, id, body);
     const dto = EventDTOConverter.toDTO(updatedRaw);

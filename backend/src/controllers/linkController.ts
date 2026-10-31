@@ -2,6 +2,8 @@ import { Context } from 'hono';
 import { LinkRepository } from '../repositories/linkRepository';
 import { UserRepository } from '../repositories/userRepository';
 import { LinkService } from '../services/linkService';
+import { ModerationService } from '../services/moderationService';
+import { validateEnv } from '../env';
 import { LinkDTOConverter } from '../dtos/linkDto';
 import { ApiResponse, LinkDTO, CreateLinkPayload } from '@shared/types';
 import { LinkIdParam, ClassIdQuery } from '@shared/schemas/linkSchema';
@@ -41,9 +43,11 @@ export class LinkController {
     const body = c.get('validBody') as CreateLinkPayload;
     const query = (c.get('validQuery') ?? c.req.query()) as ClassIdQuery;
 
+    const env = validateEnv(c.env);
+    const moderation = new ModerationService(env.GEMINI_API_KEY);
     const linkRepo = new LinkRepository(supabase);
     const userRepo = new UserRepository(supabase);
-    const service = new LinkService(linkRepo, userRepo);
+    const service = new LinkService(linkRepo, userRepo, moderation);
 
     const rawLink = await service.createLink(user.id, body, query.turmaId);
     const dto = LinkDTOConverter.toDTO(rawLink);
@@ -54,6 +58,33 @@ export class LinkController {
     };
 
     return c.json(response, 201);
+  }
+
+  /**
+   * PUT /api/turmas/links/:id
+   * Atualiza um link útil existente (apenas Líder ou Admin).
+   */
+  static async update(c: Context) {
+    const supabase = c.get('supabase');
+    const user = c.get('user');
+    const { id } = c.get('validParams') as LinkIdParam;
+    const body = c.get('validBody') as CreateLinkPayload;
+
+    const env = validateEnv(c.env);
+    const moderation = new ModerationService(env.GEMINI_API_KEY);
+    const linkRepo = new LinkRepository(supabase);
+    const userRepo = new UserRepository(supabase);
+    const service = new LinkService(linkRepo, userRepo, moderation);
+
+    const rawLink = await service.updateLink(user.id, id, body);
+    const dto = LinkDTOConverter.toDTO(rawLink);
+
+    const response: ApiResponse<LinkDTO> = {
+      success: true,
+      data: dto,
+    };
+
+    return c.json(response, 200);
   }
 
   /**

@@ -58,6 +58,36 @@ export class EventRepository {
   }
 
   /**
+   * Lista todos os eventos de uma turma com paginação no banco (LIMIT / OFFSET via range).
+   * Ordena por data_hora_limite descendente (mais recentes/futuras primeiro).
+   * Retorna os eventos com anexos e links embutidos, além do total de registros.
+   */
+  async listAllPaginated(
+    turmaId: string,
+    page: number,
+    limit: number
+  ): Promise<{ events: RawEventWithAttachments[]; total: number }> {
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+
+    const { data, count, error } = await this.supabase
+      .from('eventos')
+      .select(EventRepository.EVENT_SELECT_FIELDS, { count: 'exact' })
+      .eq('turma_id', turmaId)
+      .order('data_hora_limite', { ascending: false })
+      .range(from, to);
+
+    if (error) {
+      throw error;
+    }
+
+    return {
+      events: (data || []) as unknown as RawEventWithAttachments[],
+      total: count ?? 0,
+    };
+  }
+
+  /**
    * Busca um evento específico por seu ID único, com links e anexos.
    */
   async findById(id: string): Promise<RawEventWithAttachments | null> {

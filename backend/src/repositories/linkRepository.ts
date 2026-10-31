@@ -68,6 +68,28 @@ export class LinkRepository {
   }
 
   /**
+   * Atualiza os dados de um link útil existente.
+   */
+  async update(id: string, payload: Partial<CreateLinkPayload>): Promise<RawLink> {
+    const updateData: { titulo?: string; url_link?: string } = {};
+    if (payload.titulo !== undefined) updateData.titulo = payload.titulo;
+    if (payload.urlLink !== undefined) updateData.url_link = payload.urlLink;
+
+    const { data, error } = await this.supabase
+      .from('links_uteis')
+      .update(updateData)
+      .eq('id', id)
+      .select('*')
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return data;
+  }
+
+  /**
    * Exclui um link útil pelo ID.
    */
   async delete(id: string): Promise<void> {
