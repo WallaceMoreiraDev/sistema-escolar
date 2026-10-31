@@ -2,6 +2,88 @@
 
 > Este documento serve como ponte de comunicação oficial entre o time de Backend (IA/Dev) e o time de Frontend (IA/Dev). Todas as ações que o Frontend precisar tomar devido a alterações de API, banco ou regras de negócio devem ser registradas aqui em formato estrito de checklist.
 
+## 🟢 Concluído: Histórico de Atividades e Moderação Inteligente em Duas Camadas
+
+**Data/Contexto:** Disponibilização da rota paginada de gestão de atividades (`GET /api/turmas/eventos/gestao`) para permitir que líderes e administradores consultem todo o histórico de eventos sem restrição de 45 dias, além de sistema de moderação de conteúdo em duas camadas (Filtro Local + Gemini 1.5 Flash) com código de erro `CONTENT_POLICY_VIOLATION` (HTTP 422).
+
+### 1. Novo Endpoint: Gestão e Histórico Completo de Eventos
+- **Rota:** `GET /api/turmas/eventos/gestao`
+- **Autorização:** Apenas `LIDER` da respectiva turma ou `ADMIN` geral (`requireRole(['LIDER', 'ADMIN'])`).
+- **Query Parameters (`listAdminEventsQuerySchema`):**
+  - `page`: Número da página (inteiro >= 1, padrão: 1).
+  - `limit`: Itens por página (inteiro de 1 a 20, padrão: 5).
+  - `turmaId`: UUID opcional (exclusivo para `ADMIN` moderar turmas específicas; líderes consultam sua própria turma automaticamente).
+- **Ordenação:** Estritamente descendente por data limite (`data_hora_limite DESC`), exibindo as atividades mais recentes/futuras primeiro e as mais antigas depois.
+- **Envelope de Resposta (`ApiResponse<EventDTO[]>` com Paginação):**
+  ```json
+  {
+    "success": true,
+    "data": [
+      {
+        "id": "uuid",
+        "materia": "História",
+        "categoria": "Prova",
+        "dataHoraLimite": "2026-11-10T14:00:00.000Z",
+        "descricao": "Capítulo 4 e 5",
+        "anexoUrl": null,
+        "links": [],
+        "anexos": []
+      }
+    ],
+    "meta": {
+      "pagination": {
+        "page": 1,
+        "limit": 5,
+        "total": 14,
+        "totalPages": 3
+      }
+    }
+  }
+  ```
+
+### 2. Moderação de Conteúdo em Duas Camadas (com Justificativa Dinâmica)
+- **Operações Cobertas:**
+  - `POST /api/turmas/eventos` e `PUT /api/turmas/eventos/:id` (criação e edição de tarefas/eventos)
+  - `POST /api/turmas/links` e `PUT /api/turmas/links/:id` (criação e edição de links úteis)
+- **1ª Camada (Filtro Local Síncrono):** Validação em memória (< 1ms) com regexes normalizadas contra termos ofensivos, assédio, calúnias, termos de ódio, conteúdo adulto e camuflagens de símbolos em português.
+- **2ª Camada (Moderação Semântica com Gemini 3.5 Flash Lite):** Análise contextual e semântica com inteligência artificial para detecção de assédio velado, phishing e links maliciosos. Possui fail-safe resiliente (não bloqueia requisição em caso de falha externa do Google).
+- **Código de Erro Retornado e Justificativa Dinâmica:**
+  - `HTTP 422 UNPROCESSABLE_ENTITY`
+  - O campo `message` agora transporta a justificativa dinâmica e educativa identificada, pronta para exibição direta na UI do usuário:
+  ```json
+  {
+    "success": false,
+    "code": "CONTENT_POLICY_VIOLATION",
+    "message": "Publicação bloqueada pela moderação escolar (termo detectado: \"palavra\"). Por favor, revise o vocabulário."
+  }
+  ```
+  *(Ou, quando reprovado pela IA Gemini)*:
+  ```json
+  {
+    "success": false,
+    "code": "CONTENT_POLICY_VIOLATION",
+    "message": "Publicação bloqueada pela moderação escolar: A descrição contém linguagem depreciativa e agressiva."
+  }
+  ```
+
+### 3. Endpoint de Atualização de Links Úteis
+- **Rota:** `PUT /api/turmas/links/:id`
+- **Autorização:** Apenas `LIDER` da respectiva turma ou `ADMIN`.
+- **Payload:** `{ "titulo": string, "urlLink": string }` validado por `createLinkSchema`.
+- **Resposta:** `HTTP 200 OK` com `ApiResponse<LinkDTO>`.
+
+---
+
+### Checklist para o Frontend (Ações Recomendadas para a Frontend AI):
+- [x] Contratos `@shared/schemas/eventSchema` (`listAdminEventsQuerySchema`, `ListAdminEventsQuery`) e `@shared/types/api.types` (`CONTENT_POLICY_VIOLATION`) exportados.
+- [x] No Painel do Líder (`ClassAdminPage.tsx` / `EventList.tsx`), substituir a listagem por intervalo pela consulta paginada via `GET /api/turmas/eventos/gestao?page=1&limit=5`.
+- [x] Implementar controles de paginação (Anterior/Próxima ou números de página) utilizando `meta.pagination` (`page`, `totalPages`, `total`).
+- [x] Mapear o código de erro `CONTENT_POLICY_VIOLATION` no dicionário de erros (`errorMessages.ts` ou handler da UI).
+- [x] No tratamento de erro visual (formulários de eventos e links), priorizar a exibição da propriedade `err.message` retornada pela API (quando código `CONTENT_POLICY_VIOLATION`), para que o usuário veja a justificativa dinâmica detalhada (termo detectado ou motivo da IA).
+- [ ] (Opcional) Implementar edição inline ou modal de edição de Links Úteis consumindo `PUT /api/turmas/links/:id`.
+
+---
+
 ## 🟢 Concluído: Hardening Pré-Lançamento (Segurança, Validação e Performance)
 
 **Data/Contexto:** Implementação do pacote de proteções derivado da auditoria pré-lançamento do MVP, incluindo mitigação de Stored XSS em URLs, validação estrita de query params (`turmaId`), proteção contra OOM e spoofing de anexos, e eliminação de queries redundantes.
