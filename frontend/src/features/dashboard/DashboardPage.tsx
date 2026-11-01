@@ -19,12 +19,12 @@ export function DashboardPage() {
       <header className="mb-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h1 className="text-4xl font-extrabold tracking-tight text-slate-900">
-            Bom dia, {firstName}
+            Bem-vindo(a), {firstName}
           </h1>
           <p className="text-slate-500 mt-2 font-medium">
             {hasClass && user?.turma
               ? `Aqui está o que você precisa focar hoje na Turma ${user.turma.nomeOficial}.`
-              : 'Bem-vindo! Descubra as ferramentas que a plataforma oferece.'}
+              : 'Bem-vindo(a)! Descubra as ferramentas que a plataforma oferece.'}
           </p>
         </div>
       </header>
