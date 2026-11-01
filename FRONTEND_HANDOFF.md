@@ -2,6 +2,81 @@
 
 > Este documento serve como ponte de comunicação oficial entre o time de Backend (IA/Dev) e o time de Frontend (IA/Dev). Todas as ações que o Frontend precisar tomar devido a alterações de API, banco ou regras de negócio devem ser registradas aqui em formato estrito de checklist.
 
+## 🟢 Concluído: Suporte a Imagem de Destaque e Links nos Avisos do Mural Geral
+
+**Data/Contexto:** Expansão das capacidades do Mural Geral (`avisos_gerais`), permitindo que administradores anexem cartazes/imagens de destaque (com expurgo físico automático no bucket privado `mural-anexos`) e incluam até 2 links externos institucionais por comunicado.
+
+### 1. Novos Endpoints do Mural de Avisos
+
+#### A. Upload da Imagem de Destaque
+- **Rota:** `POST /api/avisos/:id/imagem`
+- **Autorização:** Apenas `ADMIN` (`requireRole(['ADMIN'])`).
+- **Headers:** `Content-Type: multipart/form-data` (máximo de 5 MB).
+- **Body:** Campo `file` ou `imagem` contendo a imagem (formatos permitidos: `image/jpeg`, `image/png`, `image/webp`).
+- **Comportamento:**
+  - Valida o tamanho do arquivo (máx 5 MB) e tipo MIME com extensão correspondente.
+  - Se o aviso já possuía uma imagem anterior, a imagem antiga é expurgada do storage antes de salvar a nova.
+  - Gera uma URL assinada (24 horas) e atualiza o registro no banco de dados.
+- **Envelope de Resposta (`ApiResponse<NoticeDTO>`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "uuid",
+      "titulo": "Semana Acadêmica de Tecnologia",
+      "mensagem": "Confira a programação completa...",
+      "remetente": "Diretoria ETEC",
+      "badgeDestaque": "Evento",
+      "dataPostagem": "2026-11-01T00:00:00.000Z",
+      "links": [
+        {
+          "titulo": "Cronograma Oficial",
+          "url": "https://etec.sp.gov.br/semana-tec"
+        }
+      ],
+      "imagemUrl": "https://...supabase.co/storage/v1/object/sign/mural-anexos/avisos/...?token=..."
+    }
+  }
+  ```
+
+#### B. Remoção da Imagem de Destaque
+- **Rota:** `DELETE /api/avisos/:id/imagem`
+- **Autorização:** Apenas `ADMIN` (`requireRole(['ADMIN'])`).
+- **Comportamento:** Remove fisicamente o arquivo do bucket privado `mural-anexos` e define `imagem_storage_path` e `imagem_url` como `null` no banco de dados.
+- **Envelope de Resposta (`ApiResponse<NoticeDTO>`):**
+  Retorna o `NoticeDTO` atualizado com `imagemUrl: null`.
+
+---
+
+### 2. Atualizações em Contratos Compartilhados (`/shared`)
+
+1. **`NoticeDTO` (`@shared/types/notice.types.ts`):**
+   - Adicionada a propriedade `links: Array<{ titulo: string; url: string }>`.
+   - Adicionada a propriedade `imagemUrl?: string | null` (URL assinada pronta para uso em tags `<img>`).
+2. **`CreateNoticePayload` e `UpdateNoticePayload` (`@shared/types/notice.types.ts`):**
+   - Adicionada a propriedade opcional `links?: Array<{ titulo: string; url: string }>`.
+3. **Schemas Zod (`@shared/schemas/noticeSchema.ts`):**
+   - Exportado `noticeLinkSchema`:
+     ```typescript
+     export const noticeLinkSchema = z.object({
+       titulo: z.string().trim().min(1).max(100),
+       url: safeHttpUrlSchema('A URL do link'), // Exige https:// ou http://
+     });
+     ```
+   - `createNoticeSchema` e `updateNoticeSchema` agora validam `links: z.array(noticeLinkSchema).max(2).default([])`.
+4. **Moderação Semântica nos Avisos:**
+   - Criação (`POST /api/avisos`) e edição (`PUT /api/avisos/:id`) agora passam pela moderação inteligente em duas camadas (Filtro Local + Gemini 3.5 Flash Lite) cobrindo título, mensagem e links.
+
+---
+
+### Checklist para o Frontend (Ações Recomendadas para a Frontend AI):
+- [x] No modal de criação/edição de avisos (`NoticeFormModal.tsx`), adicionar seção para inserção de até 2 links externos institucionais (campos `titulo` e `url`).
+- [x] No modal de criação/edição de avisos (`NoticeFormModal.tsx`), adicionar campo para upload da imagem de destaque do comunicado (máx 5 MB, JPEG/PNG/WEBP) consumindo `POST /api/avisos/:id/imagem` e botão para remover imagem consumindo `DELETE /api/avisos/:id/imagem`.
+- [x] No card do Mural Geral (`NoticeCard.tsx` / `MuralPage.tsx`), renderizar a imagem de destaque quando `imagemUrl` estiver presente, além dos botões/chips dos links externos adicionados.
+- [x] No painel de administração (`MuralManagementSection.tsx`), exibir indicador de imagem/links nos itens da listagem.
+
+---
+
 ## 🟢 Concluído: Histórico de Atividades e Moderação Inteligente em Duas Camadas
 
 **Data/Contexto:** Disponibilização da rota paginada de gestão de atividades (`GET /api/turmas/eventos/gestao`) para permitir que líderes e administradores consultem todo o histórico de eventos sem restrição de 45 dias, além de sistema de moderação de conteúdo em duas camadas (Filtro Local + Gemini 1.5 Flash) com código de erro `CONTENT_POLICY_VIOLATION` (HTTP 422).
