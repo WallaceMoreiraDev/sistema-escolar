@@ -50,6 +50,22 @@ noticeRoutes.put(
   NoticeController.update
 );
 
+// POST /api/avisos/:id/imagem - Upload de imagem de destaque (apenas ADMIN)
+noticeRoutes.post(
+  '/:id/imagem',
+  requireRole(['ADMIN']),
+  validateParam(noticeIdParamSchema),
+  NoticeController.uploadImage
+);
+
+// DELETE /api/avisos/:id/imagem - Remoção de imagem de destaque (apenas ADMIN)
+noticeRoutes.delete(
+  '/:id/imagem',
+  requireRole(['ADMIN']),
+  validateParam(noticeIdParamSchema),
+  NoticeController.removeImage
+);
+
 // DELETE /api/avisos/:id - Exclusão de aviso (apenas ADMIN)
 noticeRoutes.delete(
   '/:id',

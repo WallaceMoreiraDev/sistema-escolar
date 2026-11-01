@@ -9,6 +9,20 @@ export type RawNotice = Database['public']['Tables']['avisos_gerais']['Row'];
  */
 export class NoticeDTOConverter {
   static toDTO(raw: RawNotice): NoticeDTO {
+    let links: Array<{ titulo: string; url: string }> = [];
+    if (Array.isArray(raw.links)) {
+      links = raw.links as unknown as Array<{ titulo: string; url: string }>;
+    } else if (typeof raw.links === 'string') {
+      try {
+        const parsed = JSON.parse(raw.links);
+        if (Array.isArray(parsed)) {
+          links = parsed;
+        }
+      } catch {
+        links = [];
+      }
+    }
+
     return {
       id: raw.id,
       titulo: raw.titulo,
@@ -16,10 +30,12 @@ export class NoticeDTOConverter {
       remetente: raw.remetente as AvisoRemetente,
       badgeDestaque: raw.badge_destaque as AvisoBadge,
       dataPostagem: raw.data_postagem || new Date().toISOString(),
+      links,
+      imagemUrl: raw.imagem_url || null,
     };
   }
 
   static toDTOList(rawList: RawNotice[]): NoticeDTO[] {
-    return rawList.map(this.toDTO);
+    return rawList.map((item) => this.toDTO(item));
   }
 }
