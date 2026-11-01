@@ -44,6 +44,9 @@ export type Database = {
           badge_destaque: Database["public"]["Enums"]["aviso_badge"]
           data_postagem: string | null
           id: string
+          imagem_storage_path: string | null
+          imagem_url: string | null
+          links: Json
           mensagem: string
           remetente: Database["public"]["Enums"]["aviso_remetente"]
           titulo: string
@@ -52,6 +55,9 @@ export type Database = {
           badge_destaque: Database["public"]["Enums"]["aviso_badge"]
           data_postagem?: string | null
           id?: string
+          imagem_storage_path?: string | null
+          imagem_url?: string | null
+          links?: Json
           mensagem: string
           remetente: Database["public"]["Enums"]["aviso_remetente"]
           titulo: string
@@ -60,6 +66,9 @@ export type Database = {
           badge_destaque?: Database["public"]["Enums"]["aviso_badge"]
           data_postagem?: string | null
           id?: string
+          imagem_storage_path?: string | null
+          imagem_url?: string | null
+          links?: Json
           mensagem?: string
           remetente?: Database["public"]["Enums"]["aviso_remetente"]
           titulo?: string
