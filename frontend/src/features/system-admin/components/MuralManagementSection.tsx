@@ -1,4 +1,14 @@
 import { useState, useEffect } from 'react';
+import { 
+  Megaphone, 
+  Plus, 
+  Pencil, 
+  Trash2, 
+  ChevronLeft, 
+  ChevronRight, 
+  Image as ImageIcon, 
+  Link2 
+} from 'lucide-react';
 import { useNotices, useDeleteNotice } from '../../mural/hooks/useNotices';
 import { NoticeDTO } from '@shared/types';
 import { getNoticeTypeConfig } from '../../mural/utils/noticeUtils';
@@ -46,9 +56,7 @@ export function MuralManagementSection() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
-            </svg>
+            <Megaphone className="w-5 h-5" />
           </div>
           <div>
             <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Gestão do Mural Geral</h2>
@@ -57,11 +65,9 @@ export function MuralManagementSection() {
         </div>
         <button 
           onClick={handleCreate}
-          className="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 rounded-xl font-bold flex items-center gap-2 transition-all active:scale-95 shadow-sm"
+          className="px-5 py-2.5 bg-slate-900 dark:bg-white text-white dark:text-slate-900 hover:bg-slate-800 dark:hover:bg-slate-200 rounded-xl font-bold flex items-center gap-2 transition-all active:scale-95 shadow-sm text-sm"
         >
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-          </svg>
+          <Plus className="w-4 h-4" />
           Nova Postagem
         </button>
       </div>
@@ -106,20 +112,43 @@ export function MuralManagementSection() {
                   </tr>
                 ) : notices.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-6 py-8 text-center text-slate-500">
+                    <td colSpan={3} className="px-6 py-8 text-center text-slate-500 font-medium">
                       Nenhum aviso publicado.
                     </td>
                   </tr>
                 ) : (
                   notices.map((notice) => {
                     const typeConfig = getNoticeTypeConfig(notice.badgeDestaque);
+                    const hasImage = !!notice.imagemUrl;
+                    const hasLinks = notice.links && notice.links.length > 0;
+
                     return (
                       <tr key={notice.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/20 transition-colors">
                         <td className="px-6 py-4">
                           <div className="flex flex-col">
-                            <span className="font-bold text-slate-900 dark:text-white mb-1 line-clamp-1">
-                              {notice.titulo}
-                            </span>
+                            <div className="flex items-center gap-2 mb-1 flex-wrap">
+                              <span className="font-bold text-slate-900 dark:text-white line-clamp-1">
+                                {notice.titulo}
+                              </span>
+                              {hasImage && (
+                                <span 
+                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200/60 dark:border-emerald-800 px-2 py-0.5 rounded-md"
+                                  title="Contém cartaz anexo"
+                                >
+                                  <ImageIcon className="w-3 h-3" />
+                                  Imagem
+                                </span>
+                              )}
+                              {hasLinks && (
+                                <span 
+                                  className="inline-flex items-center gap-1 text-[11px] font-semibold text-blue-700 bg-blue-50 dark:bg-blue-950/40 border border-blue-200/60 dark:border-blue-800 px-2 py-0.5 rounded-md"
+                                  title={`${notice.links.length} link(s) institucional(is)`}
+                                >
+                                  <Link2 className="w-3 h-3" />
+                                  {notice.links.length} {notice.links.length === 1 ? 'link' : 'links'}
+                                </span>
+                              )}
+                            </div>
                             <div className="flex items-center gap-2 text-xs text-slate-500">
                               <span>{notice.remetente}</span>
                               <span>•</span>
@@ -138,20 +167,18 @@ export function MuralManagementSection() {
                               onClick={() => handleEdit(notice)}
                               className="p-2 text-slate-400 hover:text-primary transition-colors bg-white dark:bg-slate-800 shadow-sm rounded-lg border border-slate-200 dark:border-slate-700"
                               title="Editar Aviso"
+                              aria-label="Editar Aviso"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
-                              </svg>
+                              <Pencil className="w-4 h-4" />
                             </button>
                             <button 
                               onClick={() => setNoticeToDelete(notice)}
                               disabled={deleteMutation.isPending && noticeToDelete?.id === notice.id}
                               className="p-2 text-slate-400 hover:text-red-500 transition-colors bg-white dark:bg-slate-800 shadow-sm rounded-lg border border-slate-200 dark:border-slate-700 disabled:opacity-50 inline-flex items-center justify-center"
                               title="Remover Aviso"
+                              aria-label="Remover Aviso"
                             >
-                              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                              </svg>
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </td>
@@ -169,9 +196,10 @@ export function MuralManagementSection() {
               <button 
                 onClick={() => setPage(p => Math.max(1, p - 1))}
                 disabled={page === 1}
-                className="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5"
               >
-                &larr; Anterior
+                <ChevronLeft className="w-4 h-4" />
+                Anterior
               </button>
               
               <span className="text-sm font-bold text-slate-500">
@@ -181,16 +209,17 @@ export function MuralManagementSection() {
               <button 
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
                 disabled={page === totalPages}
-                className="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-2"
+                className="px-4 py-2 text-sm font-bold text-slate-600 dark:text-slate-400 disabled:opacity-30 disabled:cursor-not-allowed hover:text-slate-900 dark:hover:text-white transition-colors flex items-center gap-1.5"
               >
-                Próxima &rarr;
+                Próxima
+                <ChevronRight className="w-4 h-4" />
               </button>
             </div>
           )}
         </div>
       </div>
 
-      <NoticeFormModal 
+      <NoticeFormModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         noticeToEdit={editingNotice}
@@ -198,10 +227,11 @@ export function MuralManagementSection() {
 
       <ConfirmModal
         isOpen={!!noticeToDelete}
-        title="Excluir Aviso do Mural"
-        message={`Tem certeza que deseja excluir o aviso "${noticeToDelete?.titulo}"? Ele desaparecerá do mural de todos os alunos instantaneamente.`}
+        title="Remover Aviso"
+        message={`Tem certeza que deseja remover o aviso "${noticeToDelete?.titulo}"? Esta ação é irreversível e removerá eventuais imagens anexadas.`}
+        confirmText="Sim, Remover"
+        cancelText="Cancelar"
         isDestructive={true}
-        confirmText="Excluir Aviso"
         onConfirm={confirmDelete}
         onCancel={() => setNoticeToDelete(null)}
       />

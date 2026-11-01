@@ -72,6 +72,46 @@ export function useUpdateNotice() {
 }
 
 /**
+ * Hook de mutação para realizar upload de imagem de destaque do aviso (ADMIN).
+ */
+export function useUploadNoticeImage() {
+  const queryClient = useQueryClient();
+  const { session } = useAuth();
+  const token = session?.access_token;
+
+  return useMutation({
+    mutationFn: ({ id, file }: { id: string; file: File }) => {
+      if (!token) throw new Error('Não autenticado');
+      return noticeApi.uploadNoticeImage(token, id, file);
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['notices'] });
+      queryClient.invalidateQueries({ queryKey: ['notice', variables.id] });
+    },
+  });
+}
+
+/**
+ * Hook de mutação para remover imagem de destaque do aviso (ADMIN).
+ */
+export function useRemoveNoticeImage() {
+  const queryClient = useQueryClient();
+  const { session } = useAuth();
+  const token = session?.access_token;
+
+  return useMutation({
+    mutationFn: (id: string) => {
+      if (!token) throw new Error('Não autenticado');
+      return noticeApi.removeNoticeImage(token, id);
+    },
+    onSuccess: (_data, id) => {
+      queryClient.invalidateQueries({ queryKey: ['notices'] });
+      queryClient.invalidateQueries({ queryKey: ['notice', id] });
+    },
+  });
+}
+
+/**
  * Hook de mutação para excluir aviso geral (ADMIN).
  */
 export function useDeleteNotice() {
