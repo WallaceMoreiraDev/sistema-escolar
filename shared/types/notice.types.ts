@@ -14,6 +14,8 @@ export interface NoticeDTO {
   remetente: AvisoRemetente;
   badgeDestaque: AvisoBadge;
   dataPostagem: string; // ISO 8601 UTC
+  links: Array<{ titulo: string; url: string }>;
+  imagemUrl?: string | null;
 }
 
 /**
@@ -24,6 +26,7 @@ export interface CreateNoticePayload {
   mensagem: string;
   remetente: AvisoRemetente;
   badgeDestaque: AvisoBadge;
+  links?: Array<{ titulo: string; url: string }>;
 }
 
 /**

@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { safeHttpUrlSchema } from './linkSchema';
 
 // ============================================================================
 // Schemas Oficiais do Mural de Avisos (GEMINI.md - camelCase em Português)
@@ -18,6 +19,17 @@ export const avisoBadgeEnum = z.enum(
   }
 );
 
+export const noticeLinkSchema = z.object({
+  titulo: z
+    .string({ required_error: 'O título do link é obrigatório.' })
+    .trim()
+    .min(1, 'O título do link deve ter no mínimo 1 caractere.')
+    .max(100, 'O título do link deve ter no máximo 100 caracteres.'),
+  url: safeHttpUrlSchema('A URL do link'),
+});
+
+export type NoticeLinkInput = z.infer<typeof noticeLinkSchema>;
+
 export const createNoticeSchema = z.object({
   titulo: z
     .string()
@@ -31,6 +43,10 @@ export const createNoticeSchema = z.object({
     .max(5000, 'A mensagem deve ter no máximo 5000 caracteres.'),
   remetente: avisoRemetenteEnum,
   badgeDestaque: avisoBadgeEnum,
+  links: z
+    .array(noticeLinkSchema)
+    .max(2, 'No máximo 2 links são permitidos.')
+    .default([]),
 });
 
 export const updateNoticeSchema = createNoticeSchema;
