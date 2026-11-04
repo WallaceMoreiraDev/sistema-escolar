@@ -2,6 +2,34 @@
 
 > Este documento serve como ponte de comunicação oficial entre o time de Backend (IA/Dev) e o time de Frontend (IA/Dev). Todas as ações que o Frontend precisar tomar devido a alterações de API, banco ou regras de negócio devem ser registradas aqui em formato estrito de checklist.
 
+## 🟢 Concluído: Suporte a Planilhas Excel (.xlsx, .xls) e CSV nos Anexos de Atividades
+
+**Data/Contexto:** Liberação dos formatos de planilha e tabelas nos anexos físicos de atividades da turma (`POST /api/turmas/eventos/:id/anexos`). A migration do Supabase Storage expandiu os MIME types permitidos no bucket `eventos-anexos`, e o backend agora valida e protege esses arquivos contra spoofing de extensões, preservando o teto de 5 MB por arquivo e a cota cumulativa de 5 MB por evento.
+
+### 1. Formatos e MIME Types Habilitados
+- **Excel Moderno (`.xlsx`):** `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
+- **Excel Legado (`.xls`):** `application/vnd.ms-excel`
+- **Tabelas Separadas por Vírgula (`.csv`):** `text/csv`
+- *(Formatos já existentes mantidos: `.pdf`, `.jpeg`, `.jpg`, `.png`, `.webp`)*
+
+### 2. Validações e Regras de Backend
+- **Teto Individual e Cumulativo:** Máximo de 5 MB (`5242880` bytes) por arquivo e cota cumulativa por atividade.
+- **Validação Anti-Spoofing:** A extensão do arquivo é validada contra o MIME type declarado. Arquivos `.xlsx`, `.xls` ou `.csv` com MIME incompatível são rejeitados com `HTTP 400 VALIDATION_ERROR`.
+- **Download e Preview Seguro:** O endpoint de download (`GET /api/turmas/eventos/:id/anexos/:anexoId/download`) gera URLs assinadas com 1 hora de validade diretamente do Supabase Storage.
+
+---
+
+### Checklist para o Frontend (Ações Recomendadas para a Frontend AI):
+- [x] No componente de formulário de eventos (`EventForm.tsx` / `EventModal.tsx`), atualizar o atributo `accept` do input de arquivo para incluir `.xlsx,.xls,.csv` e os respectivos MIME types:
+  ```tsx
+  accept=".pdf,.jpg,.jpeg,.png,.webp,.xlsx,.xls,.csv,application/pdf,image/jpeg,image/png,image/webp,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
+  ```
+- [x] Atualizar o texto de ajuda/instrução no upload de anexos para informar que planilhas Excel (.xlsx, .xls) e arquivos CSV agora são aceitos (junto com PDFs e imagens, até 5 MB).
+- [x] Atualizar a validação client-side pré-upload para reconhecer as novas extensões e MIME types de planilhas.
+- [x] Nos cards de exibição de anexos (`AttachmentList.tsx`, `EventCard.tsx`, etc.), renderizar o ícone de planilha (ex: `FileSpreadsheet` ou `Sheet` do Lucide React) quando o arquivo possuir extensão `.xlsx`, `.xls`, `.csv` ou MIME type correspondente.
+
+---
+
 ## 🟢 Concluído: Suporte a Imagem de Destaque e Links nos Avisos do Mural Geral
 
 **Data/Contexto:** Expansão das capacidades do Mural Geral (`avisos_gerais`), permitindo que administradores anexem cartazes/imagens de destaque (com expurgo físico automático no bucket privado `mural-anexos`) e incluam até 2 links externos institucionais por comunicado.
