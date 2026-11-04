@@ -5,13 +5,13 @@ import { ApiError } from '@/utils/apiError';
 
 /**
  * Hook para buscar os membros da turma de forma paginada (GET /api/turmas/membros?page=${page}).
- * Suporta Modo God para Administradores Gerais inspecionarem qualquer turma via turmaId.
+ * Suporta Acesso de Administrador Geral para supervisionar qualquer turma via turmaId.
  */
 export function useClassMembers(page: number = 1, turmaId?: string) {
   const { session, user } = useAuth();
   const token = session?.access_token;
   const hasClass = !!user?.turma;
-  const isGodModeOrAdmin = user?.role === 'ADMIN' && !!turmaId;
+  const isGlobalAdminOrLeader = user?.role === 'ADMIN' && !!turmaId;
 
   return useQuery({
     queryKey: ['class-members', page, turmaId],
@@ -21,7 +21,7 @@ export function useClassMembers(page: number = 1, turmaId?: string) {
       }
       return classMemberApi.listMembers(token, page, turmaId);
     },
-    enabled: !!token && (hasClass || isGodModeOrAdmin),
+    enabled: !!token && (hasClass || isGlobalAdminOrLeader),
     retry: false,
     staleTime: 1000 * 30, // 30 segundos de cache
   });

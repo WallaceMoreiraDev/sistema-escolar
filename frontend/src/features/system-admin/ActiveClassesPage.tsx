@@ -56,7 +56,7 @@ export function ActiveClassesPage() {
     }
   };
 
-  const handleGodMode = (cls: ActiveClass) => {
+  const handleInspectClass = (cls: ActiveClass) => {
     navigate(`/app/painel-turma?turmaId=${cls.id}`);
   };
 
@@ -223,9 +223,9 @@ export function ActiveClassesPage() {
                         <td className="px-6 py-4 text-right">
                           <div className="flex justify-end gap-2">
                             <button
-                              onClick={() => handleGodMode(cls)}
+                              onClick={() => handleInspectClass(cls)}
                               className="px-3 py-2 text-xs font-bold text-white bg-slate-900 hover:bg-slate-800 dark:bg-primary dark:hover:bg-primary/90 transition-colors shadow-sm rounded-lg flex items-center gap-2"
-                              title="Acessar como Deus (God Mode)"
+                              title="Supervisionar turma (Acesso Administrativo Geral)"
                             >
                               <Eye className="w-3.5 h-3.5" />
                               Acessar Painel

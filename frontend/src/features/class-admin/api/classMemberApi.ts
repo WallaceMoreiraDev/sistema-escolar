@@ -12,7 +12,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
 export const classMemberApi = {
   /**
    * Busca a lista paginada de colegas de turma do usuário autenticado (GET /api/turmas/membros?page=${page}).
-   * Permite que administradores passem turmaId para inspecionar qualquer turma (Modo God).
+   * Permite que administradores passem turmaId para supervisionar qualquer turma (Acesso Administrativo Geral).
    * Retorna envelope ApiResponse contendo data: ClassMemberDTO[] e meta.pagination.
    */
   async listMembers(

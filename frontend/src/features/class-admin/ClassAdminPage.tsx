@@ -15,7 +15,7 @@ export function ClassAdminPage() {
 
   const { user, session } = useAuth();
   const token = session?.access_token;
-  const isGodMode = user?.role === 'ADMIN' && !!turmaId;
+  const isGlobalAdminView = user?.role === 'ADMIN' && !!turmaId;
 
   const { data: classResponse, isLoading: isLoadingClass } = useQuery({
     queryKey: ['admin-class-details', turmaId],
@@ -23,7 +23,7 @@ export function ClassAdminPage() {
       if (!token || !turmaId) return null;
       return adminClassApi.getClassById(token, turmaId);
     },
-    enabled: !!token && isGodMode,
+    enabled: !!token && isGlobalAdminView,
     staleTime: 1000 * 60,
   });
 
@@ -31,8 +31,8 @@ export function ClassAdminPage() {
 
   return (
     <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Banner de Modo God / Inspeção pelo Administrador Geral */}
-      {isGodMode && (
+      {/* Banner de Supervisão Administrativa pelo Administrador Geral */}
+      {isGlobalAdminView && (
         <div className="mb-8 p-5 rounded-3xl bg-gradient-to-r from-amber-500/15 via-amber-500/5 to-transparent border border-amber-300/80 dark:border-amber-600/40 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4 animate-in fade-in slide-in-from-top-3">
           <div className="flex items-center gap-3.5">
             <div className="w-12 h-12 rounded-2xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/25">
@@ -41,7 +41,7 @@ export function ClassAdminPage() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-800 dark:bg-amber-900/60 dark:text-amber-300">
-                  Modo God / Inspeção
+                  Supervisão Administrativa
                 </span>
                 {inspectedClass?.turno && (
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
@@ -72,11 +72,11 @@ export function ClassAdminPage() {
 
       <header className="mb-8">
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
-          {isGodMode ? 'Administração da Turma (Modo God)' : 'Administração da Turma'}
+          {isGlobalAdminView ? 'Administração da Turma (Supervisão Geral)' : 'Administração da Turma'}
         </h1>
         <p className="text-slate-500 dark:text-slate-400 mt-2 font-medium">
-          {isGodMode
-            ? 'Painel de controle com acesso irrestrito para inspeção e gestão da sala.'
+          {isGlobalAdminView
+            ? 'Painel de controle com acesso irrestrito para supervisão e gestão institucional da sala.'
             : 'Área restrita para líderes. Gerencie convites, eventos e membros.'}
         </p>
       </header>
@@ -85,7 +85,7 @@ export function ClassAdminPage() {
         {/* ÁREA 1: Gestão de Convites */}
         <InviteSection
           turma={
-            isGodMode && inspectedClass
+            isGlobalAdminView && inspectedClass
               ? {
                   codigoConvite: inspectedClass.codigoConvite,
                   nomeOficial: inspectedClass.nomeOficial || inspectedClass.name,
