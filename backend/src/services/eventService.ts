@@ -13,6 +13,9 @@ export class EventService {
     'image/jpeg',
     'image/png',
     'image/webp',
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', // .xlsx
+    'application/vnd.ms-excel',                                         // .xls
+    'text/csv',                                                          // .csv
   ];
 
   constructor(
@@ -371,7 +374,7 @@ export class EventService {
       throw new AppError(
         'VALIDATION_ERROR',
         400,
-        'Tipo de arquivo não permitido. Envie apenas PDF, JPEG, PNG ou WEBP.'
+        'Tipo de arquivo não permitido. Envie apenas PDF, imagens (JPEG, PNG, WEBP) ou planilhas (XLSX, XLS, CSV).'
       );
     }
 
