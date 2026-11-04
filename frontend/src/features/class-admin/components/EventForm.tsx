@@ -11,6 +11,7 @@ import {
   Plus,
   Trash2,
   FileText,
+  FileSpreadsheet,
   Image as ImageIcon,
   UploadCloud,
   Loader2,
@@ -27,7 +28,11 @@ import {
   EventAttachmentDTO,
 } from '@shared/types';
 import { ConfirmModal } from '@/components/ui/ConfirmModal';
-import { formatFileSize, isImageAttachment } from '../utils/attachmentUtils';
+import {
+  formatFileSize,
+  isImageAttachment,
+  isSpreadsheetAttachment,
+} from '../utils/attachmentUtils';
 import { getErrorMessage } from '@/utils/errorMessages';
 import { ApiError } from '@/utils/apiError';
 
@@ -196,6 +201,9 @@ export function EventForm({ isOpen, onClose, eventToEdit, turmaId }: EventFormPr
           'image/jpeg': ['.jpg', '.jpeg'],
           'image/png': ['.png'],
           'image/webp': ['.webp'],
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': ['.xlsx'],
+          'application/vnd.ms-excel': ['.xls'],
+          'text/csv': ['.csv'],
         };
 
         const extIndex = originalFile.name.lastIndexOf('.');
@@ -203,7 +211,7 @@ export function EventForm({ isOpen, onClose, eventToEdit, turmaId }: EventFormPr
 
         if (!allowedExtensions[originalFile.type] || !allowedExtensions[originalFile.type].includes(ext)) {
           setErrorMessage(
-            `O arquivo "${originalFile.name}" possui formato ou extensão não permitidos. Tipos aceitos: PDF (.pdf), JPEG (.jpg, .jpeg), PNG (.png) e WEBP (.webp).`
+            `O arquivo "${originalFile.name}" possui formato ou extensão não permitidos. Tipos aceitos: PDF (.pdf), Excel (.xlsx, .xls, .csv) e Imagens (.jpg, .png, .webp).`
           );
           continue;
         }
@@ -556,7 +564,7 @@ export function EventForm({ isOpen, onClose, eventToEdit, turmaId }: EventFormPr
                 <div className="flex items-center justify-between">
                   <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5">
                     <Paperclip className="w-4 h-4 text-primary" />
-                    <span>Anexos Físicos (PDFs e Imagens)</span>
+                    <span>Anexos Físicos (PDFs, Planilhas Excel e Imagens)</span>
                   </label>
                   <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                     {formatFileSize(totalBytes)} / 5 MB ({quotaPercentage}%)
@@ -588,14 +596,14 @@ export function EventForm({ isOpen, onClose, eventToEdit, turmaId }: EventFormPr
                   <input
                     type="file"
                     multiple
-                    accept=".pdf,.png,.jpg,.jpeg,.webp,application/pdf,image/png,image/jpeg,image/webp"
+                    accept=".pdf,.png,.jpg,.jpeg,.webp,.xlsx,.xls,.csv,application/pdf,image/png,image/jpeg,image/webp,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel,text/csv"
                     onChange={handleFileChange}
                     disabled={isPending || totalBytes >= MAX_TOTAL_BYTES}
                     className="hidden"
                   />
                   <UploadCloud className="w-6 h-6 text-primary mb-1" />
                   <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    Clique para selecionar anexos (PDF, PNG, JPG ou WEBP)
+                    Clique para selecionar anexos (PDF, Excel, PNG, JPG ou WEBP)
                   </span>
                   <span className="text-[11px] text-slate-400 mt-0.5 text-center">
                     Imagens são comprimidas automaticamente no seu navegador. Cota máxima de 5 MB somados.
@@ -618,6 +626,7 @@ export function EventForm({ isOpen, onClose, eventToEdit, turmaId }: EventFormPr
                     <div className="space-y-1.5">
                       {existingAttachments.map((anexo) => {
                         const isImg = isImageAttachment(anexo);
+                        const isSheet = isSpreadsheetAttachment(anexo);
                         return (
                           <div
                             key={anexo.id}
@@ -626,12 +635,16 @@ export function EventForm({ isOpen, onClose, eventToEdit, turmaId }: EventFormPr
                             <div className="flex items-center gap-2 overflow-hidden">
                               <div
                                 className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
-                                  isImg
+                                  isSheet
+                                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400'
+                                    : isImg
                                     ? 'bg-blue-50 text-blue-500 dark:bg-blue-950/30 dark:text-blue-400'
                                     : 'bg-rose-50 text-rose-500 dark:bg-rose-950/30 dark:text-rose-400'
                                 }`}
                               >
-                                {isImg ? (
+                                {isSheet ? (
+                                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                                ) : isImg ? (
                                   <ImageIcon className="w-3.5 h-3.5" />
                                 ) : (
                                   <FileText className="w-3.5 h-3.5" />
@@ -670,40 +683,61 @@ export function EventForm({ isOpen, onClose, eventToEdit, turmaId }: EventFormPr
                       Novos anexos a enviar ({pendingFiles.length}):
                     </span>
                     <div className="space-y-1.5">
-                      {pendingFiles.map((file, idx) => (
-                        <div
-                          key={`pending-file-${idx}`}
-                          className="flex items-center justify-between p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/40 dark:bg-emerald-950/20 text-xs shadow-sm"
-                        >
-                          <div className="flex items-center gap-2 overflow-hidden">
-                            <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                              {file.type.startsWith('image/') ? (
-                                <ImageIcon className="w-3.5 h-3.5" />
-                              ) : (
-                                <FileText className="w-3.5 h-3.5" />
-                              )}
-                            </div>
-                            <div className="overflow-hidden">
-                              <p className="font-bold text-slate-800 dark:text-slate-200 truncate">
-                                {file.name}
-                              </p>
-                              <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
-                                {formatFileSize(file.size)} (novo)
-                              </span>
-                            </div>
-                          </div>
+                      {pendingFiles.map((file, idx) => {
+                        const isImg = file.type.startsWith('image/');
+                        const isSheet =
+                          file.type === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+                          file.type === 'application/vnd.ms-excel' ||
+                          file.type === 'text/csv' ||
+                          file.name.toLowerCase().endsWith('.xlsx') ||
+                          file.name.toLowerCase().endsWith('.xls') ||
+                          file.name.toLowerCase().endsWith('.csv');
 
-                          <button
-                            type="button"
-                            onClick={() => handleRemovePendingFile(idx)}
-                            disabled={isPending}
-                            className="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors disabled:opacity-50 shrink-0 ml-2"
-                            title="Remover arquivo"
+                        return (
+                          <div
+                            key={`pending-file-${idx}`}
+                            className="flex items-center justify-between p-2.5 rounded-xl border border-emerald-200 dark:border-emerald-900/60 bg-emerald-50/40 dark:bg-emerald-950/20 text-xs shadow-sm"
                           >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      ))}
+                            <div className="flex items-center gap-2 overflow-hidden">
+                              <div
+                                className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${
+                                  isSheet
+                                    ? 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/40 dark:text-emerald-400'
+                                    : isImg
+                                    ? 'bg-blue-100 text-blue-600 dark:bg-blue-900/40 dark:text-blue-400'
+                                    : 'bg-rose-100 text-rose-600 dark:bg-rose-900/40 dark:text-rose-400'
+                                }`}
+                              >
+                                {isSheet ? (
+                                  <FileSpreadsheet className="w-3.5 h-3.5" />
+                                ) : isImg ? (
+                                  <ImageIcon className="w-3.5 h-3.5" />
+                                ) : (
+                                  <FileText className="w-3.5 h-3.5" />
+                                )}
+                              </div>
+                              <div className="overflow-hidden">
+                                <p className="font-bold text-slate-800 dark:text-slate-200 truncate">
+                                  {file.name}
+                                </p>
+                                <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                                  {formatFileSize(file.size)} (novo)
+                                </span>
+                              </div>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={() => handleRemovePendingFile(idx)}
+                              disabled={isPending}
+                              className="p-1.5 text-slate-400 hover:text-rose-500 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-colors disabled:opacity-50 shrink-0 ml-2"
+                              title="Remover arquivo"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

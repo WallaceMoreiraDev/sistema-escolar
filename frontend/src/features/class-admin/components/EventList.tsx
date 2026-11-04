@@ -11,6 +11,7 @@ import {
   ChevronDown,
   ChevronUp,
   FileText,
+  FileSpreadsheet,
   Download,
   Loader2,
 } from 'lucide-react';
@@ -22,7 +23,7 @@ import { ApiError } from '@/utils/apiError';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { eventApi } from '../api/eventApi';
 import { AttachmentImagePreview } from './AttachmentImagePreview';
-import { formatFileSize, isImageAttachment } from '../utils/attachmentUtils';
+import { formatFileSize, isImageAttachment, isSpreadsheetAttachment } from '../utils/attachmentUtils';
 import { triggerFileDownload } from '../utils/downloadHelper';
 import { sanitizeSafeUrl } from '@/utils/urlSecurity';
 
@@ -211,6 +212,7 @@ export function EventList({ onEdit, turmaId }: EventListProps) {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 w-full">
                 {event.anexos.map((anexo) => {
                   const isImg = isImageAttachment(anexo);
+                  const isSheet = isSpreadsheetAttachment(anexo);
                   const isPdf = anexo.mimeType === 'application/pdf';
                   const isDownloading = downloadingId === anexo.id;
 
@@ -241,12 +243,18 @@ export function EventList({ onEdit, turmaId }: EventListProps) {
                       <div className="flex items-center gap-2.5 overflow-hidden">
                         <div
                           className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
-                            isPdf
+                            isSheet
+                              ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400'
+                              : isPdf
                               ? 'bg-rose-50 text-rose-500 dark:bg-rose-950/30 dark:text-rose-400'
                               : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
                           }`}
                         >
-                          <FileText className="w-4 h-4" />
+                          {isSheet ? (
+                            <FileSpreadsheet className="w-4 h-4" />
+                          ) : (
+                            <FileText className="w-4 h-4" />
+                          )}
                         </div>
                         <div className="overflow-hidden">
                           <p className="font-bold text-slate-900 dark:text-white truncate">

@@ -5,6 +5,7 @@ import {
   X,
   Calendar,
   FileText,
+  FileSpreadsheet,
   ExternalLink,
   AlertTriangle,
   BookOpen,
@@ -13,11 +14,16 @@ import {
   AlertCircle,
   Loader2,
 } from 'lucide-react';
+import { EventAttachmentDTO } from '@shared/types';
 import { useClassEvent } from '../../class-admin/hooks/useClassEvents';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { eventApi } from '../../class-admin/api/eventApi';
 import { AttachmentImagePreview } from '../../class-admin/components/AttachmentImagePreview';
-import { formatFileSize, isImageAttachment } from '../../class-admin/utils/attachmentUtils';
+import {
+  formatFileSize,
+  isImageAttachment,
+  isSpreadsheetAttachment,
+} from '../../class-admin/utils/attachmentUtils';
 import { triggerFileDownload } from '../../class-admin/utils/downloadHelper';
 import { sanitizeSafeUrl } from '@/utils/urlSecurity';
 
@@ -33,81 +39,114 @@ export function EventModal() {
   const [now] = useState(() => Date.now());
 
   const onClose = () => {
-    navigate('/app/minha-turma');
+    // Retorna para a tela de origem (preserva histórico, filtros e scroll).
+    // Se não houver histórico de navegação interna, volta para a rota pai da turma.
+    if (window.history.state && window.history.state.idx > 0) {
+      navigate(-1);
+    } else {
+      navigate('/app/minha-turma');
+    }
   };
 
-  // Download de anexo (para PDFs e arquivos genéricos)
-  const handleDownload = async (anexoId: string, anexoNome?: string) => {
-    if (!session?.access_token || !rawEvent) return;
-    setActionError(null);
-    setDownloadingId(anexoId);
+  const handleDownload = async (anexoId: string, nomeArquivo: string) => {
+    if (!rawEvent || !session?.access_token) return;
+
     try {
+      setDownloadingId(anexoId);
+      setActionError(null);
+
       const res = await eventApi.getAttachmentDownloadUrl(
         session.access_token,
         rawEvent.id,
         anexoId
       );
-      if (res.data?.downloadUrl) {
-        triggerFileDownload(res.data.downloadUrl, anexoNome);
-      }
+
+      triggerFileDownload(res.data.downloadUrl, nomeArquivo);
     } catch {
-      setActionError('Não foi possível obter o link de download do anexo.');
+      setActionError(
+        'Não foi possível realizar o download do anexo. Tente novamente mais tarde.'
+      );
     } finally {
       setDownloadingId(null);
     }
   };
 
-  // Prepara o evento para UI caso exista
-  let event = null;
+  // Mapeamento e formatação visual dos dados do evento
+  let event: {
+    materia: string;
+    categoria: string;
+    dataHoraLimite: string;
+    descricao?: string | null;
+    anexoUrl?: string | null;
+    links: Array<{ titulo: string; url: string }>;
+    anexos: EventAttachmentDTO[];
+  } | null = null;
+
   let isExpiredPastSevenDays = false;
   let hasAttachments = false;
 
   if (rawEvent) {
-    const isProva = rawEvent.categoria === 'Prova';
-    const isTrab = rawEvent.categoria === 'Trabalho';
-    const isAviso = rawEvent.categoria === 'Aviso';
-
-    const colorClass = isProva
-      ? 'text-rose-600'
-      : isTrab
-      ? 'text-blue-600'
-      : isAviso
-      ? 'text-purple-600'
-      : 'text-amber-600';
-    const bgClass = isProva
-      ? 'bg-rose-500/10'
-      : isTrab
-      ? 'bg-blue-500/10'
-      : isAviso
-      ? 'bg-purple-500/10'
-      : 'bg-amber-500/10';
-
-    const dateObj = new Date(rawEvent.dataHoraLimite);
-    const dayStr = dateObj.getDate().toString().padStart(2, '0');
-    const monthStr = dateObj
-      .toLocaleString('pt-BR', { month: 'short' })
-      .replace('.', '');
-    const time = dateObj.toLocaleTimeString('pt-BR', {
+    const rawLimit = new Date(rawEvent.dataHoraLimite);
+    const dateFormatted = rawLimit.toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    });
+    const timeFormatted = rawLimit.toLocaleTimeString('pt-BR', {
       hour: '2-digit',
       minute: '2-digit',
     });
-    const dateStr = `${dayStr} ${monthStr} • ${time}`;
-
-    const deadline = dateObj.getTime();
-    const sevenDaysMs = 7 * 24 * 60 * 60 * 1000;
-    isExpiredPastSevenDays = now - deadline > sevenDaysMs;
-    hasAttachments = !!rawEvent.anexos && rawEvent.anexos.length > 0;
 
     event = {
-      ...rawEvent,
-      label: rawEvent.categoria.toUpperCase(),
-      title: rawEvent.materia,
-      subject: rawEvent.materia,
-      dateStr,
-      colorClass,
-      bgClass,
+      materia: rawEvent.materia,
+      categoria: rawEvent.categoria,
+      dataHoraLimite: `${dateFormatted} às ${timeFormatted}`,
+      descricao: rawEvent.descricao,
+      anexoUrl: rawEvent.anexoUrl,
+      links: rawEvent.links || [],
+      anexos: rawEvent.anexos || [],
     };
+
+    const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+    isExpiredPastSevenDays = now - rawLimit.getTime() > sevenDaysInMs;
+    hasAttachments = !!rawEvent.anexos && rawEvent.anexos.length > 0;
   }
+
+  // Configuração visual de cores por categoria (consistente com o calendário)
+  const categoryConfig: Record<
+    string,
+    { badgeBg: string; badgeText: string; headerBorder: string; headerBg: string }
+  > = {
+    Prova: {
+      badgeBg: 'bg-rose-100 dark:bg-rose-950/40',
+      badgeText: 'text-rose-700 dark:text-rose-300',
+      headerBorder: 'bg-rose-500',
+      headerBg: 'bg-rose-50/50 dark:bg-rose-950/20',
+    },
+    Trabalho: {
+      badgeBg: 'bg-amber-100 dark:bg-amber-950/40',
+      badgeText: 'text-amber-700 dark:text-amber-300',
+      headerBorder: 'bg-amber-500',
+      headerBg: 'bg-amber-50/50 dark:bg-amber-950/20',
+    },
+    Tarefa: {
+      badgeBg: 'bg-blue-100 dark:bg-blue-950/40',
+      badgeText: 'text-blue-700 dark:text-blue-300',
+      headerBorder: 'bg-blue-500',
+      headerBg: 'bg-blue-50/50 dark:bg-blue-950/20',
+    },
+    Aviso: {
+      badgeBg: 'bg-slate-100 dark:bg-slate-800',
+      badgeText: 'text-slate-700 dark:text-slate-300',
+      headerBorder: 'bg-slate-400',
+      headerBg: 'bg-slate-50/50 dark:bg-slate-900/40',
+    },
+  };
+
+  const currentConfig =
+    event && categoryConfig[event.categoria]
+      ? categoryConfig[event.categoria]
+      : categoryConfig.Tarefa;
 
   return createPortal(
     <div
@@ -159,71 +198,73 @@ export function EventModal() {
           <>
             {/* Cabeçalho do Modal */}
             <div
-              className={`p-6 border-b border-slate-200/50 dark:border-slate-800/50 ${event.bgClass} shrink-0`}
+              className={`relative p-6 border-b border-slate-200/50 dark:border-slate-800/50 ${currentConfig.headerBg} shrink-0`}
             >
-              <div className="flex justify-between items-start mb-4">
+              <div className={`absolute top-0 left-0 w-full h-1 ${currentConfig.headerBorder}`} />
+
+              <div className="flex justify-between items-start mb-4 pt-1">
                 <div
-                  className={`inline-flex px-3 py-1 rounded-xl text-xs font-bold tracking-widest bg-white/80 dark:bg-slate-900/80 shadow-sm ${event.colorClass}`}
+                  className={`inline-flex px-3 py-1 rounded-xl text-xs font-bold uppercase tracking-wider ${currentConfig.badgeBg} ${currentConfig.badgeText}`}
                 >
-                  {event.label}
+                  {event.categoria}
                 </div>
                 <button
+                  type="button"
                   onClick={onClose}
-                  className="p-2 text-slate-500 hover:text-slate-900 dark:hover:text-white transition-all bg-white/40 dark:bg-slate-800/40 rounded-full hover:bg-white dark:hover:bg-slate-700 hover:scale-105 active:scale-95 shadow-sm cursor-pointer"
+                  className="p-2 text-slate-400 hover:text-slate-700 dark:hover:text-white transition-all bg-white/60 dark:bg-slate-800/60 rounded-full hover:bg-white dark:hover:bg-slate-800 hover:scale-105 active:scale-95 shadow-sm cursor-pointer"
+                  aria-label="Fechar modal"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white leading-tight">
-                {event.title}
+
+              <h2 className="text-2xl font-black text-slate-900 dark:text-white leading-tight mb-2">
+                {event.materia}
               </h2>
-              <p className="text-sm font-bold mt-3 text-slate-700 dark:text-slate-300 flex items-center gap-2 bg-white/30 dark:bg-slate-900/30 w-fit px-3 py-1.5 rounded-lg shadow-sm">
-                <BookOpen className="w-4 h-4 text-slate-500 dark:text-slate-400" />
-                {event.subject}
-              </p>
+
+              <div className="flex items-center gap-2 text-sm font-semibold text-slate-600 dark:text-slate-300">
+                <Calendar className="w-4 h-4 text-primary shrink-0" />
+                <span className="capitalize">{event.dataHoraLimite}</span>
+              </div>
             </div>
 
-            {/* Corpo do Modal */}
-            <div className="p-6 bg-slate-50/50 dark:bg-slate-900/50 overflow-y-auto space-y-6">
+            {/* Corpo do Modal com Scroll */}
+            <div className="p-6 overflow-y-auto space-y-6 flex-1 bg-slate-50/30 dark:bg-slate-900/30">
               {actionError && (
-                <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 text-xs flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 shrink-0" />
+                <div className="p-3.5 rounded-xl bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-900 text-red-700 dark:text-red-400 text-xs flex items-start gap-2 animate-in fade-in">
+                  <AlertTriangle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
                   <span>{actionError}</span>
                 </div>
               )}
 
-              {/* Data Limite */}
-              <div>
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
-                  <Calendar className="w-4 h-4" />
-                  Data Limite / Realização
-                </h4>
-                <p className="text-sm font-bold text-slate-900 dark:text-white bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 px-4 py-2.5 rounded-xl shadow-sm inline-block">
-                  {event.dateStr}
-                </p>
-              </div>
-
               {/* Descrição Detalhada */}
               <div>
-                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
-                  <FileText className="w-4 h-4" />
-                  Descrição Detalhada
+                <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2 flex items-center gap-1.5">
+                  <BookOpen className="w-4 h-4" />
+                  Instruções e Conteúdo
                 </h4>
-                <div className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed bg-white dark:bg-slate-800 p-5 rounded-2xl border border-slate-200 dark:border-slate-700 shadow-sm whitespace-pre-wrap break-words">
-                  {event.descricao || (
-                    <span className="italic opacity-60">Sem descrição detalhada.</span>
+                <div className="p-4 rounded-2xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700 shadow-sm">
+                  {event.descricao ? (
+                    <p className="text-sm text-slate-700 dark:text-slate-200 leading-relaxed whitespace-pre-line">
+                      {event.descricao}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-slate-400 italic">
+                      Nenhuma descrição adicional foi fornecida pelo líder ou professor.
+                    </p>
                   )}
                 </div>
               </div>
 
-              {/* LINKS EXTERNOS (Canva, Drive, Miro, etc.) */}
+              {/* LINKS EXTERNOS DE APOIO (Múltiplos links e retrocompatibilidade com anexoUrl) */}
               {((event.links && event.links.length > 0) || event.anexoUrl) && (
                 <div>
                   <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
                     <ExternalLink className="w-4 h-4" />
-                    Links Externos de Apoio
+                    Links e Materiais de Apoio
                   </h4>
-                  <div className="space-y-2.5">
+                  <div className="space-y-2">
+                    {/* Lista dinâmica de links estruturados */}
                     {event.links &&
                       event.links.map((link, idx) => (
                         <a
@@ -283,7 +324,7 @@ export function EventModal() {
                 </div>
               )}
 
-              {/* ANEXOS FÍSICOS (Preview Inline de Imagens e Cards de Documentos) */}
+              {/* ANEXOS FÍSICOS (Preview Inline de Imagens e Cards de Documentos/Planilhas) */}
               <div>
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2.5 flex items-center gap-1.5">
                   <Paperclip className="w-4 h-4" />
@@ -295,6 +336,7 @@ export function EventModal() {
                     <div className="space-y-3">
                       {event.anexos.map((anexo) => {
                         const isImg = isImageAttachment(anexo);
+                        const isSheet = isSpreadsheetAttachment(anexo);
                         const isPdf = anexo.mimeType === 'application/pdf';
                         const isDownloading = downloadingId === anexo.id;
 
@@ -310,7 +352,7 @@ export function EventModal() {
                           );
                         }
 
-                        // Se for PDF ou outro arquivo físico, renderiza card com botão de baixar/abrir
+                        // Se for Planilha, PDF ou outro arquivo físico, renderiza card com botão de baixar/abrir
                         return (
                           <div
                             key={anexo.id}
@@ -319,12 +361,18 @@ export function EventModal() {
                             <div className="flex items-center gap-3 overflow-hidden">
                               <div
                                 className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                                  isPdf
+                                  isSheet
+                                    ? 'bg-emerald-50 text-emerald-600 dark:bg-emerald-950/30 dark:text-emerald-400'
+                                    : isPdf
                                     ? 'bg-rose-50 text-rose-500 dark:bg-rose-950/30 dark:text-rose-400'
                                     : 'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
                                 }`}
                               >
-                                <FileText className="w-5 h-5" />
+                                {isSheet ? (
+                                  <FileSpreadsheet className="w-5 h-5" />
+                                ) : (
+                                  <FileText className="w-5 h-5" />
+                                )}
                               </div>
                               <div className="flex flex-col overflow-hidden">
                                 <span className="text-sm font-bold text-slate-900 dark:text-white truncate">

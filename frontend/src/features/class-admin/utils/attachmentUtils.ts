@@ -20,3 +20,17 @@ export function isImageAttachment(anexo: EventAttachmentDTO): boolean {
     name.endsWith('.webp')
   );
 }
+
+export function isSpreadsheetAttachment(anexo: EventAttachmentDTO): boolean {
+  if (anexo.mimeType) {
+    if (
+      anexo.mimeType === 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' ||
+      anexo.mimeType === 'application/vnd.ms-excel' ||
+      anexo.mimeType === 'text/csv'
+    ) {
+      return true;
+    }
+  }
+  const name = anexo.nomeArquivo?.toLowerCase() || '';
+  return name.endsWith('.xlsx') || name.endsWith('.xls') || name.endsWith('.csv');
+}
