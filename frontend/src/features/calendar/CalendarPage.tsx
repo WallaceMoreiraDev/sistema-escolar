@@ -6,6 +6,7 @@ import { useClassEvents } from '../class-admin/hooks/useClassEvents';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { JoinClassModal } from '@/features/dashboard/components/JoinClassModal';
 import { CreateClassModal } from '@/features/dashboard/components/CreateClassModal';
+import { EventCheckbox } from './components/EventCheckbox';
 
 const FILTERS = ['TUDO', 'PROVAS', 'TRABALHOS', 'TAREFAS', 'AVISOS'];
 const MONTH_NAMES = [
@@ -170,7 +171,8 @@ export function CalendarPage() {
       .map((ev) => ({
         id: ev.id,
         title: ev.materia,
-        description: ev.descricao || 'Sem descrição.',
+        description: ev.descricao || '',
+        concluida: ev.concluida,
         ...getCalendarEventStyles(ev.categoria),
       }));
 
@@ -200,7 +202,8 @@ export function CalendarPage() {
       .map((ev) => ({
         id: ev.id,
         title: ev.materia,
-        description: ev.descricao || 'Sem descrição.',
+        description: ev.descricao || '',
+        concluida: ev.concluida,
         ...getCalendarEventStyles(ev.categoria),
       }));
 
@@ -368,19 +371,32 @@ export function CalendarPage() {
                               e.stopPropagation();
                               navigate(`evento/${event.id}`);
                             }}
-                            className={`p-4 rounded-2xl border-l-4 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all shadow-sm glass-card ${event.borderClass} ${event.bgClass}`}
+                            className={`p-4 rounded-2xl border-l-4 cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-all shadow-sm glass-card ${event.borderClass} ${event.bgClass} ${
+                              event.concluida ? 'opacity-55 hover:opacity-80' : ''
+                            }`}
                           >
-                            <div
-                              className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold tracking-wider mb-3 ${event.colorClass} bg-white/50 dark:bg-slate-900/50 shadow-sm`}
-                            >
-                              {event.label}
+                            <div className="flex items-center justify-between gap-2 mb-2">
+                              <div
+                                className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${event.colorClass} bg-white/50 dark:bg-slate-900/50 shadow-sm`}
+                              >
+                                {event.label}
+                              </div>
+                              <EventCheckbox eventId={event.id} concluida={event.concluida} size="sm" />
                             </div>
-                            <p className="text-sm font-bold text-slate-900 dark:text-white leading-tight mb-2">
+                            <p
+                              className={`text-sm font-bold text-slate-900 dark:text-white leading-tight mb-1.5 ${
+                                event.concluida
+                                  ? 'line-through decoration-slate-400 text-slate-500 dark:text-slate-400'
+                                  : ''
+                              }`}
+                            >
                               {event.title}
                             </p>
-                            <p className="text-xs font-medium text-slate-600 dark:text-slate-400 line-clamp-3 leading-relaxed">
-                              {event.description}
-                            </p>
+                            {event.description ? (
+                              <p className="text-xs font-medium text-slate-600 dark:text-slate-400 line-clamp-2 leading-relaxed">
+                                {event.description}
+                              </p>
+                            ) : null}
                           </div>
                         ))
                       ) : (
@@ -432,19 +448,34 @@ export function CalendarPage() {
                                 e.stopPropagation();
                                 navigate(`evento/${event.id}`);
                               }}
-                              className={`glass-card p-5 rounded-2xl border-l-4 cursor-pointer shadow-sm active:scale-[0.98] transition-transform ${event.borderClass} ${event.bgClass}`}
+                              className={`glass-card p-4 sm:p-5 rounded-2xl border-l-4 cursor-pointer shadow-sm active:scale-[0.98] transition-all flex items-start justify-between gap-3 ${event.borderClass} ${event.bgClass} ${
+                                event.concluida ? 'opacity-55 hover:opacity-80' : ''
+                              }`}
                             >
-                              <div
-                                className={`inline-block px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wider mb-2 ${event.colorClass} bg-white/60 dark:bg-slate-900/60`}
-                              >
-                                {event.label}
+                              <div className="flex-1 min-w-0">
+                                <div
+                                  className={`inline-block px-2.5 py-0.5 rounded-lg text-[10px] font-bold tracking-wider mb-1.5 ${event.colorClass} bg-white/60 dark:bg-slate-900/60`}
+                                >
+                                  {event.label}
+                                </div>
+                                <h4
+                                  className={`text-base font-bold text-slate-900 dark:text-white mb-1 ${
+                                    event.concluida
+                                      ? 'line-through decoration-slate-400 text-slate-500 dark:text-slate-400'
+                                      : ''
+                                  }`}
+                                >
+                                  {event.title}
+                                </h4>
+                                {event.description ? (
+                                  <p className="line-clamp-2 text-xs text-slate-500 mt-1 leading-relaxed">
+                                    {event.description}
+                                  </p>
+                                ) : null}
                               </div>
-                              <h4 className="text-base font-bold text-slate-900 dark:text-white mb-1">
-                                {event.title}
-                              </h4>
-                              <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
-                                {event.description}
-                              </p>
+                              <div className="shrink-0 pt-0.5">
+                                <EventCheckbox eventId={event.id} concluida={event.concluida} />
+                              </div>
                             </div>
                           ))}
                         </div>
@@ -658,7 +689,9 @@ export function CalendarPage() {
                               setHoveredEvent(event);
                             }}
                             onMouseLeave={() => setHoveredEvent(null)}
-                            className={`text-xs font-bold px-2.5 py-2 rounded-xl border-l-[3px] ${event.colorClass} ${event.bgClass} ${event.borderClass} cursor-pointer hover:scale-[1.02] hover:shadow-md transition-all leading-tight line-clamp-3 shrink-0`}
+                            className={`text-xs font-bold px-2.5 py-2 rounded-xl border-l-[3px] ${event.colorClass} ${event.bgClass} ${event.borderClass} cursor-pointer hover:scale-[1.02] hover:shadow-md transition-all leading-tight line-clamp-3 shrink-0 ${
+                              event.concluida ? 'opacity-50 line-through' : ''
+                            }`}
                           >
                             <span className="opacity-75 mr-1 font-extrabold text-[10px]">
                               [{event.label.slice(0, 3)}]
@@ -733,14 +766,32 @@ export function CalendarPage() {
                             e.stopPropagation();
                             navigate(`evento/${event.id}`);
                           }}
-                          className={`glass-card p-4 rounded-2xl border-l-4 cursor-pointer active:scale-[0.98] transition-transform ${event.borderClass} ${event.bgClass}`}
+                          className={`glass-card p-4 rounded-2xl border-l-4 cursor-pointer active:scale-[0.98] transition-all flex items-start justify-between gap-3 ${event.borderClass} ${event.bgClass} ${
+                            event.concluida ? 'opacity-55 hover:opacity-80' : ''
+                          }`}
                         >
-                          <div className={`text-xs font-bold mb-2 ${event.colorClass}`}>
-                            {event.label}
+                          <div className="flex-1 min-w-0">
+                            <div className={`text-xs font-bold mb-1.5 ${event.colorClass}`}>
+                              {event.label}
+                            </div>
+                            <p
+                              className={`text-sm font-bold text-slate-900 dark:text-white leading-tight ${
+                                event.concluida
+                                  ? 'line-through decoration-slate-400 text-slate-500 dark:text-slate-400'
+                                  : ''
+                              }`}
+                            >
+                              {event.title}
+                            </p>
+                            {event.description ? (
+                              <p className="line-clamp-2 text-xs text-slate-500 mt-1 leading-relaxed">
+                                {event.description}
+                              </p>
+                            ) : null}
                           </div>
-                          <p className="text-sm font-bold text-slate-900 dark:text-white leading-tight">
-                            {event.title}
-                          </p>
+                          <div className="shrink-0 pt-0.5">
+                            <EventCheckbox eventId={event.id} concluida={event.concluida} />
+                          </div>
                         </div>
                       ))}
 

@@ -1,6 +1,8 @@
 import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useClassEvents } from '../../class-admin/hooks/useClassEvents';
+import { EventCheckbox } from '../../calendar/components/EventCheckbox';
+import { CheckCircle2 } from 'lucide-react';
 
 /**
  * Calcula os próximos 5 dias letivos (dias úteis: segunda a sexta) a partir de uma data de referência.
@@ -189,7 +191,11 @@ export function WeeklySummary() {
               <div
                 key={event.id}
                 onClick={() => navigate(`/app/minha-turma/evento/${event.id}`)}
-                className="glass-card p-5 sm:p-6 flex items-center gap-4 sm:gap-5 group cursor-pointer"
+                className={`glass-card p-5 sm:p-6 flex items-center gap-4 sm:gap-5 group cursor-pointer transition-all ${
+                  event.concluida
+                    ? 'opacity-55 hover:opacity-80 bg-slate-50/50 dark:bg-slate-900/30'
+                    : ''
+                }`}
               >
                 <div
                   className={`w-14 h-14 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl border flex flex-col items-center justify-center shrink-0 shadow-sm transition-colors ${styles.bg} ${styles.border} ${styles.text} ${styles.hoverBg} group-hover:text-white`}
@@ -209,11 +215,23 @@ export function WeeklySummary() {
                     >
                       {event.categoria}
                     </span>
+                    {event.concluida && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                        <CheckCircle2 className="w-3 h-3" />
+                        Concluída
+                      </span>
+                    )}
                     <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
                       {time}
                     </span>
                   </div>
-                  <h4 className="text-base sm:text-lg font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate">
+                  <h4
+                    className={`text-base sm:text-lg font-bold text-slate-900 dark:text-white group-hover:text-primary transition-colors truncate ${
+                      event.concluida
+                        ? 'line-through decoration-slate-400 text-slate-500 dark:text-slate-400'
+                        : ''
+                    }`}
+                  >
                     {event.materia}
                   </h4>
                   <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-1">
@@ -221,6 +239,10 @@ export function WeeklySummary() {
                       <span className="italic">Sem descrição</span>
                     )}
                   </p>
+                </div>
+
+                <div className="shrink-0 pl-1">
+                  <EventCheckbox eventId={event.id} concluida={event.concluida} />
                 </div>
               </div>
             );

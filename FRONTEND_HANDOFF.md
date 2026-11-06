@@ -2,6 +2,92 @@
 
 > Este documento serve como ponte de comunicação oficial entre o time de Backend (IA/Dev) e o time de Frontend (IA/Dev). Todas as ações que o Frontend precisar tomar devido a alterações de API, banco ou regras de negócio devem ser registradas aqui em formato estrito de checklist.
 
+## 🟢 Concluído: Checklist de Tarefas e Subgrupos de Turma (A/B)
+
+**Data/Contexto:** Implementação do sistema de checklist individual de tarefas para alunos e divisão da turma em subgrupos (`GERAL`, `TURMA_A`, `TURMA_B`). Permite que alunos alternem o status de conclusão de cada tarefa de forma idempotente e que líderes/administradores direcionem eventos e atividades para a turma toda ou para um subgrupo específico.
+
+### 1. Novos Endpoints e Rotas Atualizadas
+
+#### A. Atualização do Subgrupo do Aluno
+- **Rota:** `PATCH /api/me/subgrupo`
+- **Autorização:** Usuário autenticado (`authMiddleware`).
+- **Headers:** `Content-Type: application/json`
+- **Payload (`updateSubgrupoSchema`):**
+  ```json
+  {
+    "subgrupo": "TURMA_A"
+  }
+  ```
+  *Valores permitidos:* `'GERAL' | 'TURMA_A' | 'TURMA_B'`.
+- **Envelope de Resposta (`ApiResponse<UserProfileDTO>`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "id": "uuid",
+      "nome": "Wallace Moreira",
+      "email": "aluno@etec.sp.gov.br",
+      "role": "ALUNO",
+      "onboardingConcluido": true,
+      "termosAceitosEm": "2026-10-31T00:00:00.000Z",
+      "subgrupoTurma": "TURMA_A",
+      "turma": {
+        "id": "uuid-da-turma",
+        "nomeOficial": "3º MTEC Desenvolvimento de Sistemas",
+        "codigoConvite": "DEV2026",
+        "ano": "3º Ano",
+        "curso": "Desenvolvimento de Sistemas",
+        "turno": "Tarde",
+        "localSala": "Laboratório 04"
+      }
+    }
+  }
+  ```
+
+#### B. Toggle de Conclusão de Tarefa (Checklist do Aluno)
+- **Rota:** `POST /api/turmas/eventos/:id/toggle-conclusao`
+- **Autorização:** Qualquer usuário autenticado pertencente à turma do evento (ou Administrador Geral).
+- **Parâmetro de Rota:** `:id` (UUID do evento).
+- **Comportamento (Idempotente):**
+  - Se a tarefa já estiver marcada como concluída pelo usuário, o registro é removido e retorna `{ "concluida": false }`.
+  - Se a tarefa não estiver concluída, o registro é criado e retorna `{ "concluida": true }`.
+- **Envelope de Resposta (`ApiResponse<{ concluida: boolean }>`):**
+  ```json
+  {
+    "success": true,
+    "data": {
+      "concluida": true
+    }
+  }
+  ```
+
+---
+
+### 2. Contratos Compartilhados Atualizados (`/shared`)
+
+1. **`UserProfileDTO` (`@shared/types/user.types.ts`):**
+   - Nova propriedade `subgrupoTurma: SubgrupoTurma` (`'GERAL' | 'TURMA_A' | 'TURMA_B'`).
+2. **`EventDTO` (`@shared/types/event.types.ts`):**
+   - Nova propriedade `grupoDestinatario?: GrupoDestinatario` (`'TODOS' | 'TURMA_A' | 'TURMA_B'`).
+   - Nova propriedade `concluida?: boolean` (calculada dinamicamente com base no usuário autenticado).
+3. **`CreateEventPayload` e `UpdateEventPayload` (`@shared/types/event.types.ts`):**
+   - Campo opcional `grupoDestinatario?: GrupoDestinatario`.
+4. **Schemas Zod (`@shared/schemas`):**
+   - `updateSubgrupoSchema` exportado em `@shared/schemas/userSchema`.
+   - `createEventSchema` inclui `grupoDestinatario: z.enum(['TODOS', 'TURMA_A', 'TURMA_B']).default('TODOS')`.
+   - `updateEventSchema` inclui `grupoDestinatario: z.enum(['TODOS', 'TURMA_A', 'TURMA_B']).optional()`.
+
+---
+
+### Checklist para o Frontend (Ações Recomendadas para a Frontend AI):
+- [ ] No perfil do usuário / configurações ou cabeçalho, permitir que o aluno selecione seu subgrupo de turma (`GERAL`, `TURMA_A` ou `TURMA_B`) consumindo `PATCH /api/me/subgrupo`.
+- [x] Nos cards de atividades / calendário de tarefas (`EventCard.tsx`, `EventModal.tsx`, etc.), adicionar checkbox interativo para marcar/desmarcar tarefa concluída consumindo `POST /api/turmas/eventos/:id/toggle-conclusao`.
+- [x] Aplicar feedback visual de tarefa concluída (ex: texto tachado, opacidade reduzida ou badge verde de "Concluída") baseado na propriedade `event.concluida`.
+- [ ] No formulário de criação/edição de eventos (`EventForm.tsx`), incluir seletor de grupo destinatário (`TODOS`, `TURMA_A`, `TURMA_B`), com valor padrão `TODOS`.
+- [ ] No calendário/lista de tarefas, exibir badge identificador quando a tarefa for destinada especificamente para `Turma A` ou `Turma B`, e permitir filtrar tarefas de acordo com o subgrupo do aluno (`user.subgrupoTurma`).
+
+---
+
 ## 🟢 Concluído: Suporte a Planilhas Excel (.xlsx, .xls) e CSV nos Anexos de Atividades
 
 **Data/Contexto:** Liberação dos formatos de planilha e tabelas nos anexos físicos de atividades da turma (`POST /api/turmas/eventos/:id/anexos`). A migration do Supabase Storage expandiu os MIME types permitidos no bucket `eventos-anexos`, e o backend agora valida e protege esses arquivos contra spoofing de extensões, preservando o teto de 5 MB por arquivo e a cota cumulativa de 5 MB por evento.

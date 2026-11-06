@@ -4,6 +4,8 @@ import { eventApi } from '../api/eventApi';
 import {
   CreateEventPayload,
   UpdateEventPayload,
+  EventDTO,
+  ApiResponse,
 } from '@shared/types';
 import { ApiError } from '@/utils/apiError';
 
@@ -238,6 +240,103 @@ export function useDeleteAttachment() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['class-events'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-class-events'] });
+    },
+  });
+}
+
+
+/**
+ * Hook de mutação para alternar a conclusão individual de uma tarefa (Checklist Pessoal).
+ * Implementa Atualização Otimista (Optimistic Update) com rollback automático em caso de falha.
+ * Rota: POST /api/turmas/eventos/:id/toggle-conclusao
+ */
+export function useToggleEventCompletion() {
+  const queryClient = useQueryClient();
+  const { session } = useAuth();
+  const token = session?.access_token;
+
+  return useMutation({
+    mutationFn: async (eventId: string) => {
+      if (!token) {
+        throw new ApiError('UNAUTHORIZED', 401, undefined, 'Usuário não autenticado.');
+      }
+      return eventApi.toggleCompletion(token, eventId);
+    },
+    onMutate: async (eventId: string) => {
+      // 1. Cancela queries ativas para evitar race conditions no cache
+      await queryClient.cancelQueries({ queryKey: ['class-events'] });
+      await queryClient.cancelQueries({ queryKey: ['class-event', eventId] });
+      await queryClient.cancelQueries({ queryKey: ['admin-class-events'] });
+
+      // 2. Snapshot do estado anterior para rollback
+      const previousClassEvents = queryClient.getQueriesData<ApiResponse<EventDTO[]>>({
+        queryKey: ['class-events'],
+      });
+      const previousSingleEvent = queryClient.getQueryData<EventDTO>(['class-event', eventId]);
+      const previousAdminEvents = queryClient.getQueriesData<ApiResponse<EventDTO[]>>({
+        queryKey: ['admin-class-events'],
+      });
+
+      // 3. Atualização otimista imediata na lista de eventos (0ms de latência percebida)
+      queryClient.setQueriesData<ApiResponse<EventDTO[]>>(
+        { queryKey: ['class-events'] },
+        (old) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: old.data.map((ev) =>
+              ev.id === eventId ? { ...ev, concluida: !ev.concluida } : ev
+            ),
+          };
+        }
+      );
+
+      // 4. Atualização otimista imediata no evento individual do modal (se estiver em cache)
+      queryClient.setQueryData<EventDTO>(['class-event', eventId], (old) => {
+        if (!old) return old;
+        return {
+          ...old,
+          concluida: !old.concluida,
+        };
+      });
+
+      // 5. Atualização otimista imediata na lista de gestão do admin
+      queryClient.setQueriesData<ApiResponse<EventDTO[]>>(
+        { queryKey: ['admin-class-events'] },
+        (old) => {
+          if (!old?.data) return old;
+          return {
+            ...old,
+            data: old.data.map((ev) =>
+              ev.id === eventId ? { ...ev, concluida: !ev.concluida } : ev
+            ),
+          };
+        }
+      );
+
+      return { previousClassEvents, previousSingleEvent, previousAdminEvents };
+    },
+    onError: (_err, eventId, context) => {
+      // Rollback para os valores anteriores caso a API retorne erro
+      if (context?.previousClassEvents) {
+        context.previousClassEvents.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+      if (context?.previousSingleEvent) {
+        queryClient.setQueryData(['class-event', eventId], context.previousSingleEvent);
+      }
+      if (context?.previousAdminEvents) {
+        context.previousAdminEvents.forEach(([queryKey, data]) => {
+          queryClient.setQueryData(queryKey, data);
+        });
+      }
+    },
+    onSettled: (_data, _err, eventId) => {
+      // Revalida os dados com o servidor após término da mutação
+      queryClient.invalidateQueries({ queryKey: ['class-events'] });
+      queryClient.invalidateQueries({ queryKey: ['class-event', eventId] });
       queryClient.invalidateQueries({ queryKey: ['admin-class-events'] });
     },
   });

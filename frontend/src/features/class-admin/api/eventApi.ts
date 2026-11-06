@@ -309,4 +309,34 @@ export const eventApi = {
 
     return (await res.json()) as ApiResponse<{ downloadUrl: string }>;
   },
+
+  /**
+   * Alterna o status de conclusão individual de uma tarefa pelo aluno (Checklist Pessoal).
+   * Rota: POST /api/turmas/eventos/:id/toggle-conclusao
+   */
+  async toggleCompletion(
+    token: string,
+    eventId: string
+  ): Promise<ApiResponse<{ concluida: boolean }>> {
+    eventIdParamSchema.parse({ id: eventId });
+
+    const res = await fetch(`${API_URL}/api/turmas/eventos/${eventId}/toggle-conclusao`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    if (!res.ok) {
+      const errorData = (await res.json().catch(() => null)) as ApiErrorResponse | null;
+      throw new ApiError(
+        errorData?.code || 'UNKNOWN_ERROR',
+        res.status,
+        errorData?.details,
+        errorData?.message
+      );
+    }
+
+    return (await res.json()) as ApiResponse<{ concluida: boolean }>;
+  },
 };
