@@ -4,3 +4,4 @@ export * from './eventSchema';
 export * from './noticeSchema';
 export * from './onboardingSchema';
 export * from './fundingSchema';
+export * from './userSchema';

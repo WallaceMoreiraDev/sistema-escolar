@@ -3,6 +3,8 @@ import { AnoTurma, TurnoTurma } from './class.types';
 
 export type UserRole = NonNullable<Database['public']['Enums']['user_role']>;
 
+export type SubgrupoTurma = 'GERAL' | 'TURMA_A' | 'TURMA_B';
+
 /**
  * Resumo dos dados da Turma mapeados para o DTO em camelCase (GEMINI.md Seção 2).
  */
@@ -27,6 +29,7 @@ export interface UserProfileDTO {
   role: UserRole;
   onboardingConcluido: boolean;
   termosAceitosEm?: string | null;
+  subgrupoTurma: SubgrupoTurma;
   turma: TurmaSummaryDTO | null;
 }
 
@@ -35,4 +38,11 @@ export interface UserProfileDTO {
  */
 export interface UpdateProfilePayload {
   nome: string;
+}
+
+/**
+ * Payload esperado para atualização de subgrupo da turma.
+ */
+export interface UpdateSubgrupoPayload {
+  subgrupo: SubgrupoTurma;
 }

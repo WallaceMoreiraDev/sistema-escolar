@@ -7,6 +7,12 @@ export const eventoCategoriaEnum = z.enum(['Prova', 'Trabalho', 'Tarefa', 'Aviso
 
 export type EventoCategoriaSchema = z.infer<typeof eventoCategoriaEnum>;
 
+export const grupoDestinatarioEnum = z.enum(['TODOS', 'TURMA_A', 'TURMA_B'], {
+  errorMap: () => ({ message: 'Grupo destinatário inválido. Opções válidas: TODOS, TURMA_A, TURMA_B.' }),
+});
+
+export type GrupoDestinatarioSchema = z.infer<typeof grupoDestinatarioEnum>;
+
 /**
  * Schema de validação para links externos de apoio da atividade.
  */
@@ -50,6 +56,7 @@ export const createEventSchema = z.object({
     .max(2, 'No máximo 2 links permitidos.')
     .optional()
     .default([]),
+  grupoDestinatario: grupoDestinatarioEnum.default('TODOS'),
 });
 
 export type CreateEventInput = z.infer<typeof createEventSchema>;
@@ -57,7 +64,35 @@ export type CreateEventInput = z.infer<typeof createEventSchema>;
 /**
  * Schema de validação para atualização parcial de evento (PUT /api/turmas/eventos/:id).
  */
-export const updateEventSchema = createEventSchema.partial();
+export const updateEventSchema = z.object({
+  materia: z
+    .string()
+    .trim()
+    .min(2, 'A matéria deve ter no mínimo 2 caracteres.')
+    .max(100, 'A matéria deve ter no máximo 100 caracteres.')
+    .optional(),
+  categoria: eventoCategoriaEnum.optional(),
+  dataHoraLimite: z
+    .string()
+    .refine((val) => !isNaN(Date.parse(val)), {
+      message: 'A data e horário limite devem estar em formato de data/hora válido (ISO 8601 UTC).',
+    })
+    .optional(),
+  descricao: z
+    .string()
+    .trim()
+    .max(1000, 'A descrição deve ter no máximo 1000 caracteres.')
+    .nullable()
+    .optional(),
+  anexoUrl: safeHttpUrlSchema('A URL do anexo')
+    .nullable()
+    .optional(),
+  links: z
+    .array(eventLinkSchema)
+    .max(2, 'No máximo 2 links permitidos.')
+    .optional(),
+  grupoDestinatario: grupoDestinatarioEnum.optional(),
+});
 
 export type UpdateEventInput = z.infer<typeof updateEventSchema>;
 

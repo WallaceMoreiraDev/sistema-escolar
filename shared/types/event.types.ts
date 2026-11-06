@@ -2,6 +2,8 @@ import { Database } from './database.types';
 
 export type EventoCategoria = Database['public']['Enums']['evento_categoria'];
 
+export type GrupoDestinatario = 'TODOS' | 'TURMA_A' | 'TURMA_B';
+
 /**
  * Link de apoio associado a um evento ou atividade da turma.
  */
@@ -41,6 +43,8 @@ export interface EventDTO {
   anexos: EventAttachmentDTO[];
   criadoPor: string | null;
   createdAt: string | null; // ISO 8601 UTC
+  grupoDestinatario?: GrupoDestinatario;
+  concluida?: boolean;
 }
 
 /**
@@ -53,6 +57,7 @@ export interface CreateEventPayload {
   descricao?: string | null;
   anexoUrl?: string | null;
   links?: EventLinkDTO[];
+  grupoDestinatario?: GrupoDestinatario;
 }
 
 /**
@@ -65,5 +70,5 @@ export interface UpdateEventPayload {
   descricao?: string | null;
   anexoUrl?: string | null;
   links?: EventLinkDTO[];
+  grupoDestinatario?: GrupoDestinatario;
 }
-
