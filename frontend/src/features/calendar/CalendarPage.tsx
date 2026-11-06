@@ -10,6 +10,9 @@ import {
   Filter,
   Users,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  CalendarDays,
   X,
   RotateCcw,
   Calendar,
@@ -38,6 +41,58 @@ const MONTH_NAMES = [
   'Novembro',
   'Dezembro',
 ];
+
+const MONTH_SHORT = [
+  'Jan',
+  'Fev',
+  'Mar',
+  'Abr',
+  'Mai',
+  'Jun',
+  'Jul',
+  'Ago',
+  'Set',
+  'Out',
+  'Nov',
+  'Dez',
+];
+
+/**
+ * Retorna a segunda-feira da semana de uma data de referência (padrão acadêmico brasileiro).
+ */
+function getMonday(d: Date): Date {
+  const date = new Date(d);
+  const day = date.getDay(); // 0 = Domingo, 1 = Segunda, ..., 6 = Sábado
+  const diff = day === 0 ? -6 : 1 - day;
+  date.setDate(date.getDate() + diff);
+  date.setHours(0, 0, 0, 0);
+  return date;
+}
+
+/**
+ * Formata o intervalo semanal de forma amigável (ex: "02 a 08 de Nov, 2026").
+ */
+function formatWeekRange(monday: Date): string {
+  const sunday = new Date(
+    monday.getFullYear(),
+    monday.getMonth(),
+    monday.getDate() + 6
+  );
+  const startDay = String(monday.getDate()).padStart(2, '0');
+  const endDay = String(sunday.getDate()).padStart(2, '0');
+  const startMonth = MONTH_SHORT[monday.getMonth()];
+  const endMonth = MONTH_SHORT[sunday.getMonth()];
+  const startYear = monday.getFullYear();
+  const endYear = sunday.getFullYear();
+
+  if (startYear !== endYear) {
+    return `${startDay} de ${startMonth}, ${startYear} a ${endDay} de ${endMonth}, ${endYear}`;
+  }
+  if (startMonth !== endMonth) {
+    return `${startDay} de ${startMonth} a ${endDay} de ${endMonth}, ${endYear}`;
+  }
+  return `${startDay} a ${endDay} de ${endMonth}, ${endYear}`;
+}
 
 type FilterType = 'TUDO' | 'PROVAS' | 'TRABALHOS' | 'TAREFAS' | 'AVISOS';
 type FilterStatus = 'ALL' | 'PENDING' | 'COMPLETED';
@@ -89,6 +144,12 @@ export function CalendarPage() {
     new Date(today.getFullYear(), today.getMonth(), 1)
   );
 
+  // Alternador de visão mobile no calendário (Padrão: Grade Semanal de 7 dias)
+  const [mobileCalendarView, setMobileCalendarView] = useState<'WEEK' | 'MONTH'>('WEEK');
+
+  // Estado da Grade Semanal Mobile
+  const [selectedWeekMonday, setSelectedWeekMonday] = useState<Date>(() => getMonday(today));
+
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
 
@@ -132,6 +193,39 @@ export function CalendarPage() {
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
 
+  // Inteligência de Navegação de Semanas (Mobile)
+  const currentWeekMonday = getMonday(today);
+  const isCurrentWeek =
+    selectedWeekMonday.getFullYear() === currentWeekMonday.getFullYear() &&
+    selectedWeekMonday.getMonth() === currentWeekMonday.getMonth() &&
+    selectedWeekMonday.getDate() === currentWeekMonday.getDate();
+
+  const handlePrevWeek = () => {
+    const newMon = new Date(selectedWeekMonday);
+    newMon.setDate(newMon.getDate() - 7);
+    setSelectedWeekMonday(newMon);
+
+    // Sincroniza currentDate com a quinta-feira da semana (dia do meio) para garantir cache eficiente
+    const midWeek = new Date(newMon.getFullYear(), newMon.getMonth(), newMon.getDate() + 3);
+    setCurrentDate(new Date(midWeek.getFullYear(), midWeek.getMonth(), 1));
+  };
+
+  const handleNextWeek = () => {
+    const newMon = new Date(selectedWeekMonday);
+    newMon.setDate(newMon.getDate() + 7);
+    setSelectedWeekMonday(newMon);
+
+    const midWeek = new Date(newMon.getFullYear(), newMon.getMonth(), newMon.getDate() + 3);
+    setCurrentDate(new Date(midWeek.getFullYear(), midWeek.getMonth(), 1));
+  };
+
+  const handleGoToToday = () => {
+    const now = new Date();
+    setSelectedWeekMonday(getMonday(now));
+    setSelectedMobileDay(now.getDate());
+    setCurrentDate(new Date(now.getFullYear(), now.getMonth(), 1));
+  };
+
   // Inteligência Temporal e Consulta de Eventos (respeitando o limite de 45 dias)
   const summaryStart = new Date(
     today.getFullYear(),
@@ -152,8 +246,10 @@ export function CalendarPage() {
     999
   ).toISOString();
 
-  const monthStart = new Date(year, month, 1, 0, 0, 0, 0).toISOString();
-  const monthEnd = new Date(year, month + 1, 0, 23, 59, 59, 999).toISOString();
+  // Cobre 6 dias antes do início do mês e 6 dias após o término (total 43 dias <= limite de 45 dias da API)
+  // Isso garante que semanas que cruzam a virada de mês tenham todos os 7 dias disponíveis no cache
+  const monthStart = new Date(year, month, 1 - 6, 0, 0, 0, 0).toISOString();
+  const monthEnd = new Date(year, month + 1, 6, 23, 59, 59, 999).toISOString();
 
   const queryStart = viewMode === 'SUMMARY' ? summaryStart : monthStart;
   const queryEnd = viewMode === 'SUMMARY' ? summaryEnd : monthEnd;
@@ -210,6 +306,8 @@ export function CalendarPage() {
   const handleMobileDaySelect = (day: number) => {
     setSelectedMobileDay(day);
     setMobilePage(1);
+    const targetDate = new Date(year, month, day);
+    setSelectedWeekMonday(getMonday(targetDate));
   };
 
   // Regra de Visibilidade do Evento (Subgrupo + Filtro de Tipo + Filtro de Status)
@@ -332,6 +430,62 @@ export function CalendarPage() {
   // Remove semanas vazias do final do array
   const weeksNeeded = Math.ceil((firstDayOfWeek + daysInMonth) / 7);
   const renderedDays = MONTH_DAYS_DYNAMIC.slice(0, weeksNeeded * 7);
+
+  // ==========================================
+  // GERAÇÃO DA GRADE SEMANAL DE 7 DIAS (Seg a Dom)
+  // ==========================================
+  const weekDays = Array.from({ length: 7 }, (_, i) => {
+    const d = new Date(
+      selectedWeekMonday.getFullYear(),
+      selectedWeekMonday.getMonth(),
+      selectedWeekMonday.getDate() + i
+    );
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const dayNum = String(d.getDate()).padStart(2, '0');
+    const dateStr = `${y}-${m}-${dayNum}`;
+
+    const weekdaysShort = ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'];
+    const weekdaysFull = [
+      'Segunda-feira',
+      'Terça-feira',
+      'Quarta-feira',
+      'Quinta-feira',
+      'Sexta-feira',
+      'Sábado',
+      'Domingo',
+    ];
+
+    const dayEvents = realEvents
+      .filter(
+        (ev) => getEventLocalDateStr(ev.dataHoraLimite) === dateStr && isEventVisible(ev)
+      )
+      .map((ev) => ({
+        id: ev.id,
+        title: ev.materia,
+        description: ev.descricao || '',
+        concluida: ev.concluida,
+        grupoDestinatario: ev.grupoDestinatario,
+        ...getCalendarEventStyles(ev.categoria),
+      }));
+
+    const isToday =
+      d.getFullYear() === today.getFullYear() &&
+      d.getMonth() === today.getMonth() &&
+      d.getDate() === today.getDate();
+
+    return {
+      date: d,
+      dateStr,
+      weekdayShort: weekdaysShort[i],
+      weekdayFull: weekdaysFull[i],
+      dayNum,
+      dayFormatted: `${dayNum}/${m}`,
+      isToday,
+      events: dayEvents,
+      hasEvents: dayEvents.length > 0,
+    };
+  });
 
   // ==========================================
   // RENDERIZADOR: Modal de Filtros do Calendário
@@ -656,13 +810,13 @@ export function CalendarPage() {
                     )}
                 </div>
 
-                {/* BOTÃO VER MÊS COMPLETO */}
+                {/* BOTÃO VER CALENDÁRIO COMPLETO */}
                 <button
                   onClick={() => setViewMode('MONTH_GRID')}
                   className="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors bg-primary/10 hover:bg-primary/20 px-4 py-2 rounded-xl shadow-sm cursor-pointer"
                 >
                   <Calendar className="w-4 h-4" />
-                  <span>Ver Mês Completo</span>
+                  <span>Ver Calendário Completo</span>
                 </button>
               </div>
             </div>
@@ -929,43 +1083,25 @@ export function CalendarPage() {
                 <span>Voltar para Resumo</span>
               </button>
 
-              {/* Controle de Mês Funcional */}
-              <div className="flex items-center gap-2 sm:gap-4 self-center bg-white dark:bg-slate-900 px-3 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+              {/* Controle de Mês Funcional (Desktop sempre visível; Mobile visível apenas no modo Mensal) */}
+              <div
+                className={`items-center gap-2 sm:gap-4 self-center bg-white dark:bg-slate-900 px-3 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm ${
+                  mobileCalendarView === 'WEEK' ? 'hidden md:flex' : 'flex'
+                }`}
+              >
                 <button
+                  type="button"
                   onClick={prevMonth}
+                  aria-label="Mês anterior"
                   className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all cursor-pointer active:scale-95"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 19l-7-7 7-7"
-                    />
-                  </svg>
+                  <ChevronLeft className="w-5 h-5" />
                 </button>
 
                 <div className="relative">
                   <div className="px-4 py-2 text-base sm:text-lg font-black text-slate-800 dark:text-white cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors flex items-center gap-2">
                     {MONTH_NAMES[month]} {year}
-                    <svg
-                      className="w-4 h-4 text-slate-400"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 9l-7 7-7-7"
-                      />
-                    </svg>
+                    <ChevronDown className="w-4 h-4 text-slate-400" />
                   </div>
                   <select
                     value={`${year}-${month}`}
@@ -991,22 +1127,12 @@ export function CalendarPage() {
                 </div>
 
                 <button
+                  type="button"
                   onClick={nextMonth}
+                  aria-label="Próximo mês"
                   className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all cursor-pointer active:scale-95"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9 5l7 7-7 7"
-                    />
-                  </svg>
+                  <ChevronRight className="w-5 h-5" />
                 </button>
               </div>
 
@@ -1058,6 +1184,34 @@ export function CalendarPage() {
                     document.body
                   )}
               </div>
+            </div>
+
+            {/* ALTERNADOR DE VISÃO NO MOBILE: SEMANAL VS MENSAL (md:hidden) */}
+            <div className="md:hidden flex items-center p-1 bg-slate-100 dark:bg-slate-800/60 rounded-2xl mb-4 border border-slate-200/60 dark:border-slate-800/60">
+              <button
+                type="button"
+                onClick={() => setMobileCalendarView('WEEK')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  mobileCalendarView === 'WEEK'
+                    ? 'bg-white dark:bg-slate-900 text-primary shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <CalendarDays className="w-4 h-4" />
+                <span>Semanal</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setMobileCalendarView('MONTH')}
+                className={`flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  mobileCalendarView === 'MONTH'
+                    ? 'bg-white dark:bg-slate-900 text-primary shadow-sm'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                <Calendar className="w-4 h-4" />
+                <span>Mensal</span>
+              </button>
             </div>
 
             {/* CHIPS DE FILTROS ATIVOS (FEEDBACK VISUAL CLARO) */}
@@ -1112,7 +1266,158 @@ export function CalendarPage() {
               </div>
             )}
 
-            <div className="glass-panel rounded-3xl overflow-hidden mt-2">
+            {/* VISÃO SEMANAL MOBILE (md:hidden) */}
+            {mobileCalendarView === 'WEEK' && (
+              <div className="md:hidden flex flex-col gap-4 animate-in fade-in duration-200">
+                {/* 1. Navegador de Semanas */}
+                <div className="flex items-center justify-between bg-white dark:bg-slate-900 px-3 py-2.5 rounded-2xl border border-slate-200/80 dark:border-slate-800/80 shadow-sm">
+                  <button
+                    type="button"
+                    onClick={handlePrevWeek}
+                    aria-label="Semana anterior"
+                    className="p-1.5 text-slate-500 hover:text-primary hover:bg-primary/10 rounded-xl transition-all cursor-pointer active:scale-95"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+
+                  <div className="flex flex-col items-center">
+                    <span className="text-xs sm:text-sm font-extrabold text-slate-800 dark:text-slate-200 text-center">
+                      {formatWeekRange(selectedWeekMonday)}
+                    </span>
+                    {isCurrentWeek ? (
+                      <span className="text-[10px] font-semibold text-slate-400">
+                        Semana atual
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={handleGoToToday}
+                        className="text-[10px] font-bold text-primary hover:underline flex items-center gap-1 cursor-pointer transition-colors mt-0.5"
+                      >
+                        <RotateCcw className="w-2.5 h-2.5" />
+                        <span>Voltar para semana atual</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleNextWeek}
+                    aria-label="Próxima semana"
+                    className="p-1.5 text-slate-500 hover:text-primary hover:bg-primary/10 rounded-xl transition-all cursor-pointer active:scale-95"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* 2. Agenda Aberta da Semana (Agrupada por Dia) */}
+                {(() => {
+                  const daysWithEvents = weekDays.filter((d) => d.events.length > 0);
+
+                  if (daysWithEvents.length === 0) {
+                    return (
+                      <div className="p-8 text-center text-slate-500 dark:text-slate-400 glass-card rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-xs sm:text-sm font-medium bg-slate-50/50 dark:bg-slate-900/50 mb-8">
+                        Nenhuma atividade agendada para esta semana.
+                      </div>
+                    );
+                  }
+
+                  return (
+                    <div className="flex flex-col gap-6 mb-8">
+                      {daysWithEvents.map((day) => (
+                        <div key={day.dateStr} className="flex flex-col gap-3">
+                          {/* Subtítulo elegante do dia */}
+                          <div className="flex items-center justify-between pb-2 border-b border-slate-200/80 dark:border-slate-800/80">
+                            <div className="flex items-center gap-2">
+                              <CalendarDays
+                                className={`w-4 h-4 ${
+                                  day.isToday ? 'text-primary' : 'text-slate-500 dark:text-slate-400'
+                                }`}
+                              />
+                              <h3
+                                className={`text-sm font-bold capitalize ${
+                                  day.isToday
+                                    ? 'text-primary'
+                                    : 'text-slate-800 dark:text-slate-200'
+                                }`}
+                              >
+                                {day.weekdayFull}, {day.dayFormatted}
+                              </h3>
+                              {day.isToday && (
+                                <span className="px-1.5 py-0.5 text-[10px] font-black uppercase tracking-wider bg-primary/10 text-primary rounded-md">
+                                  Hoje
+                                </span>
+                              )}
+                            </div>
+                            <span className="text-[11px] font-semibold text-slate-400">
+                              {day.events.length}{' '}
+                              {day.events.length === 1 ? 'atividade' : 'atividades'}
+                            </span>
+                          </div>
+
+                          {/* Cards dos eventos do dia */}
+                          <div className="flex flex-col gap-3">
+                            {day.events.map((event) => (
+                              <div
+                                key={event.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  navigate(`evento/${event.id}`);
+                                }}
+                                className={`glass-card p-4 rounded-2xl border-l-4 cursor-pointer active:scale-[0.98] transition-all flex items-start justify-between gap-3 shadow-sm ${event.borderClass} ${event.bgClass} ${
+                                  event.concluida ? 'opacity-55 hover:opacity-80' : ''
+                                }`}
+                              >
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+                                    <div
+                                      className={`inline-block px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider ${event.colorClass} bg-white/60 dark:bg-slate-900/60 shadow-sm`}
+                                    >
+                                      {event.label}
+                                    </div>
+                                    {event.grupoDestinatario === 'TURMA_A' && (
+                                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">
+                                        Turma A
+                                      </span>
+                                    )}
+                                    {event.grupoDestinatario === 'TURMA_B' && (
+                                      <span className="px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50">
+                                        Turma B
+                                      </span>
+                                    )}
+                                  </div>
+                                  <p
+                                    className={`text-sm font-bold text-slate-900 dark:text-white leading-tight ${
+                                      event.concluida
+                                        ? 'line-through decoration-slate-400 text-slate-500 dark:text-slate-400'
+                                        : ''
+                                    }`}
+                                  >
+                                    {event.title}
+                                  </p>
+                                  {event.description ? (
+                                    <p className="line-clamp-2 text-xs text-slate-500 dark:text-slate-400 mt-1 leading-relaxed">
+                                      {event.description}
+                                    </p>
+                                  ) : null}
+                                </div>
+                                <div className="shrink-0 pt-0.5">
+                                  <EventCheckbox eventId={event.id} concluida={event.concluida} />
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
+            )}
+
+            <div className={`glass-panel rounded-3xl overflow-hidden mt-2 ${
+              mobileCalendarView === 'WEEK' ? 'hidden md:block' : 'block'
+            }`}>
               <div className="grid grid-cols-7 bg-slate-100/50 dark:bg-slate-800/30 border-b border-slate-200 dark:border-slate-800">
                 {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map((d) => (
                   <div
@@ -1220,21 +1525,13 @@ export function CalendarPage() {
               </div>
             </div>
 
-            <div className="md:hidden mt-8 mb-10">
+            <div
+              className={`md:hidden mt-8 mb-10 ${
+                mobileCalendarView === 'WEEK' ? 'hidden' : 'block'
+              }`}
+            >
               <h3 className="text-lg font-bold text-slate-800 dark:text-slate-200 mb-4 border-b border-slate-200 dark:border-slate-800 pb-2 flex items-center gap-2">
-                <svg
-                  className="w-5 h-5 text-primary"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
+                <Calendar className="w-5 h-5 text-primary" />
                 Eventos do dia {selectedMobileDay}
               </h3>
               <div className="flex flex-col gap-3">
