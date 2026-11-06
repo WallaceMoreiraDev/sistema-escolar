@@ -185,6 +185,29 @@ export class EventController {
   }
 
   /**
+   * POST /api/turmas/eventos/:id/toggle-conclusao
+   * Alterna o status de conclusão individual da atividade para o aluno autenticado.
+   */
+  static async toggleConclusao(c: Context) {
+    const supabase = c.get('supabase');
+    const user = c.get('user');
+    const { id } = c.get('validParams') as EventIdParam;
+
+    const eventRepo = new EventRepository(supabase);
+    const userRepo = new UserRepository(supabase);
+    const service = new EventService(eventRepo, userRepo);
+
+    const result = await service.toggleConclusao(user.id, id);
+
+    const response: ApiResponse<{ concluida: boolean }> = {
+      success: true,
+      data: result,
+    };
+
+    return c.json(response, 200);
+  }
+
+  /**
    * POST /api/turmas/eventos/:id/anexos
    * Upload de anexo físico via multipart/form-data (máx 5 MB por arquivo e cumulativo).
    */

@@ -3,6 +3,7 @@ import {
   EventDTO,
   EventLinkDTO,
   EventAttachmentDTO,
+  GrupoDestinatario,
 } from '@shared/types/event.types';
 
 export type RawEvent = Database['public']['Tables']['eventos']['Row'];
@@ -10,6 +11,8 @@ export type RawEventAttachment = Database['public']['Tables']['eventos_anexos'][
 
 export type RawEventWithAttachments = RawEvent & {
   eventos_anexos?: RawEventAttachment[] | null;
+  usuario_tarefas_concluidas?: { user_id: string }[] | null;
+  concluida?: boolean;
 };
 
 /**
@@ -54,10 +57,19 @@ export class EventDTOConverter {
     return [];
   }
 
-  static toDTO(raw: RawEventWithAttachments): EventDTO {
+  static toDTO(raw: RawEventWithAttachments, isCompleted?: boolean): EventDTO {
     const anexos = Array.isArray(raw.eventos_anexos)
       ? EventAttachmentDTOConverter.toDTOList(raw.eventos_anexos)
       : [];
+
+    const concluida =
+      isCompleted !== undefined
+        ? isCompleted
+        : Boolean(
+            raw.concluida ||
+              (Array.isArray(raw.usuario_tarefas_concluidas) &&
+                raw.usuario_tarefas_concluidas.length > 0)
+          );
 
     return {
       id: raw.id,
@@ -71,11 +83,12 @@ export class EventDTOConverter {
       anexos,
       criadoPor: raw.criado_por,
       createdAt: raw.created_at,
+      grupoDestinatario: (raw.grupo_destinatario as GrupoDestinatario) || 'TODOS',
+      concluida,
     };
   }
 
   static toDTOList(rawList: RawEventWithAttachments[]): EventDTO[] {
-    return rawList.map(EventDTOConverter.toDTO);
+    return rawList.map((item) => EventDTOConverter.toDTO(item));
   }
 }
-

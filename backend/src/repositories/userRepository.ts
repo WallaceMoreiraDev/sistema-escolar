@@ -1,8 +1,28 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database } from '@shared/types/database.types';
+import { SubgrupoTurma } from '@shared/types/user.types';
 import { RawUserWithTurma } from '../dtos/userDto';
 
 export class UserRepository {
+  private static readonly USER_SELECT_FIELDS = `
+    id,
+    nome,
+    email,
+    role,
+    onboarding_concluido,
+    termos_aceitos_em,
+    subgrupo_turma,
+    turmas (
+      id,
+      nome_oficial,
+      codigo_convite,
+      ano,
+      curso,
+      turno,
+      local_sala
+    )
+  `;
+
   constructor(private readonly supabase: SupabaseClient<Database>) {}
 
   /**
@@ -13,7 +33,7 @@ export class UserRepository {
   async getUserProfile(userId: string): Promise<RawUserWithTurma | null> {
     const { data, error } = await this.supabase
       .from('usuarios')
-      .select('id, nome, email, role, onboarding_concluido, termos_aceitos_em, turmas (id, nome_oficial, codigo_convite, ano, curso, turno, local_sala)')
+      .select(UserRepository.USER_SELECT_FIELDS)
       .eq('id', userId)
       .single();
 
@@ -44,11 +64,29 @@ export class UserRepository {
         termos_aceitos_em: new Date().toISOString()
       })
       .eq('id', userId)
-      .select('id, nome, email, role, onboarding_concluido, termos_aceitos_em, turmas (id, nome_oficial, codigo_convite, ano, curso, turno, local_sala)')
+      .select(UserRepository.USER_SELECT_FIELDS)
       .single();
 
     if (error || !data) {
       throw error || new Error('Falha ao atualizar o usuário.');
+    }
+
+    return data as RawUserWithTurma;
+  }
+
+  /**
+   * Atualiza a divisão de subgrupo da turma do aluno ('GERAL', 'TURMA_A', 'TURMA_B').
+   */
+  async updateSubgrupo(userId: string, subgrupo: SubgrupoTurma): Promise<RawUserWithTurma> {
+    const { data, error } = await this.supabase
+      .from('usuarios')
+      .update({ subgrupo_turma: subgrupo })
+      .eq('id', userId)
+      .select(UserRepository.USER_SELECT_FIELDS)
+      .single();
+
+    if (error || !data) {
+      throw error || new Error('Falha ao atualizar o subgrupo do usuário.');
     }
 
     return data as RawUserWithTurma;

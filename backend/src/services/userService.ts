@@ -1,5 +1,6 @@
 import { UserRepository } from '../repositories/userRepository';
 import { RawUserWithTurma } from '../dtos/userDto';
+import { SubgrupoTurma } from '@shared/types/user.types';
 import { AppError } from '../utils/AppError';
 
 export class UserService {
@@ -30,6 +31,20 @@ export class UserService {
         throw error;
       }
       throw new AppError('INTERNAL_SERVER_ERROR', 500, 'Falha ao atualizar o perfil.');
+    }
+  }
+
+  /**
+   * Atualiza a divisão de subgrupo da turma do aluno ('GERAL', 'TURMA_A', 'TURMA_B').
+   */
+  async updateSubgrupo(userId: string, subgrupo: SubgrupoTurma): Promise<RawUserWithTurma> {
+    try {
+      return await this.repo.updateSubgrupo(userId, subgrupo);
+    } catch (error) {
+      if (error instanceof AppError) {
+        throw error;
+      }
+      throw new AppError('INTERNAL_SERVER_ERROR', 500, 'Falha ao atualizar o subgrupo.');
     }
   }
 }

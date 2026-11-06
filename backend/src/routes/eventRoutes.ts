@@ -70,6 +70,13 @@ eventRoutes.delete(
   EventController.delete
 );
 
+// POST /api/turmas/eventos/:id/toggle-conclusao - Alterna status de conclusão da tarefa para o aluno autenticado
+eventRoutes.post(
+  '/:id/toggle-conclusao',
+  validateParam(eventIdParamSchema),
+  EventController.toggleConclusao
+);
+
 // POST /api/turmas/eventos/:id/anexos - Upload de anexo físico (apenas Líder ou Admin)
 eventRoutes.post(
   '/:id/anexos',

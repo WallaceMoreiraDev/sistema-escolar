@@ -1,6 +1,6 @@
 import { SupabaseClient } from '@supabase/supabase-js';
 import { Database, Json } from '@shared/types/database.types';
-import { EventLinkDTO } from '@shared/types/event.types';
+import { EventLinkDTO, GrupoDestinatario } from '@shared/types/event.types';
 import { RawEventWithAttachments, RawEventAttachment } from '../dtos/eventDto';
 
 export class EventRepository {
@@ -15,6 +15,7 @@ export class EventRepository {
     descricao,
     anexo_url,
     links,
+    grupo_destinatario,
     criado_por,
     created_at,
     eventos_anexos (
@@ -27,6 +28,9 @@ export class EventRepository {
       mime_type,
       criado_por,
       created_at
+    ),
+    usuario_tarefas_concluidas (
+      user_id
     )
   `;
 
@@ -35,7 +39,7 @@ export class EventRepository {
   /**
    * Busca eventos de uma turma dentro de um intervalo de datas (data_hora_limite).
    * Ordena cronologicamente de forma ascendente (data_hora_limite ASC).
-   * Inclui links e anexos correlacionados.
+   * Inclui links, anexos e status de conclusão do usuário autenticado.
    */
   async findEventsByPeriod(
     turmaId: string,
@@ -60,7 +64,7 @@ export class EventRepository {
   /**
    * Lista todos os eventos de uma turma com paginação no banco (LIMIT / OFFSET via range).
    * Ordena por data_hora_limite descendente (mais recentes/futuras primeiro).
-   * Retorna os eventos com anexos e links embutidos, além do total de registros.
+   * Retorna os eventos com anexos, links e status de conclusão, além do total de registros.
    */
   async listAllPaginated(
     turmaId: string,
@@ -88,7 +92,7 @@ export class EventRepository {
   }
 
   /**
-   * Busca um evento específico por seu ID único, com links e anexos.
+   * Busca um evento específico por seu ID único, com links, anexos e status de conclusão.
    */
   async findById(id: string): Promise<RawEventWithAttachments | null> {
     const { data, error } = await this.supabase
@@ -108,7 +112,7 @@ export class EventRepository {
   }
 
   /**
-   * Insere um novo evento de turma no banco de dados com links JSONB.
+   * Insere um novo evento de turma no banco de dados com links JSONB e grupo destinatário.
    */
   async create(payload: {
     turma_id: string;
@@ -118,6 +122,7 @@ export class EventRepository {
     descricao?: string | null;
     anexo_url?: string | null;
     links?: EventLinkDTO[] | null;
+    grupo_destinatario?: GrupoDestinatario;
     criado_por: string;
   }): Promise<RawEventWithAttachments> {
     const { data, error } = await this.supabase
@@ -130,6 +135,7 @@ export class EventRepository {
         descricao: payload.descricao ?? null,
         anexo_url: payload.anexo_url ?? null,
         links: payload.links ? (payload.links as unknown as Json) : [],
+        grupo_destinatario: payload.grupo_destinatario ?? 'TODOS',
         criado_por: payload.criado_por,
       })
       .select(EventRepository.EVENT_SELECT_FIELDS)
@@ -143,7 +149,7 @@ export class EventRepository {
   }
 
   /**
-   * Atualiza os campos de um evento existente, incluindo links JSONB.
+   * Atualiza os campos de um evento existente, incluindo links JSONB e grupo destinatário.
    */
   async update(
     id: string,
@@ -154,6 +160,7 @@ export class EventRepository {
       descricao?: string | null;
       anexo_url?: string | null;
       links?: EventLinkDTO[] | null;
+      grupo_destinatario?: GrupoDestinatario;
     }
   ): Promise<RawEventWithAttachments> {
     const updateData: Database['public']['Tables']['eventos']['Update'] = {};
@@ -168,6 +175,9 @@ export class EventRepository {
     if (payload.links !== undefined) {
       updateData.links = payload.links ? (payload.links as unknown as Json) : [];
     }
+    if (payload.grupo_destinatario !== undefined) {
+      updateData.grupo_destinatario = payload.grupo_destinatario;
+    }
 
     const { data, error } = await this.supabase
       .from('eventos')
@@ -181,6 +191,50 @@ export class EventRepository {
     }
 
     return data as unknown as RawEventWithAttachments;
+  }
+
+  /**
+   * Alterna o status de conclusão individual da tarefa para o aluno (idempotente).
+   * Se já concluído, remove o registro (DELETE); se não concluído, insere (INSERT).
+   */
+  async toggleConclusao(userId: string, eventoId: string): Promise<{ concluida: boolean }> {
+    const { data, error: selectError } = await this.supabase
+      .from('usuario_tarefas_concluidas')
+      .select('user_id')
+      .eq('user_id', userId)
+      .eq('evento_id', eventoId)
+      .maybeSingle();
+
+    if (selectError) {
+      throw selectError;
+    }
+
+    if (data) {
+      const { error: deleteError } = await this.supabase
+        .from('usuario_tarefas_concluidas')
+        .delete()
+        .eq('user_id', userId)
+        .eq('evento_id', eventoId);
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      return { concluida: false };
+    } else {
+      const { error: insertError } = await this.supabase
+        .from('usuario_tarefas_concluidas')
+        .insert({
+          user_id: userId,
+          evento_id: eventoId,
+        });
+
+      if (insertError) {
+        throw insertError;
+      }
+
+      return { concluida: true };
+    }
   }
 
   /**

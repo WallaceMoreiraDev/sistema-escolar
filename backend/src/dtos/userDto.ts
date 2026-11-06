@@ -1,4 +1,4 @@
-import { UserProfileDTO, UserRole, AnoTurma, TurnoTurma } from '@shared/types';
+import { UserProfileDTO, UserRole, SubgrupoTurma, AnoTurma, TurnoTurma } from '@shared/types';
 
 export type RawTurmaJoin = {
   id: string;
@@ -17,6 +17,7 @@ export type RawUserWithTurma = {
   role: string | null;
   onboarding_concluido: boolean;
   termos_aceitos_em?: string | null;
+  subgrupo_turma?: string | null;
   turmas: RawTurmaJoin | RawTurmaJoin[] | null;
 };
 
@@ -36,6 +37,7 @@ export class UserDTO {
       role: (raw.role as UserRole) || 'ALUNO',
       onboardingConcluido: raw.onboarding_concluido,
       termosAceitosEm: raw.termos_aceitos_em ?? null,
+      subgrupoTurma: (raw.subgrupo_turma as SubgrupoTurma) || 'GERAL',
       turma: turmaRaw
         ? {
             id: turmaRaw.id,

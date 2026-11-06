@@ -3,6 +3,7 @@ import { UserController } from '../controllers/userController';
 import { authMiddleware, Variables } from '../middlewares/authMiddleware';
 import { validateBody } from '../middlewares/validationMiddleware';
 import { onboardingSchema } from '@shared/schemas/onboardingSchema';
+import { updateSubgrupoSchema } from '@shared/schemas/userSchema';
 
 // Type the Hono app to include our Context Variables
 const userRoutes = new Hono<{ Variables: Variables }>();
@@ -15,5 +16,8 @@ userRoutes.get('/', UserController.getProfile);
 
 // PUT /api/me/profile
 userRoutes.put('/profile', validateBody(onboardingSchema), UserController.updateProfile);
+
+// PATCH /api/me/subgrupo
+userRoutes.patch('/subgrupo', validateBody(updateSubgrupoSchema), UserController.updateSubgrupo);
 
 export { userRoutes };

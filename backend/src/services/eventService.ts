@@ -234,6 +234,7 @@ export class EventService {
       descricao: payload.descricao,
       anexo_url: payload.anexoUrl,
       links: payload.links,
+      grupo_destinatario: payload.grupoDestinatario,
       criado_por: userId,
     });
   }
@@ -286,6 +287,7 @@ export class EventService {
       descricao: payload.descricao,
       anexo_url: payload.anexoUrl,
       links: payload.links,
+      grupo_destinatario: payload.grupoDestinatario,
     });
   }
 
@@ -328,6 +330,38 @@ export class EventService {
     }
 
     await this.eventRepo.delete(eventId);
+  }
+
+  /**
+   * Alterna o status de conclusão individual da tarefa para o aluno autenticado (idempotente).
+   */
+  async toggleConclusao(userId: string, eventId: string): Promise<{ concluida: boolean }> {
+    const event = await this.eventRepo.findById(eventId);
+    if (!event) {
+      throw new AppError('NOT_FOUND', 404, 'Evento não encontrado.');
+    }
+
+    const userProfile = await this.userRepo.getUserProfile(userId);
+    if (!userProfile) {
+      throw new AppError('AUTH_UNAUTHORIZED', 401, 'Usuário não autenticado.');
+    }
+
+    const isAdmin = userProfile.role === 'ADMIN';
+    if (!isAdmin) {
+      const userTurma = Array.isArray(userProfile.turmas)
+        ? userProfile.turmas[0]
+        : userProfile.turmas;
+
+      if (!userTurma || userTurma.id !== event.turma_id) {
+        throw new AppError(
+          'FORBIDDEN',
+          403,
+          'Você não tem permissão para marcar conclusão em eventos de outra turma.'
+        );
+      }
+    }
+
+    return this.eventRepo.toggleConclusao(userId, eventId);
   }
 
   // ===========================================================================

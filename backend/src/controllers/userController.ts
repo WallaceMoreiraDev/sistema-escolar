@@ -2,7 +2,7 @@ import { Context } from 'hono';
 import { UserService } from '../services/userService';
 import { UserRepository } from '../repositories/userRepository';
 import { UserDTO } from '../dtos/userDto';
-import { ApiResponse, UserProfileDTO, UpdateProfilePayload } from '@shared/types';
+import { ApiResponse, UserProfileDTO, UpdateProfilePayload, UpdateSubgrupoPayload } from '@shared/types';
 
 export class UserController {
   /**
@@ -48,5 +48,28 @@ export class UserController {
     };
 
     return c.json(response);
+  }
+
+  /**
+   * PATCH /api/me/subgrupo
+   * Atualiza a divisão de subgrupo do usuário ('GERAL', 'TURMA_A', 'TURMA_B').
+   */
+  static async updateSubgrupo(c: Context) {
+    const supabase = c.get('supabase');
+    const user = c.get('user');
+    const body = c.get('validBody') as UpdateSubgrupoPayload;
+
+    const repo = new UserRepository(supabase);
+    const service = new UserService(repo);
+
+    const rawUpdated = await service.updateSubgrupo(user.id, body.subgrupo);
+    const profileDTO = UserDTO.toProfile(rawUpdated);
+
+    const response: ApiResponse<UserProfileDTO> = {
+      success: true,
+      data: profileDTO,
+    };
+
+    return c.json(response, 200);
   }
 }
