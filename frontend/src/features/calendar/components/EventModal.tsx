@@ -219,6 +219,16 @@ export function EventModal() {
                   >
                     {event.categoria}
                   </div>
+                  {rawEvent.grupoDestinatario === 'TURMA_A' && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/40">
+                      Turma A
+                    </span>
+                  )}
+                  {rawEvent.grupoDestinatario === 'TURMA_B' && (
+                    <span className="inline-flex items-center px-2.5 py-1 rounded-xl text-xs font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200/60 dark:border-purple-900/40">
+                      Turma B
+                    </span>
+                  )}
                   {isCompleted ? (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300 shadow-xs">
                       <CheckCircle2 className="w-3.5 h-3.5" />

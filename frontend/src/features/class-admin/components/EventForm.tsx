@@ -60,6 +60,7 @@ const eventFormSchema = z.object({
   categoria: z.enum(['Prova', 'Trabalho', 'Tarefa', 'Aviso'], {
     errorMap: () => ({ message: 'Selecione uma categoria válida.' }),
   }),
+  grupoDestinatario: z.enum(['TODOS', 'TURMA_A', 'TURMA_B']),
   dataHoraLimite: z
     .string({ required_error: 'A data e horário limite são obrigatórios.' })
     .min(1, 'A data e horário limite são obrigatórios.'),
@@ -105,6 +106,7 @@ export function EventForm({ isOpen, onClose, eventToEdit, turmaId }: EventFormPr
     defaultValues: {
       materia: '',
       categoria: 'Tarefa',
+        grupoDestinatario: 'TODOS',
       dataHoraLimite: '',
       descricao: '',
       links: [],
@@ -157,6 +159,7 @@ export function EventForm({ isOpen, onClose, eventToEdit, turmaId }: EventFormPr
       reset({
         materia: eventToEdit.materia,
         categoria: eventToEdit.categoria,
+        grupoDestinatario: eventToEdit.grupoDestinatario || 'TODOS',
         dataHoraLimite: formattedDate,
         descricao: eventToEdit.descricao || '',
         links: initialLinks,
@@ -305,6 +308,7 @@ export function EventForm({ isOpen, onClose, eventToEdit, turmaId }: EventFormPr
     const payload: CreateEventPayload = {
       materia: data.materia.trim(),
       categoria: data.categoria,
+      grupoDestinatario: data.grupoDestinatario,
       dataHoraLimite: utcDate,
       descricao: data.descricao?.trim() ? data.descricao.trim() : null,
       links: (data.links || []).filter((l) => l.titulo.trim() && l.url.trim()),
@@ -434,26 +438,49 @@ export function EventForm({ isOpen, onClose, eventToEdit, turmaId }: EventFormPr
                 </div>
               </div>
 
-              {/* Data e Horário Limite */}
-              <div>
-                <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
-                  Data e Horário Limite *
-                </label>
-                <input
-                  {...register('dataHoraLimite')}
-                  type="datetime-local"
-                  disabled={isPending}
-                  className={`w-full px-4 py-2.5 rounded-xl border ${
-                    errors.dataHoraLimite
-                      ? 'border-red-500'
-                      : 'border-slate-200 dark:border-slate-700 focus:border-primary'
-                  } bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white outline-none transition-all disabled:opacity-50`}
-                />
-                {errors.dataHoraLimite && (
-                  <p className="text-xs text-red-500 mt-1">
-                    {errors.dataHoraLimite.message}
-                  </p>
-                )}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                {/* Data e Horário Limite */}
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Data e Horário Limite *
+                  </label>
+                  <input
+                    {...register('dataHoraLimite')}
+                    type="datetime-local"
+                    disabled={isPending}
+                    className={`w-full px-4 py-2.5 rounded-xl border ${
+                      errors.dataHoraLimite
+                        ? 'border-red-500'
+                        : 'border-slate-200 dark:border-slate-700 focus:border-primary'
+                    } bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white outline-none transition-all disabled:opacity-50`}
+                  />
+                  {errors.dataHoraLimite && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {errors.dataHoraLimite.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Destinatário da Atividade */}
+                <div>
+                  <label className="block text-sm font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Destinatário da Atividade *
+                  </label>
+                  <select
+                    {...register('grupoDestinatario')}
+                    disabled={isPending}
+                    className="w-full px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 focus:border-primary bg-slate-50 dark:bg-slate-800/50 text-slate-900 dark:text-white outline-none transition-all appearance-none disabled:opacity-50"
+                  >
+                    <option value="TODOS">Toda a sala (Geral)</option>
+                    <option value="TURMA_A">Apenas Turma A</option>
+                    <option value="TURMA_B">Apenas Turma B</option>
+                  </select>
+                  {errors.grupoDestinatario && (
+                    <p className="text-xs text-red-500 mt-1">
+                      {errors.grupoDestinatario.message}
+                    </p>
+                  )}
+                </div>
               </div>
 
               {/* Descrição */}

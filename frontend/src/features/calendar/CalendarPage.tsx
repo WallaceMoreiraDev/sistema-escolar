@@ -1,14 +1,29 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { GraduationCap, MapPin, Clock, KeyRound, PlusCircle } from 'lucide-react';
+import {
+  GraduationCap,
+  MapPin,
+  Clock,
+  KeyRound,
+  PlusCircle,
+  Filter,
+  Users,
+  ChevronDown,
+  X,
+  RotateCcw,
+  Calendar,
+  ArrowLeft,
+  Check,
+} from 'lucide-react';
 import { ClassSidebar } from './components/ClassSidebar';
 import { useClassEvents } from '../class-admin/hooks/useClassEvents';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { JoinClassModal } from '@/features/dashboard/components/JoinClassModal';
 import { CreateClassModal } from '@/features/dashboard/components/CreateClassModal';
 import { EventCheckbox } from './components/EventCheckbox';
+import { SubgrupoTurma, GrupoDestinatario } from '@shared/types';
 
-const FILTERS = ['TUDO', 'PROVAS', 'TRABALHOS', 'TAREFAS', 'AVISOS'];
 const MONTH_NAMES = [
   'Janeiro',
   'Fevereiro',
@@ -24,10 +39,15 @@ const MONTH_NAMES = [
   'Dezembro',
 ];
 
+type FilterType = 'TUDO' | 'PROVAS' | 'TRABALHOS' | 'TAREFAS' | 'AVISOS';
+type FilterStatus = 'ALL' | 'PENDING' | 'COMPLETED';
+
 interface CalendarEventDisplay {
   id: string;
   title: string;
   description: string;
+  concluida?: boolean;
+  grupoDestinatario?: GrupoDestinatario;
   type: string;
   label: string;
   colorClass: string;
@@ -38,14 +58,24 @@ interface CalendarEventDisplay {
 
 export function CalendarPage() {
   const navigate = useNavigate();
-  const { user, isLoading: isAuthLoading } = useAuth();
+  const { user, updateSubgrupo, isLoading: isAuthLoading } = useAuth();
   const turma = user?.turma;
 
   const [isJoinOpen, setIsJoinOpen] = useState(false);
   const [isCreateOpen, setIsCreateOpen] = useState(false);
 
   const [viewMode, setViewMode] = useState<'SUMMARY' | 'MONTH_GRID'>('SUMMARY');
-  const [activeFilter, setActiveFilter] = useState('TUDO');
+  const [typeFilter, setTypeFilter] = useState<FilterType>('TUDO');
+  const [statusFilter, setStatusFilter] = useState<FilterStatus>('ALL');
+
+  // Estados dos Menus
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isDivisionOpen, setIsDivisionOpen] = useState(false);
+  const [isUpdatingSubgrupo, setIsUpdatingSubgrupo] = useState(false);
+
+  const filterPopoverRef = useRef<HTMLDivElement>(null);
+  const divisionPopoverRef = useRef<HTMLDivElement>(null);
+
   const [mobilePage, setMobilePage] = useState(1);
 
   // Estado para o Tooltip flutuante do desktop
@@ -61,6 +91,42 @@ export function CalendarPage() {
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
+
+  // Fechar menus ao clicar fora
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        filterPopoverRef.current &&
+        !filterPopoverRef.current.contains(event.target as Node)
+      ) {
+        setIsFilterOpen(false);
+      }
+      if (
+        divisionPopoverRef.current &&
+        !divisionPopoverRef.current.contains(event.target as Node)
+      ) {
+        setIsDivisionOpen(false);
+      }
+    }
+    if (isFilterOpen || isDivisionOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isFilterOpen, isDivisionOpen]);
+
+  // Atualização do subgrupo do aluno
+  const handleSubgrupoChange = async (novoSubgrupo: SubgrupoTurma) => {
+    try {
+      setIsUpdatingSubgrupo(true);
+      await updateSubgrupo(novoSubgrupo);
+    } catch (err) {
+      console.error('Falha ao atualizar divisão da turma:', err);
+    } finally {
+      setIsUpdatingSubgrupo(false);
+    }
+  };
 
   // Navegação de mês
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
@@ -146,6 +212,49 @@ export function CalendarPage() {
     setMobilePage(1);
   };
 
+  // Regra de Visibilidade do Evento (Subgrupo + Filtro de Tipo + Filtro de Status)
+  const isEventVisible = (ev: {
+    categoria: string;
+    concluida?: boolean;
+    grupoDestinatario?: GrupoDestinatario;
+  }) => {
+    // 1. Filtro por subgrupo do aluno
+    const alunoSubgrupo = user?.subgrupoTurma || 'GERAL';
+    if (alunoSubgrupo === 'TURMA_A') {
+      if (
+        ev.grupoDestinatario &&
+        ev.grupoDestinatario !== 'TODOS' &&
+        ev.grupoDestinatario !== 'TURMA_A'
+      ) {
+        return false;
+      }
+    } else if (alunoSubgrupo === 'TURMA_B') {
+      if (
+        ev.grupoDestinatario &&
+        ev.grupoDestinatario !== 'TODOS' &&
+        ev.grupoDestinatario !== 'TURMA_B'
+      ) {
+        return false;
+      }
+    }
+
+    // 2. Filtro por tipo de evento
+    if (typeFilter !== 'TUDO') {
+      const styles = getCalendarEventStyles(ev.categoria);
+      if (styles.type !== typeFilter) return false;
+    }
+
+    // 3. Filtro por status de conclusão
+    if (statusFilter === 'PENDING' && ev.concluida) return false;
+    if (statusFilter === 'COMPLETED' && !ev.concluida) return false;
+
+    return true;
+  };
+
+  // Contagem de filtros ativos para badge
+  const activeFilterCount =
+    (typeFilter !== 'TUDO' ? 1 : 0) + (statusFilter !== 'ALL' ? 1 : 0);
+
   // GERAÇÃO DO RESUMO (Próximos 5 Dias a partir de Hoje)
   const summaryDays = Array.from({ length: 5 }, (_, i) => {
     const d = new Date(today);
@@ -165,14 +274,17 @@ export function CalendarPage() {
       'Sábado',
     ];
 
-    // Filtra eventos reais que caem exatamente neste dia no fuso horário do usuário
+    // Filtra eventos reais que caem exatamente neste dia e atendem aos critérios de visibilidade
     const dayEvents = realEvents
-      .filter((ev) => getEventLocalDateStr(ev.dataHoraLimite) === dateStr)
+      .filter(
+        (ev) => getEventLocalDateStr(ev.dataHoraLimite) === dateStr && isEventVisible(ev)
+      )
       .map((ev) => ({
         id: ev.id,
         title: ev.materia,
         description: ev.descricao || '',
         concluida: ev.concluida,
+        grupoDestinatario: ev.grupoDestinatario,
         ...getCalendarEventStyles(ev.categoria),
       }));
 
@@ -198,12 +310,15 @@ export function CalendarPage() {
     const dateStr = `${year}-${currentMonthStr}-${currentDayStr}`;
 
     const dayEvents = realEvents
-      .filter((ev) => getEventLocalDateStr(ev.dataHoraLimite) === dateStr)
+      .filter(
+        (ev) => getEventLocalDateStr(ev.dataHoraLimite) === dateStr && isEventVisible(ev)
+      )
       .map((ev) => ({
         id: ev.id,
         title: ev.materia,
         description: ev.descricao || '',
         concluida: ev.concluida,
+        grupoDestinatario: ev.grupoDestinatario,
         ...getCalendarEventStyles(ev.categoria),
       }));
 
@@ -218,11 +333,115 @@ export function CalendarPage() {
   const weeksNeeded = Math.ceil((firstDayOfWeek + daysInMonth) / 7);
   const renderedDays = MONTH_DAYS_DYNAMIC.slice(0, weeksNeeded * 7);
 
+  // ==========================================
+  // RENDERIZADOR: Modal de Filtros do Calendário
+  // ==========================================
+  const renderFilterContent = () => (
+    <>
+      <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800 mb-4">
+        <span className="text-xs font-extrabold text-slate-900 dark:text-white uppercase tracking-wider flex items-center gap-2">
+          <Filter className="w-4 h-4 text-primary" />
+          Filtros do Calendário
+        </span>
+        <button
+          type="button"
+          onClick={() => setIsFilterOpen(false)}
+          className="p-1.5 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Categoria / Tipo */}
+      <div className="mb-4">
+        <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+          Tipo de Atividade
+        </label>
+        <div className="grid grid-cols-2 gap-2">
+          {[
+            { id: 'TUDO' as const, label: 'Todos os tipos' },
+            { id: 'PROVAS' as const, label: 'Provas' },
+            { id: 'TRABALHOS' as const, label: 'Trabalhos' },
+            { id: 'TAREFAS' as const, label: 'Tarefas' },
+            { id: 'AVISOS' as const, label: 'Avisos' },
+          ].map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => setTypeFilter(t.id)}
+              className={`px-3 py-2 rounded-xl text-xs font-bold text-left transition-all cursor-pointer ${
+                typeFilter === t.id
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Status de Conclusão */}
+      <div className="mb-4">
+        <label className="block text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-2">
+          Status da Atividade
+        </label>
+        <div className="flex flex-col gap-2">
+          {[
+            { id: 'ALL' as const, label: 'Todas as atividades' },
+            { id: 'PENDING' as const, label: 'Apenas pendentes' },
+            { id: 'COMPLETED' as const, label: 'Apenas concluídas' },
+          ].map((s) => (
+            <button
+              key={s.id}
+              type="button"
+              onClick={() => setStatusFilter(s.id)}
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold text-left transition-all cursor-pointer ${
+                statusFilter === s.id
+                  ? 'bg-primary text-white shadow-sm'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+              }`}
+            >
+              {s.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Ações / Limpar / Concluir */}
+      <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-3">
+        {activeFilterCount > 0 ? (
+          <button
+            type="button"
+            onClick={() => {
+              setTypeFilter('TUDO');
+              setStatusFilter('ALL');
+            }}
+            className="flex items-center gap-1.5 text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-rose-500 transition-colors cursor-pointer py-1.5"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            Limpar Filtros
+          </button>
+        ) : (
+          <span className="text-xs text-slate-400">Nenhum filtro ativo</span>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setIsFilterOpen(false)}
+          className="px-4 py-2 bg-slate-900 text-white dark:bg-white dark:text-slate-900 rounded-xl text-xs font-bold hover:opacity-90 transition-opacity cursor-pointer"
+        >
+          Concluir
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <>
-      <div className="w-full animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <div className="w-full animate-in fade-in duration-500">
         {/* Cabeçalho da Turma com Dados Reais da Sessão */}
-        <header className="mb-8">
+        <header className="mb-6">
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white">
             Minha Turma
           </h1>
@@ -291,33 +510,214 @@ export function CalendarPage() {
           )}
         </header>
 
+        {/* BARRA DE DIVISÃO DA TURMA (Abaixo dos detalhes da turma e acima do calendário) */}
+        {turma && (
+          <div className="relative z-40 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3.5 sm:px-4 rounded-2xl bg-white/90 dark:bg-slate-900/90 border border-slate-200/80 dark:border-slate-800/80 shadow-sm backdrop-blur-sm">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                <Users className="w-4 h-4" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white uppercase tracking-wider">
+                    Divisão da Turma
+                  </span>
+                  {isUpdatingSubgrupo && (
+                    <span className="text-[10px] text-primary font-semibold animate-pulse">
+                      Salvando...
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Filtre as atividades pelo seu subgrupo
+                </p>
+              </div>
+            </div>
+
+            {/* Seletor Customizado de Divisão: Simples, Bonito e Compacto */}
+            <div className="relative shrink-0 self-start sm:self-auto z-50" ref={divisionPopoverRef}>
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDivisionOpen((prev) => !prev);
+                  setIsFilterOpen(false);
+                }}
+                className="px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-primary/50 shadow-sm cursor-pointer"
+              >
+                <span className="text-slate-500 dark:text-slate-400 font-medium">Sua divisão:</span>
+                <span className="font-bold text-primary">
+                  {user?.subgrupoTurma === 'TURMA_A'
+                    ? 'Turma A'
+                    : user?.subgrupoTurma === 'TURMA_B'
+                    ? 'Turma B'
+                    : 'Sem divisão (Geral)'}
+                </span>
+                <ChevronDown
+                  className={`w-3.5 h-3.5 text-slate-400 transition-transform duration-200 ${
+                    isDivisionOpen ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+
+              {/* Menu Dropdown Simples e Elegante com z-index e sombra elevados */}
+              {isDivisionOpen && (
+                <div className="absolute left-0 sm:right-0 sm:left-auto top-full mt-2 w-56 p-1.5 bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-700 z-[60] ring-1 ring-black/10 animate-in fade-in zoom-in-95 duration-100">
+                  {[
+                    { id: 'GERAL' as const, label: 'Sem divisão (Geral)' },
+                    { id: 'TURMA_A' as const, label: 'Turma A' },
+                    { id: 'TURMA_B' as const, label: 'Turma B' },
+                  ].map((opt) => {
+                    const isSelected = (user?.subgrupoTurma || 'GERAL') === opt.id;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        onClick={() => {
+                          handleSubgrupoChange(opt.id);
+                          setIsDivisionOpen(false);
+                        }}
+                        className={`w-full px-3 py-2.5 rounded-lg text-xs font-semibold flex items-center justify-between transition-colors cursor-pointer ${
+                          isSelected
+                            ? 'bg-primary/10 text-primary font-bold'
+                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                        }`}
+                      >
+                        <span>{opt.label}</span>
+                        {isSelected && <Check className="w-3.5 h-3.5 text-primary" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
         {/* VIEW 1: RESUMO (Calendário 5 Colunas) */}
         {viewMode === 'SUMMARY' && (
           <div className="animate-in fade-in duration-500">
-            <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">
-                Próximos 5 Dias
-              </h2>
-              <button
-                onClick={() => setViewMode('MONTH_GRID')}
-                className="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors bg-primary/10 hover:bg-primary/20 px-5 py-2.5 rounded-xl shadow-sm"
-              >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-4">
+              <div>
+                <h2 className="text-xl font-bold text-slate-800 dark:text-slate-200">
+                  Próximos 5 Dias
+                </h2>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  Atividades programadas do calendário
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 self-end sm:self-auto">
+                {/* BOTÃO DE FILTRO DE ATIVIDADES DO CALENDÁRIO */}
+                <div className="relative z-30" ref={filterPopoverRef}>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsFilterOpen((prev) => !prev);
+                      setIsDivisionOpen(false);
+                    }}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border shadow-sm cursor-pointer ${
+                      activeFilterCount > 0
+                        ? 'bg-primary text-white border-primary shadow-md hover:bg-primary/90'
+                        : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                    }`}
+                  >
+                    <Filter className={`w-3.5 h-3.5 ${activeFilterCount > 0 ? 'text-white' : 'text-primary'}`} />
+                    <span>Filtros</span>
+                    {activeFilterCount > 0 && (
+                      <span className="w-4 h-4 rounded-full bg-white text-primary text-[10px] font-black flex items-center justify-center">
+                        {activeFilterCount}
+                      </span>
+                    )}
+                    <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isFilterOpen ? 'rotate-180' : ''}`} />
+                  </button>
+
+                  {/* Popover (Desktop) */}
+                  {isFilterOpen && (
+                    <div className="hidden sm:block absolute right-0 top-full mt-2 w-80 p-5 rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 z-50 ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-150">
+                      {renderFilterContent()}
+                    </div>
+                  )}
+
+                  {/* Bottom Sheet no Celular via Portal no document.body com espaçamento inferior generoso */}
+                  {isFilterOpen &&
+                    typeof document !== 'undefined' &&
+                    createPortal(
+                      <div className="sm:hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end justify-center animate-in fade-in duration-200">
+                        <div
+                          className="absolute inset-0"
+                          onClick={() => setIsFilterOpen(false)}
+                        />
+                        <div className="relative w-full max-h-[85vh] bg-white dark:bg-slate-900 rounded-t-3xl p-6 pb-28 shadow-2xl border-t border-slate-200 dark:border-slate-800 overflow-y-auto z-10 animate-in slide-in-from-bottom duration-200">
+                          <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-4" />
+                          {renderFilterContent()}
+                        </div>
+                      </div>,
+                      document.body
+                    )}
+                </div>
+
+                {/* BOTÃO VER MÊS COMPLETO */}
+                <button
+                  onClick={() => setViewMode('MONTH_GRID')}
+                  className="flex items-center gap-2 text-sm font-bold text-primary hover:text-primary/80 transition-colors bg-primary/10 hover:bg-primary/20 px-4 py-2 rounded-xl shadow-sm cursor-pointer"
                 >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
-                Ver Mês Completo
-              </button>
+                  <Calendar className="w-4 h-4" />
+                  <span>Ver Mês Completo</span>
+                </button>
+              </div>
             </div>
+
+            {/* CHIPS DE FILTROS ATIVOS (FEEDBACK VISUAL CLARO) */}
+            {activeFilterCount > 0 && (
+              <div className="flex flex-wrap items-center gap-2 mb-5 animate-in fade-in duration-200">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  Filtros aplicados:
+                </span>
+                {typeFilter !== 'TUDO' && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-primary/10 text-primary border border-primary/20">
+                    {typeFilter === 'PROVAS'
+                      ? 'Provas'
+                      : typeFilter === 'TRABALHOS'
+                      ? 'Trabalhos'
+                      : typeFilter === 'TAREFAS'
+                      ? 'Tarefas'
+                      : 'Avisos'}
+                    <button
+                      type="button"
+                      onClick={() => setTypeFilter('TUDO')}
+                      className="hover:opacity-75 cursor-pointer"
+                      title="Remover filtro de tipo"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {statusFilter !== 'ALL' && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-primary/10 text-primary border border-primary/20">
+                    {statusFilter === 'PENDING' ? 'Apenas pendentes' : 'Apenas concluídas'}
+                    <button
+                      type="button"
+                      onClick={() => setStatusFilter('ALL')}
+                      className="hover:opacity-75 cursor-pointer"
+                      title="Remover filtro de status"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTypeFilter('TUDO');
+                    setStatusFilter('ALL');
+                  }}
+                  className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-rose-500 transition-colors ml-1 cursor-pointer flex items-center gap-1"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Limpar todos
+                </button>
+              </div>
+            )}
 
             {/* VISÃO DESKTOP: Grid 5 Colunas */}
             <div className="hidden md:grid grid-cols-5 gap-6">
@@ -376,10 +776,22 @@ export function CalendarPage() {
                             }`}
                           >
                             <div className="flex items-center justify-between gap-2 mb-2">
-                              <div
-                                className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${event.colorClass} bg-white/50 dark:bg-slate-900/50 shadow-sm`}
-                              >
-                                {event.label}
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <div
+                                  className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${event.colorClass} bg-white/50 dark:bg-slate-900/50 shadow-sm`}
+                                >
+                                  {event.label}
+                                </div>
+                                {event.grupoDestinatario === 'TURMA_A' && (
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">
+                                    Turma A
+                                  </span>
+                                )}
+                                {event.grupoDestinatario === 'TURMA_B' && (
+                                  <span className="px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50">
+                                    Turma B
+                                  </span>
+                                )}
                               </div>
                               <EventCheckbox eventId={event.id} concluida={event.concluida} size="sm" />
                             </div>
@@ -453,10 +865,22 @@ export function CalendarPage() {
                               }`}
                             >
                               <div className="flex-1 min-w-0">
-                                <div
-                                  className={`inline-block px-2.5 py-0.5 rounded-lg text-[10px] font-bold tracking-wider mb-1.5 ${event.colorClass} bg-white/60 dark:bg-slate-900/60`}
-                                >
-                                  {event.label}
+                                <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+                                  <div
+                                    className={`inline-block px-2.5 py-0.5 rounded-lg text-[10px] font-bold tracking-wider ${event.colorClass} bg-white/60 dark:bg-slate-900/60`}
+                                  >
+                                    {event.label}
+                                  </div>
+                                  {event.grupoDestinatario === 'TURMA_A' && (
+                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">
+                                      Turma A
+                                    </span>
+                                  )}
+                                  {event.grupoDestinatario === 'TURMA_B' && (
+                                    <span className="px-2 py-0.5 rounded-md text-[10px] font-bold tracking-wider bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50">
+                                      Turma B
+                                    </span>
+                                  )}
                                 </div>
                                 <h4
                                   className={`text-base font-bold text-slate-900 dark:text-white mb-1 ${
@@ -484,7 +908,7 @@ export function CalendarPage() {
 
                   {summaryDays.every((d) => d.events.length === 0) && (
                     <div className="p-8 text-center text-slate-500 glass-card rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 font-medium">
-                      Nenhum evento para os próximos 5 dias.
+                      Nenhum evento para os próximos 5 dias com os filtros atuais.
                     </div>
                   )}
                 </>
@@ -496,29 +920,17 @@ export function CalendarPage() {
         {/* VIEW 2: GRADE MENSAL */}
         {viewMode === 'MONTH_GRID' && (
           <div className="animate-in fade-in duration-500">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
               <button
                 onClick={() => setViewMode('SUMMARY')}
-                className="flex w-fit items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors"
+                className="flex w-fit items-center gap-2 text-sm font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
               >
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 19l-7-7 7-7"
-                  />
-                </svg>
-                Voltar para Resumo
+                <ArrowLeft className="w-4 h-4" />
+                <span>Voltar para Resumo</span>
               </button>
 
               {/* Controle de Mês Funcional */}
-              <div className="flex items-center gap-2 sm:gap-4 self-center bg-white/60 dark:bg-slate-900/60 backdrop-blur-md px-3 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+              <div className="flex items-center gap-2 sm:gap-4 self-center bg-white dark:bg-slate-900 px-3 py-2 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
                 <button
                   onClick={prevMonth}
                   className="p-2 text-slate-400 hover:text-primary hover:bg-primary/10 rounded-xl transition-all cursor-pointer active:scale-95"
@@ -597,23 +1009,108 @@ export function CalendarPage() {
                   </svg>
                 </button>
               </div>
-            </div>
 
-            <div className="flex overflow-x-auto gap-2 pb-4 hide-scrollbar">
-              {FILTERS.map((f) => (
+              {/* BOTÃO DE FILTRO DE ATIVIDADES DO CALENDÁRIO */}
+              <div className="relative z-30 self-end md:self-auto" ref={filterPopoverRef}>
                 <button
-                  key={f}
-                  onClick={() => setActiveFilter(f)}
-                  className={`shrink-0 px-5 py-2 rounded-full text-xs font-bold transition-all flex items-center gap-2 ${
-                    activeFilter === f
-                      ? 'bg-primary text-white shadow-md'
-                      : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
+                  type="button"
+                  onClick={() => {
+                    setIsFilterOpen((prev) => !prev);
+                    setIsDivisionOpen(false);
+                  }}
+                  className={`px-3.5 py-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2 border shadow-sm cursor-pointer ${
+                    activeFilterCount > 0
+                      ? 'bg-primary text-white border-primary shadow-md hover:bg-primary/90'
+                      : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
                   }`}
                 >
-                  {f === 'TUDO' ? 'Todos os Eventos' : f}
+                  <Filter className={`w-3.5 h-3.5 ${activeFilterCount > 0 ? 'text-white' : 'text-primary'}`} />
+                  <span>Filtros</span>
+                  {activeFilterCount > 0 && (
+                    <span className="w-4 h-4 rounded-full bg-white text-primary text-[10px] font-black flex items-center justify-center">
+                      {activeFilterCount}
+                    </span>
+                  )}
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${isFilterOpen ? 'rotate-180' : ''}`} />
                 </button>
-              ))}
+
+                {/* Popover (Desktop) */}
+                {isFilterOpen && (
+                  <div className="hidden sm:block absolute right-0 top-full mt-2 w-80 p-5 rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 z-50 ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-150">
+                    {renderFilterContent()}
+                  </div>
+                )}
+
+                {/* Bottom Sheet no Celular via Portal no document.body com espaçamento inferior generoso */}
+                {isFilterOpen &&
+                  typeof document !== 'undefined' &&
+                  createPortal(
+                    <div className="sm:hidden fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm flex items-end justify-center animate-in fade-in duration-200">
+                      <div
+                        className="absolute inset-0"
+                        onClick={() => setIsFilterOpen(false)}
+                      />
+                      <div className="relative w-full max-h-[85vh] bg-white dark:bg-slate-900 rounded-t-3xl p-6 pb-28 shadow-2xl border-t border-slate-200 dark:border-slate-800 overflow-y-auto z-10 animate-in slide-in-from-bottom duration-200">
+                        <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-4" />
+                        {renderFilterContent()}
+                      </div>
+                    </div>,
+                    document.body
+                  )}
+              </div>
             </div>
+
+            {/* CHIPS DE FILTROS ATIVOS (FEEDBACK VISUAL CLARO) */}
+            {activeFilterCount > 0 && (
+              <div className="flex flex-wrap items-center gap-2 mb-5 animate-in fade-in duration-200">
+                <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                  Filtros aplicados:
+                </span>
+                {typeFilter !== 'TUDO' && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-primary/10 text-primary border border-primary/20">
+                    {typeFilter === 'PROVAS'
+                      ? 'Provas'
+                      : typeFilter === 'TRABALHOS'
+                      ? 'Trabalhos'
+                      : typeFilter === 'TAREFAS'
+                      ? 'Tarefas'
+                      : 'Avisos'}
+                    <button
+                      type="button"
+                      onClick={() => setTypeFilter('TUDO')}
+                      className="hover:opacity-75 cursor-pointer"
+                      title="Remover filtro de tipo"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                {statusFilter !== 'ALL' && (
+                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-primary/10 text-primary border border-primary/20">
+                    {statusFilter === 'PENDING' ? 'Apenas pendentes' : 'Apenas concluídas'}
+                    <button
+                      type="button"
+                      onClick={() => setStatusFilter('ALL')}
+                      className="hover:opacity-75 cursor-pointer"
+                      title="Remover filtro de status"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </span>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setTypeFilter('TUDO');
+                    setStatusFilter('ALL');
+                  }}
+                  className="text-xs font-bold text-slate-500 dark:text-slate-400 hover:text-rose-500 transition-colors ml-1 cursor-pointer flex items-center gap-1"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Limpar todos
+                </button>
+              </div>
+            )}
 
             <div className="glass-panel rounded-3xl overflow-hidden mt-2">
               <div className="grid grid-cols-7 bg-slate-100/50 dark:bg-slate-800/30 border-b border-slate-200 dark:border-slate-800">
@@ -637,9 +1134,7 @@ export function CalendarPage() {
                       />
                     );
 
-                  const filteredEvents = dayObj.events.filter(
-                    (e) => activeFilter === 'TUDO' || e.type === activeFilter
-                  );
+                  const filteredEvents = dayObj.events;
                   const isSelectedOnMobile = selectedMobileDay === dayObj.day;
 
                   return (
@@ -696,6 +1191,16 @@ export function CalendarPage() {
                             <span className="opacity-75 mr-1 font-extrabold text-[10px]">
                               [{event.label.slice(0, 3)}]
                             </span>
+                            {event.grupoDestinatario === 'TURMA_A' && (
+                              <span className="mr-1 text-[9px] px-1 py-0.2 rounded font-bold bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                                A
+                              </span>
+                            )}
+                            {event.grupoDestinatario === 'TURMA_B' && (
+                              <span className="mr-1 text-[9px] px-1 py-0.2 rounded font-bold bg-purple-100 text-purple-700 dark:bg-purple-950 dark:text-purple-300">
+                                B
+                              </span>
+                            )}
                             {event.title}
                           </div>
                         ))}
@@ -737,11 +1242,7 @@ export function CalendarPage() {
                   const dayObj = renderedDays.find(
                     (d) => d && d.day === selectedMobileDay
                   );
-                  const dayEvents = dayObj
-                    ? dayObj.events.filter(
-                        (e) => activeFilter === 'TUDO' || e.type === activeFilter
-                      )
-                    : [];
+                  const dayEvents = dayObj ? dayObj.events : [];
                   const limit = 4;
                   const totalPages = Math.ceil(dayEvents.length / limit);
                   const paginatedEvents = dayEvents.slice(
@@ -752,7 +1253,7 @@ export function CalendarPage() {
                   if (dayEvents.length === 0) {
                     return (
                       <div className="p-6 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 text-center text-slate-500 font-medium bg-slate-50/50 dark:bg-slate-900/50">
-                        Nenhum evento programado para este dia.
+                        Nenhum evento programado para este dia com os filtros atuais.
                       </div>
                     );
                   }
@@ -771,8 +1272,20 @@ export function CalendarPage() {
                           }`}
                         >
                           <div className="flex-1 min-w-0">
-                            <div className={`text-xs font-bold mb-1.5 ${event.colorClass}`}>
-                              {event.label}
+                            <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+                              <div className={`text-xs font-bold ${event.colorClass}`}>
+                                {event.label}
+                              </div>
+                              {event.grupoDestinatario === 'TURMA_A' && (
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300 border border-blue-200 dark:border-blue-800/50">
+                                  Turma A
+                                </span>
+                              )}
+                              {event.grupoDestinatario === 'TURMA_B' && (
+                                <span className="px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300 border border-purple-200 dark:border-purple-800/50">
+                                  Turma B
+                                </span>
+                              )}
                             </div>
                             <p
                               className={`text-sm font-bold text-slate-900 dark:text-white leading-tight ${
@@ -800,7 +1313,7 @@ export function CalendarPage() {
                           <button
                             onClick={() => setMobilePage((p) => Math.max(1, p - 1))}
                             disabled={mobilePage === 1}
-                            className="px-3 py-1.5 text-xs font-bold text-slate-600 disabled:opacity-30 hover:text-slate-900 transition-colors"
+                            className="px-3 py-1.5 text-xs font-bold text-slate-600 disabled:opacity-30 hover:text-slate-900 transition-colors cursor-pointer"
                           >
                             &larr; Anterior
                           </button>
@@ -816,7 +1329,7 @@ export function CalendarPage() {
                               setMobilePage((p) => Math.min(totalPages, p + 1))
                             }
                             disabled={mobilePage === totalPages}
-                            className="px-3 py-1.5 text-xs font-bold text-slate-600 disabled:opacity-30 hover:text-slate-900 transition-colors"
+                            className="px-3 py-1.5 text-xs font-bold text-slate-600 disabled:opacity-30 hover:text-slate-900 transition-colors cursor-pointer"
                           >
                             Próxima &rarr;
                           </button>
@@ -845,12 +1358,22 @@ export function CalendarPage() {
             transform: 'translate(-50%, -100%)',
           }}
         >
-          <div className="flex items-center gap-2 mb-2">
+          <div className="flex items-center gap-2 mb-2 flex-wrap">
             <span
               className={`inline-block px-2 py-0.5 rounded text-[10px] font-bold tracking-wider ${hoveredEvent.colorClass} bg-slate-100 dark:bg-slate-800`}
             >
               {hoveredEvent.label}
             </span>
+            {hoveredEvent.grupoDestinatario === 'TURMA_A' && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-300">
+                Turma A
+              </span>
+            )}
+            {hoveredEvent.grupoDestinatario === 'TURMA_B' && (
+              <span className="px-1.5 py-0.5 rounded text-[10px] font-bold tracking-wider bg-purple-100 text-purple-700 dark:bg-purple-950/60 dark:text-purple-300">
+                Turma B
+              </span>
+            )}
           </div>
           <h4 className="text-sm font-bold text-slate-900 dark:text-white mb-1 leading-tight">
             {hoveredEvent.title}

@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useClassEvents } from '../../class-admin/hooks/useClassEvents';
+import { useAuth } from '../../auth/contexts/AuthContext';
 import { EventCheckbox } from '../../calendar/components/EventCheckbox';
 import { CheckCircle2 } from 'lucide-react';
 
@@ -45,6 +46,7 @@ function getEventLocalDateStr(dataHoraLimite: string): string {
 
 export function WeeklySummary() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [page, setPage] = useState(1);
   const limit = 5;
 
@@ -126,11 +128,21 @@ export function WeeklySummary() {
   // Filtra eventos garantindo que sua data local pertença exclusivamente ao conjunto dos 5 dias letivos calculados
   const filteredEvents = useMemo(() => {
     const rawEvents = response?.data || [];
+    const userSubgrupo = user?.subgrupoTurma || 'GERAL';
+
     return rawEvents.filter((event) => {
       const eventDateKey = getEventLocalDateStr(event.dataHoraLimite);
-      return schoolDayKeys.has(eventDateKey);
+      if (!schoolDayKeys.has(eventDateKey)) return false;
+
+      if (userSubgrupo === 'TURMA_A') {
+        return !event.grupoDestinatario || event.grupoDestinatario === 'TODOS' || event.grupoDestinatario === 'TURMA_A';
+      }
+      if (userSubgrupo === 'TURMA_B') {
+        return !event.grupoDestinatario || event.grupoDestinatario === 'TODOS' || event.grupoDestinatario === 'TURMA_B';
+      }
+      return true;
     });
-  }, [response?.data, schoolDayKeys]);
+  }, [response?.data, schoolDayKeys, user?.subgrupoTurma]);
 
   const total = filteredEvents.length;
   const totalPages = Math.ceil(total / limit) || 1;
@@ -215,6 +227,16 @@ export function WeeklySummary() {
                     >
                       {event.categoria}
                     </span>
+                    {event.grupoDestinatario === 'TURMA_A' && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 dark:bg-blue-950/50 dark:text-blue-300 border border-blue-200/60 dark:border-blue-900/40">
+                        Turma A
+                      </span>
+                    )}
+                    {event.grupoDestinatario === 'TURMA_B' && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 dark:bg-purple-950/50 dark:text-purple-300 border border-purple-200/60 dark:border-purple-900/40">
+                        Turma B
+                      </span>
+                    )}
                     {event.concluida && (
                       <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
                         <CheckCircle2 className="w-3 h-3" />

@@ -80,11 +80,11 @@
 ---
 
 ### Checklist para o Frontend (Ações Recomendadas para a Frontend AI):
-- [ ] No perfil do usuário / configurações ou cabeçalho, permitir que o aluno selecione seu subgrupo de turma (`GERAL`, `TURMA_A` ou `TURMA_B`) consumindo `PATCH /api/me/subgrupo`.
+- [x] No perfil do usuário / configurações ou cabeçalho, permitir que o aluno selecione seu subgrupo de turma (`GERAL`, `TURMA_A` ou `TURMA_B`) consumindo `PATCH /api/me/subgrupo`.
 - [x] Nos cards de atividades / calendário de tarefas (`EventCard.tsx`, `EventModal.tsx`, etc.), adicionar checkbox interativo para marcar/desmarcar tarefa concluída consumindo `POST /api/turmas/eventos/:id/toggle-conclusao`.
 - [x] Aplicar feedback visual de tarefa concluída (ex: texto tachado, opacidade reduzida ou badge verde de "Concluída") baseado na propriedade `event.concluida`.
 - [ ] No formulário de criação/edição de eventos (`EventForm.tsx`), incluir seletor de grupo destinatário (`TODOS`, `TURMA_A`, `TURMA_B`), com valor padrão `TODOS`.
-- [ ] No calendário/lista de tarefas, exibir badge identificador quando a tarefa for destinada especificamente para `Turma A` ou `Turma B`, e permitir filtrar tarefas de acordo com o subgrupo do aluno (`user.subgrupoTurma`).
+- [x] No calendário/lista de tarefas, exibir badge identificador quando a tarefa for destinada especificamente para `Turma A` ou `Turma B`, e permitir filtrar tarefas de acordo com o subgrupo do aluno (`user.subgrupoTurma`).
 
 ---
 

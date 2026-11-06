@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase } from '../../../lib/supabase';
-import { UserProfileDTO } from '@shared/types';
+import { UserProfileDTO, SubgrupoTurma } from '@shared/types';
 import { authApi } from '../api/authApi';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -12,6 +12,7 @@ interface AuthContextType {
   isError: boolean;
   error: unknown;
   signOut: () => Promise<void>;
+  updateSubgrupo: (subgrupo: SubgrupoTurma) => Promise<UserProfileDTO>;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -21,6 +22,9 @@ const AuthContext = createContext<AuthContextType>({
   isError: false,
   error: null,
   signOut: async () => {},
+  updateSubgrupo: async () => {
+    throw new Error('AuthProvider não encontrado');
+  },
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
@@ -65,10 +69,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [queryClient]);
 
+  const updateSubgrupo = useCallback(
+    async (subgrupo: SubgrupoTurma): Promise<UserProfileDTO> => {
+      if (!session?.access_token) {
+        throw new Error('Usuário não autenticado.');
+      }
+
+      // Atualização otimista imediata no cache de 'me'
+      queryClient.setQueryData<UserProfileDTO>(
+        ['me', session.access_token],
+        (old) => (old ? { ...old, subgrupoTurma: subgrupo } : old)
+      );
+
+      try {
+        const updatedUser = await authApi.updateSubgrupo(session.access_token, subgrupo);
+        queryClient.setQueryData(['me', session.access_token], updatedUser);
+        return updatedUser;
+      } catch (err) {
+        queryClient.invalidateQueries({ queryKey: ['me', session.access_token] });
+        throw err;
+      }
+    },
+    [session?.access_token, queryClient]
+  );
+
   const isLoading = isInitializing || (!!session && isUserLoading);
 
   return (
-    <AuthContext.Provider value={{ session, user, isLoading, isError, error, signOut }}>
+    <AuthContext.Provider value={{ session, user, isLoading, isError, error, signOut, updateSubgrupo }}>
       {children}
     </AuthContext.Provider>
   );
