@@ -101,6 +101,7 @@ export type Database = {
           criado_por: string | null
           data_hora_limite: string
           descricao: string | null
+          grupo_destinatario: string
           id: string
           links: Json
           materia: string
@@ -113,6 +114,7 @@ export type Database = {
           criado_por?: string | null
           data_hora_limite: string
           descricao?: string | null
+          grupo_destinatario?: string
           id?: string
           links?: Json
           materia: string
@@ -125,6 +127,7 @@ export type Database = {
           criado_por?: string | null
           data_hora_limite?: string
           descricao?: string | null
+          grupo_destinatario?: string
           id?: string
           links?: Json
           materia?: string
@@ -335,6 +338,39 @@ export type Database = {
         }
         Relationships: []
       }
+      usuario_tarefas_concluidas: {
+        Row: {
+          concluido_em: string
+          evento_id: string
+          user_id: string
+        }
+        Insert: {
+          concluido_em?: string
+          evento_id: string
+          user_id: string
+        }
+        Update: {
+          concluido_em?: string
+          evento_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuario_tarefas_concluidas_evento_id_fkey"
+            columns: ["evento_id"]
+            isOneToOne: false
+            referencedRelation: "eventos"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuario_tarefas_concluidas_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "usuarios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       usuarios: {
         Row: {
           data_entrada_turma: string | null
@@ -343,6 +379,7 @@ export type Database = {
           nome: string
           onboarding_concluido: boolean
           role: Database["public"]["Enums"]["user_role"] | null
+          subgrupo_turma: string
           termos_aceitos_em: string | null
           turma_id: string | null
         }
@@ -353,6 +390,7 @@ export type Database = {
           nome: string
           onboarding_concluido?: boolean
           role?: Database["public"]["Enums"]["user_role"] | null
+          subgrupo_turma?: string
           termos_aceitos_em?: string | null
           turma_id?: string | null
         }
@@ -363,6 +401,7 @@ export type Database = {
           nome?: string
           onboarding_concluido?: boolean
           role?: Database["public"]["Enums"]["user_role"] | null
+          subgrupo_turma?: string
           termos_aceitos_em?: string | null
           turma_id?: string | null
         }
