@@ -129,6 +129,7 @@ export function CalendarPage() {
   const [isUpdatingSubgrupo, setIsUpdatingSubgrupo] = useState(false);
 
   const filterPopoverRef = useRef<HTMLDivElement>(null);
+  const filterBottomSheetRef = useRef<HTMLDivElement>(null);
   const divisionPopoverRef = useRef<HTMLDivElement>(null);
 
   const [mobilePage, setMobilePage] = useState(1);
@@ -156,15 +157,21 @@ export function CalendarPage() {
   // Fechar menus ao clicar fora
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (
-        filterPopoverRef.current &&
-        !filterPopoverRef.current.contains(event.target as Node)
-      ) {
+      const target = event.target as Node;
+      const element = target instanceof HTMLElement ? target : target.parentElement;
+
+      // Não fecha se o clique ocorreu dentro do popover desktop OU dentro da Bottom Sheet mobile
+      const isInsideFilter =
+        filterPopoverRef.current?.contains(target) ||
+        filterBottomSheetRef.current?.contains(target) ||
+        Boolean(element?.closest?.('[data-filter-container]'));
+
+      if (!isInsideFilter) {
         setIsFilterOpen(false);
       }
       if (
         divisionPopoverRef.current &&
-        !divisionPopoverRef.current.contains(event.target as Node)
+        !divisionPopoverRef.current.contains(target)
       ) {
         setIsDivisionOpen(false);
       }
@@ -787,7 +794,10 @@ export function CalendarPage() {
 
                   {/* Popover (Desktop) */}
                   {isFilterOpen && (
-                    <div className="hidden sm:block absolute right-0 top-full mt-2 w-80 p-5 rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 z-50 ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-150">
+                    <div
+                      data-filter-container="true"
+                      className="hidden sm:block absolute right-0 top-full mt-2 w-80 p-5 rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 z-50 ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-150"
+                    >
                       {renderFilterContent()}
                     </div>
                   )}
@@ -801,7 +811,11 @@ export function CalendarPage() {
                           className="absolute inset-0"
                           onClick={() => setIsFilterOpen(false)}
                         />
-                        <div className="relative w-full max-h-[85vh] bg-white dark:bg-slate-900 rounded-t-3xl p-6 pb-28 shadow-2xl border-t border-slate-200 dark:border-slate-800 overflow-y-auto z-10 animate-in slide-in-from-bottom duration-200">
+                        <div
+                          ref={filterBottomSheetRef}
+                          data-filter-container="true"
+                          className="relative w-full max-h-[85vh] bg-white dark:bg-slate-900 rounded-t-3xl p-6 pb-28 shadow-2xl border-t border-slate-200 dark:border-slate-800 overflow-y-auto z-10 animate-in slide-in-from-bottom duration-200"
+                        >
                           <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-4" />
                           {renderFilterContent()}
                         </div>
@@ -1162,7 +1176,10 @@ export function CalendarPage() {
 
                 {/* Popover (Desktop) */}
                 {isFilterOpen && (
-                  <div className="hidden sm:block absolute right-0 top-full mt-2 w-80 p-5 rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 z-50 ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-150">
+                  <div
+                    data-filter-container="true"
+                    className="hidden sm:block absolute right-0 top-full mt-2 w-80 p-5 rounded-2xl bg-white dark:bg-slate-900 shadow-2xl border border-slate-200 dark:border-slate-800 z-50 ring-1 ring-black/5 animate-in fade-in zoom-in-95 duration-150"
+                  >
                     {renderFilterContent()}
                   </div>
                 )}
@@ -1176,7 +1193,11 @@ export function CalendarPage() {
                         className="absolute inset-0"
                         onClick={() => setIsFilterOpen(false)}
                       />
-                      <div className="relative w-full max-h-[85vh] bg-white dark:bg-slate-900 rounded-t-3xl p-6 pb-28 shadow-2xl border-t border-slate-200 dark:border-slate-800 overflow-y-auto z-10 animate-in slide-in-from-bottom duration-200">
+                      <div
+                        ref={filterBottomSheetRef}
+                        data-filter-container="true"
+                        className="relative w-full max-h-[85vh] bg-white dark:bg-slate-900 rounded-t-3xl p-6 pb-28 shadow-2xl border-t border-slate-200 dark:border-slate-800 overflow-y-auto z-10 animate-in slide-in-from-bottom duration-200"
+                      >
                         <div className="w-12 h-1.5 bg-slate-200 dark:bg-slate-700 rounded-full mx-auto mb-4" />
                         {renderFilterContent()}
                       </div>
