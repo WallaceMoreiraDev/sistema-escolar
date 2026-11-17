@@ -1,13 +1,21 @@
 import { useEffect } from 'react';
-import { Navigate, Outlet, useLocation } from 'react-router-dom';
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { AlertCircle, RefreshCw, LogOut, WifiOff } from 'lucide-react';
 import { useAuth } from '../../features/auth/contexts/AuthContext';
 import { ApiError } from '@/utils/apiError';
+import { RouteLoadingSkeleton } from '@/components/ui/RouteLoadingSkeleton';
+import {
+  consumePostLoginRedirect,
+  getPendingInviteCode,
+  getPostLoginRedirect,
+  savePostLoginRedirect,
+} from '@/utils/pendingNavigation';
 
 export function ProtectedRoute() {
   const { session, user, isLoading, isError, error, signOut } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const queryClient = useQueryClient();
 
   // Se isError ocorrer com status 401, desloga e redireciona imediatamente para o login
@@ -19,10 +27,41 @@ export function ProtectedRoute() {
     }
   }, [isUnauthorized, signOut]);
 
+  // Preserva o destino interno (/app/...) antes de enviar o usuário desautenticado ao login
+  useEffect(() => {
+    if (!isLoading && (!session || isUnauthorized) && location.pathname.startsWith('/app/')) {
+      savePostLoginRedirect(`${location.pathname}${location.search}`);
+    }
+  }, [isLoading, session, isUnauthorized, location.pathname, location.search]);
+
+  const currentFullPath = `${location.pathname}${location.search}`;
+  const isRootOrOnboardingFlow =
+    location.pathname === '/app/dashboard' || location.pathname === '/onboarding';
+  const pendingInvite = user?.onboardingConcluido ? getPendingInviteCode() : null;
+  const peekedPostLoginRedirect =
+    user?.onboardingConcluido && !pendingInvite && isRootOrOnboardingFlow
+      ? getPostLoginRedirect()
+      : null;
+
+  // Consome o redirect pós-login em efeito para manter idempotência sob React StrictMode
+  useEffect(() => {
+    if (!user?.onboardingConcluido) return;
+    if (getPendingInviteCode()) return;
+    if (location.pathname !== '/app/dashboard' && location.pathname !== '/onboarding') return;
+
+    const target = consumePostLoginRedirect();
+    if (!target) return;
+
+    const fullPath = `${location.pathname}${location.search}`;
+    if (target !== fullPath) {
+      navigate(target, { replace: true });
+    }
+  }, [user?.onboardingConcluido, location.pathname, location.search, navigate]);
+
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
-        <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-8">
+        <RouteLoadingSkeleton />
       </div>
     );
   }
@@ -83,10 +122,26 @@ export function ProtectedRoute() {
     if (!user.onboardingConcluido && location.pathname !== '/onboarding') {
       return <Navigate to="/onboarding" replace />;
     }
-    
-    // Se o onboarding já foi concluído e está tentando acessar o onboarding, manda pro app
-    if (user.onboardingConcluido && location.pathname === '/onboarding') {
-      return <Navigate to="/app/dashboard" replace />;
+
+    if (user.onboardingConcluido) {
+      // Prioridade 1: convite pendente para turma (sobrevive ao OAuth e Onboarding)
+      if (pendingInvite && !location.pathname.startsWith('/convite/')) {
+        return <Navigate to={`/convite/${encodeURIComponent(pendingInvite)}`} replace />;
+      }
+
+      // Prioridade 2: destino pós-login salvo (evita flash da Dashboard antes do redirect)
+      if (peekedPostLoginRedirect && peekedPostLoginRedirect !== currentFullPath) {
+        return (
+          <div className="min-h-screen bg-slate-50 dark:bg-slate-900 py-8">
+            <RouteLoadingSkeleton />
+          </div>
+        );
+      }
+
+      // Se o onboarding já foi concluído e está tentando acessar o onboarding, manda pro app
+      if (location.pathname === '/onboarding') {
+        return <Navigate to="/app/dashboard" replace />;
+      }
     }
   }
 

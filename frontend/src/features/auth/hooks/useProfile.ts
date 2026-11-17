@@ -11,8 +11,12 @@ export function useUpdateProfile() {
       if (!session?.access_token) throw new Error('Não autenticado');
       return authApi.updateProfile(session.access_token, nome);
     },
-    onSuccess: () => {
-      // Força a atualização dos dados do usuário logado
+    onSuccess: (updatedUser) => {
+      // Atualiza o cache imediatamente para que redirecionamentos pós-onboarding vejam onboardingConcluido=true
+      if (session?.access_token) {
+        queryClient.setQueryData(['me', session.access_token], updatedUser);
+      }
+      // Força a sincronização em segundo plano dos dados do usuário logado
       queryClient.invalidateQueries({ queryKey: ['me'] });
     },
   });

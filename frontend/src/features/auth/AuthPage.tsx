@@ -1,16 +1,22 @@
-import { useState, useEffect } from 'react';
-import { Navigate, Link } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '@/features/auth/contexts/AuthContext';
 import { PWAInstallPrompt } from '@/components/ui/PWAInstallPrompt';
+import { RouteLoadingSkeleton } from '@/components/ui/RouteLoadingSkeleton';
+import {
+  consumePostLoginRedirect,
+  getPendingInviteCode,
+} from '@/utils/pendingNavigation';
 
 export function AuthPage() {
   const { session, user, isError } = useAuth();
+  const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
+  const resolvedRedirectRef = useRef<string | null>(null);
 
   // Destrava o botão caso a página seja restaurada do BFCache (Safari iOS / navegadores móveis)
   useEffect(() => {
-    setIsLoading(false);
     const handlePageShow = () => {
       setIsLoading(false);
     };
@@ -20,8 +26,29 @@ export function AuthPage() {
   }, []);
 
   // Só redireciona se a autenticação estiver 100% resolvida e o perfil carregado
+  useEffect(() => {
+    if (!session || !user || isError) return;
+
+    if (!resolvedRedirectRef.current) {
+      const pendingInvite = getPendingInviteCode();
+      if (pendingInvite && user.onboardingConcluido) {
+        resolvedRedirectRef.current = `/convite/${encodeURIComponent(pendingInvite)}`;
+      } else if (!user.onboardingConcluido) {
+        resolvedRedirectRef.current = '/onboarding';
+      } else {
+        resolvedRedirectRef.current = consumePostLoginRedirect() || '/app/dashboard';
+      }
+    }
+
+    navigate(resolvedRedirectRef.current, { replace: true });
+  }, [session, user, isError, navigate]);
+
   if (session && user && !isError) {
-    return <Navigate to="/app/dashboard" replace />;
+    return (
+      <div className="min-h-screen bg-background py-8">
+        <RouteLoadingSkeleton />
+      </div>
+    );
   }
 
   const handleLogin = async () => {
