@@ -37,6 +37,9 @@ const OnboardingPage = lazy(() =>
 const PrivacyPolicyPage = lazy(() =>
   import('@/features/privacy/PrivacyPolicyPage').then((m) => ({ default: m.PrivacyPolicyPage }))
 );
+const InviteJoinPage = lazy(() =>
+  import('@/features/class-requests/InviteJoinPage').then((m) => ({ default: m.InviteJoinPage }))
+);
 
 const withSuspense = (Component: React.ComponentType, isModal = false) => (
   <Suspense fallback={isModal ? <ModalRouteLoadingSkeleton /> : <RouteLoadingSkeleton />}>
@@ -56,6 +59,10 @@ export const router = createBrowserRouter([
   {
     path: '/privacidade',
     element: withSuspense(PrivacyPolicyPage),
+  },
+  {
+    path: '/convite/:codigo',
+    element: withSuspense(InviteJoinPage),
   },
   {
     element: <ProtectedRoute />,

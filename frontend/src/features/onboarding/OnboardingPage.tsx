@@ -5,6 +5,10 @@ import { z } from 'zod';
 import { UserCheck, AlertTriangle, ArrowRight, ExternalLink } from 'lucide-react';
 import { onboardingSchema } from '@shared/schemas/onboardingSchema';
 import { useUpdateProfile } from '@/features/auth/hooks/useProfile';
+import {
+  consumePostLoginRedirect,
+  getPendingInviteCode,
+} from '@/utils/pendingNavigation';
 
 const onboardingFormSchema = onboardingSchema.extend({
   aceitouTermos: z.literal(true, {
@@ -16,6 +20,7 @@ type OnboardingFormValues = z.infer<typeof onboardingFormSchema>;
 export function OnboardingPage() {
   const navigate = useNavigate();
   const { mutate, isPending } = useUpdateProfile();
+  const hasPendingInvite = Boolean(getPendingInviteCode());
 
   const { register, handleSubmit, formState: { errors } } = useForm<OnboardingFormValues>({
     resolver: zodResolver(onboardingFormSchema)
@@ -24,7 +29,14 @@ export function OnboardingPage() {
   const onSubmit = (data: OnboardingFormValues) => {
     mutate({ nome: data.nome }, {
       onSuccess: () => {
-        navigate('/app/dashboard');
+        const pendingInvite = getPendingInviteCode();
+        if (pendingInvite) {
+          navigate(`/convite/${encodeURIComponent(pendingInvite)}`, { replace: true });
+          return;
+        }
+
+        const redirectPath = consumePostLoginRedirect() || '/app/dashboard';
+        navigate(redirectPath, { replace: true });
       }
     });
   };
@@ -102,7 +114,11 @@ export function OnboardingPage() {
             disabled={isPending}
             className="w-full flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white py-4 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:pointer-events-none text-lg mt-4"
           >
-            {isPending ? 'Salvando...' : 'Continuar para o Dashboard'}
+            {isPending
+              ? 'Salvando...'
+              : hasPendingInvite
+              ? 'Continuar e entrar na turma'
+              : 'Continuar para o Dashboard'}
             {!isPending && <ArrowRight className="w-5 h-5" />}
           </button>
         </form>
